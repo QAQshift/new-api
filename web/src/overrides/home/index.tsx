@@ -39,79 +39,91 @@ import { Button } from '@/components/ui/button'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { useAuthStore } from '@/stores/auth-store'
 
-const navLinks = [
-  { title: 'Home', href: '/' },
-  { title: 'Pricing', href: '/pricing' },
-  { title: 'Docs', href: '/docs' },
-  { title: 'Support', href: '/about' },
-]
-
-const models = [
-  {
-    name: 'GPT-5.6',
-    detail:
-      'Excels at agentic coding, terminal automation, toolchain orchestration, high-frequency development, and multi-step workflows.',
-    color: 'bg-emerald-500',
-  },
-  {
-    name: 'Claude',
-    detail:
-      'Excels at deep understanding of large codebases, complex refactoring, multi-file bug fixes, long-text analysis, and stable output.',
-    color: 'bg-orange-500',
-  },
-  {
-    name: 'Gemini',
-    detail:
-      'Flexible multimodal reasoning for text, images, documents, and fast experiments.',
-    color: 'bg-blue-500',
-  },
-]
-
-const capabilities: { icon: LucideIcon; title: string; description: string }[] =
-  [
-    {
-      icon: Activity,
-      title: 'Low-latency routing',
-      description:
-        'Health-aware routing keeps first-token response fast and consistent.',
-    },
-    {
-      icon: ShieldCheck,
-      title: 'Stable under load',
-      description:
-        'Retries, route health, and operational visibility protect important calls.',
-    },
-    {
-      icon: WalletCards,
-      title: 'Fair, transparent cost',
-      description:
-        'Clear model groups and usage logs make long-term budgets easier to manage.',
-    },
-    {
-      icon: Globe2,
-      title: 'Global intelligent scheduling',
-      description:
-        'Multiple regions work together to select a healthy path for each request.',
-    },
-    {
-      icon: ServerCog,
-      title: 'Engineering-first operations',
-      description:
-        'Designed for production backends, automation, and teams that need control.',
-    },
-    {
-      icon: Bot,
-      title: 'Made for Agent workflows',
-      description:
-        'Dedicated project keys and compatible endpoints fit Codex, Claude Code, and custom agents.',
-    },
-  ]
-
 export function BrandHome() {
   const { t } = useTranslation()
   const { systemName } = useSystemConfig()
   const { auth } = useAuthStore()
   const isAuthenticated = Boolean(auth.user)
+
+  const navLinks = [
+    { title: t('Home'), href: '/' },
+    { title: t('Pricing'), href: '/pricing' },
+    { title: t('Docs'), href: '/docs' },
+    { title: t('Support'), href: '/about' },
+  ]
+
+  const models = [
+    {
+      name: 'GPT-5.6',
+      detail: t(
+        'Excels at agentic coding, terminal automation, toolchain orchestration, high-frequency development, and multi-step workflows.'
+      ),
+      color: 'bg-emerald-500',
+    },
+    {
+      name: 'Claude',
+      detail: t(
+        'Excels at deep understanding of large codebases, complex refactoring, multi-file bug fixes, long-text analysis, and stable output.'
+      ),
+      color: 'bg-orange-500',
+    },
+    {
+      name: 'Gemini',
+      detail: t(
+        'Flexible multimodal reasoning for text, images, documents, and fast experiments.'
+      ),
+      color: 'bg-blue-500',
+    },
+  ]
+
+  const capabilities: {
+    icon: LucideIcon
+    title: string
+    description: string
+  }[] = [
+    {
+      icon: Activity,
+      title: t('Low-latency routing'),
+      description: t(
+        'Health-aware routing keeps first-token response fast and consistent.'
+      ),
+    },
+    {
+      icon: ShieldCheck,
+      title: t('Stable under load'),
+      description: t(
+        'Retries, route health, and operational visibility protect important calls.'
+      ),
+    },
+    {
+      icon: WalletCards,
+      title: t('Fair, transparent cost'),
+      description: t(
+        'Clear model groups and usage logs make long-term budgets easier to manage.'
+      ),
+    },
+    {
+      icon: Globe2,
+      title: t('Global intelligent scheduling'),
+      description: t(
+        'Multiple regions work together to select a healthy path for each request.'
+      ),
+    },
+    {
+      icon: ServerCog,
+      title: t('Engineering-first operations'),
+      description: t(
+        'Designed for production backends, automation, and teams that need control.'
+      ),
+    },
+    {
+      icon: Bot,
+      title: t('Made for Agent workflows'),
+      description: t(
+        'Dedicated project keys and compatible endpoints fit Codex, Claude Code, and custom agents.'
+      ),
+    },
+  ]
 
   return (
     <PublicLayout showMainContainer={false} navLinks={navLinks}>
@@ -401,16 +413,22 @@ export function BrandHome() {
             <div className='mt-10 grid gap-4 md:grid-cols-3'>
               {[
                 [
-                  'Coding',
-                  'Great for code generation, project edits, automated development, and long coding sessions.',
+                  t('Coding'),
+                  t(
+                    'Great for code generation, project edits, automated development, and long coding sessions.'
+                  ),
                 ],
                 [
-                  'Automation',
-                  'Suited for tool calling, scheduled jobs, and multi-step workflows that need predictable access.',
+                  t('Automation'),
+                  t(
+                    'Suited for tool calling, scheduled jobs, and multi-step workflows that need predictable access.'
+                  ),
                 ],
                 [
-                  'Team projects',
-                  'Create dedicated keys per project and keep usage, permissions, and logs easy to audit.',
+                  t('Team projects'),
+                  t(
+                    'Create dedicated keys per project and keep usage, permissions, and logs easy to audit.'
+                  ),
                 ],
               ].map(([title, text]) => (
                 <article

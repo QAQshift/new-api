@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -120,6 +121,34 @@ func GetOptions(c *gin.Context) {
 type OptionUpdateRequest struct {
 	Key   string `json:"key"`
 	Value any    `json:"value"`
+}
+
+const (
+	maxLogoDataBytes       = 512 * 1024
+	maxBackgroundDataBytes = 4 * 1024 * 1024
+)
+
+func isValidImageOption(value string, maxDataBytes int) bool {
+	if value == "" {
+		return true
+	}
+	if strings.HasPrefix(value, "data:image/") {
+		metadata, encoded, ok := strings.Cut(value, ",")
+		if !ok || !strings.HasSuffix(metadata, ";base64") {
+			return false
+		}
+		mediaType := strings.TrimPrefix(strings.TrimSuffix(metadata, ";base64"), "data:")
+		switch mediaType {
+		case "image/gif", "image/jpeg", "image/png", "image/webp":
+		default:
+			return false
+		}
+		decoded, err := base64.StdEncoding.DecodeString(encoded)
+		return err == nil && len(decoded) > 0 && len(decoded) <= maxDataBytes
+	}
+
+	parsed, err := url.ParseRequestURI(value)
+	return err == nil && (parsed.Scheme == "http" || parsed.Scheme == "https") && parsed.Host != ""
 }
 
 func UpdateOption(c *gin.Context) {
@@ -262,14 +291,24 @@ func UpdateOption(c *gin.Context) {
 		}
 	case "UIThemeBackground":
 		value := strings.TrimSpace(option.Value.(string))
-		if value != "" {
-			parsed, parseErr := url.ParseRequestURI(value)
-			if parseErr != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" || len(value) > 2048 {
-				common.ApiErrorMsg(c, "无效的站点背景图片地址")
-				return
-			}
+		if len(value) > 2048 && !strings.HasPrefix(value, "data:image/") {
+			common.ApiErrorMsg(c, "无效的站点背景图片")
+			return
+		}
+		if !isValidImageOption(value, maxBackgroundDataBytes) {
+			common.ApiErrorMsg(c, "无效的站点背景图片")
+			return
 		}
 		option.Value = value
+	case "Logo":
+		if len(option.Value.(string)) > 2048 && !strings.HasPrefix(option.Value.(string), "data:image/") {
+			common.ApiErrorMsg(c, "无效的徽标图片")
+			return
+		}
+		if !isValidImageOption(option.Value.(string), maxLogoDataBytes) {
+			common.ApiErrorMsg(c, "无效的徽标图片")
+			return
+		}
 	case "GroupRatio":
 		err = ratio_setting.CheckGroupRatio(option.Value.(string))
 		if err != nil {

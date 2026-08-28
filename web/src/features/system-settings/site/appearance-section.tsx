@@ -16,10 +16,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Check, ImagePlus } from 'lucide-react'
+import { Check, ImagePlus, Upload, X } from 'lucide-react'
+import { useRef, type ChangeEvent } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
+import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
@@ -29,7 +32,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -38,6 +40,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  IMAGE_UPLOAD_LIMITS,
+  isImageDataUrl,
+  readImageFileAsDataUrl,
+} from '@/lib/image-data-url'
 import {
   THEME_PRESETS,
   type ContentLayout,
@@ -76,6 +83,7 @@ type SelectOption = { value: string; label: string }
 export function AppearanceSection(props: AppearanceSectionProps) {
   const { t } = useTranslation()
   const updateOption = useUpdateOption()
+  const backgroundInputRef = useRef<HTMLInputElement>(null)
   const { form, handleSubmit, handleReset, isDirty, isSubmitting } =
     useSettingsForm<AppearanceSettings>({
       defaultValues: props.defaultValues,
@@ -129,9 +137,37 @@ export function AppearanceSection(props: AppearanceSectionProps) {
     xl: '16px',
   }
   const previewRadius = previewRadiusMap[selectedRadius] ?? '10px'
-  const previewBackground = /^https?:\/\//i.test(selectedBackground)
-    ? `url("${selectedBackground}")`
-    : undefined
+  const previewBackground =
+    /^https?:\/\//i.test(selectedBackground) ||
+    isImageDataUrl(selectedBackground)
+      ? `url("${selectedBackground}")`
+      : undefined
+
+  const handleBackgroundFileChange = async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    try {
+      const dataUrl = await readImageFileAsDataUrl(
+        file,
+        IMAGE_UPLOAD_LIMITS.background
+      )
+      form.setValue('UIThemeBackground', dataUrl, {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : ''
+      toast.error(
+        message === 'Image file is too large'
+          ? t('Background image must be 4 MB or smaller')
+          : t('Please choose a PNG, JPG, WebP, or GIF image')
+      )
+    }
+  }
 
   return (
     <>
@@ -296,16 +332,52 @@ export function AppearanceSection(props: AppearanceSectionProps) {
                       <ImagePlus className='size-4' /> {t('Background image')}
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        type='url'
-                        placeholder='https://example.com/background.jpg'
-                        maxLength={2048}
-                      />
+                      <div className='flex flex-wrap items-center gap-3'>
+                        {field.value ? (
+                          <div className='bg-muted/50 h-20 w-32 overflow-hidden rounded-lg border'>
+                            <img
+                              src={field.value}
+                              alt={t('Background image')}
+                              className='size-full object-cover'
+                            />
+                          </div>
+                        ) : (
+                          <div className='bg-muted/50 text-muted-foreground flex h-20 w-32 items-center justify-center rounded-lg border text-xs'>
+                            {t('No background image')}
+                          </div>
+                        )}
+                        <input
+                          ref={backgroundInputRef}
+                          type='file'
+                          accept='image/png,image/jpeg,image/webp,image/gif'
+                          className='hidden'
+                          onChange={handleBackgroundFileChange}
+                        />
+                        <Button
+                          type='button'
+                          variant='outline'
+                          onClick={() => backgroundInputRef.current?.click()}
+                        >
+                          <Upload className='mr-2 size-4' /> {t('Upload')}
+                        </Button>
+                        {field.value ? (
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            onClick={() =>
+                              form.setValue('UIThemeBackground', '', {
+                                shouldDirty: true,
+                              })
+                            }
+                          >
+                            <X className='mr-2 size-4' /> {t('Clear')}
+                          </Button>
+                        ) : null}
+                      </div>
                     </FormControl>
                     <FormDescription>
                       {t(
-                        'Optional HTTPS image URL used as the global background. Leave blank to use the preset background.'
+                        'Upload a PNG, JPG, WebP, or GIF image as the global background. Maximum size: 4 MB.'
                       )}
                     </FormDescription>
                     <FormMessage />

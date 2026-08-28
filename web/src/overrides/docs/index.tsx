@@ -36,14 +36,13 @@ import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
-import { useSystemConfig } from '@/hooks/use-system-config'
 
 const navigation = [
   { id: 'overview', label: 'Overview' },
-  { id: 'models', label: 'Models and billing' },
+  { id: 'models', label: 'Models and Billing' },
   { id: 'network', label: 'Network' },
   { id: 'quickstart', label: 'Quickstart' },
-  { id: 'agents', label: 'Agent ready' },
+  { id: 'agents', label: 'Agent Ready' },
   { id: 'faq', label: 'FAQ' },
 ] as const
 
@@ -54,8 +53,8 @@ const quickstartCode = `curl https://your-domain.example/v1/chat/completions \\
 
 const networkMeta = [
   'One API key per project',
-  'Latency and health aware',
-  'Automatic failover ready',
+  'Intelligent scheduling',
+  'Healthy provider',
 ] as const
 
 function CodeBlock(props: { code: string; title: string }) {
@@ -117,7 +116,12 @@ function SectionHeading(props: {
 
 export function Docs() {
   const { t } = useTranslation()
-  const { systemName } = useSystemConfig()
+  const requestCode = quickstartCode.replace(
+    'https://your-domain.example',
+    typeof window === 'undefined'
+      ? 'https://your-domain.example'
+      : window.location.origin
+  )
 
   return (
     <PublicLayout showMainContainer={false}>
@@ -129,14 +133,13 @@ export function Docs() {
               <BookIcon /> {t('Developer documentation')}
             </div>
             <h1 className='mt-5 max-w-4xl text-5xl leading-[1.04] font-semibold tracking-tight md:text-7xl'>
-              {t('Everything you need to ship with {{name}}.', {
-                name: systemName,
-              })}
+              {t('Mainstream AI model APIs')}{' '}
+              <span className='text-muted-foreground'>
+                {t('at a fraction of the cost')}
+              </span>
             </h1>
             <p className='text-muted-foreground mt-6 max-w-2xl text-lg leading-8'>
-              {t(
-                'One reliable API for leading models, with clear usage, low-latency routing, and production-ready operations.'
-              )}
+              {t('Stable relay · clear billing · unified multi-model access')}
             </p>
             <div className='mt-8 flex flex-wrap gap-3'>
               <Button
@@ -180,27 +183,27 @@ export function Docs() {
             <section id='overview' className='scroll-mt-24 space-y-8'>
               <SectionHeading
                 eyebrow={t('Model relay · unified access')}
-                title={t('Mainstream AI models, one clean interface.')}
+                title={t('Unified model access')}
                 description={t(
-                  'Connect existing applications with minimal changes. Use the model that fits the task, keep the same key and endpoint, and let the gateway handle routing and observability.'
+                  'Connect existing applications with minimal changes. Keep the same SDK, key, and request format while the gateway handles routing and observability.'
                 )}
               />
               <div className='grid gap-4 sm:grid-cols-3'>
                 {[
                   {
                     icon: Gauge,
-                    title: 'Low-latency routing',
-                    text: 'Intelligent paths keep first-token response fast and consistent.',
+                    title: 'Unified model access',
+                    text: 'One integration gives your application access to the configured model groups.',
                   },
                   {
                     icon: ShieldCheck,
-                    title: 'Stable by design',
-                    text: 'Health checks, retries, and independent routes protect production calls.',
+                    title: 'Clear usage tracking',
+                    text: 'Review model, token, latency, and deduction details in one console.',
                   },
                   {
                     icon: Code2,
-                    title: 'Zero-friction migration',
-                    text: 'OpenAI-compatible APIs work with the tools you already use.',
+                    title: 'Stable API relay',
+                    text: 'Health checks and intelligent scheduling keep important requests moving.',
                   },
                 ].map((item) => {
                   const Icon = item.icon
@@ -222,26 +225,26 @@ export function Docs() {
 
             <section id='models' className='scroll-mt-24 space-y-8'>
               <SectionHeading
-                eyebrow={t('Models and billing')}
+                eyebrow={t('Models and Billing')}
                 title={t('Top models online, with transparent billing.')}
                 description={t(
-                  'Choose from the configured model groups in your console. Usage follows the group rules shown to you, so costs remain predictable as your workload grows.'
+                  'See available models, rate rules, and best-fit scenarios at a glance. The console remains authoritative for current availability and billing.'
                 )}
               />
               <div className='grid gap-4 md:grid-cols-2'>
                 {[
                   {
                     name: 'GPT-5.6',
-                    tag: 'Coding and agents',
+                    tag: '1× rate',
                     description:
-                      'Official-style capability for agentic coding, terminal automation, and multi-step development workflows.',
+                      'Excels at agentic coding, terminal automation, toolchain orchestration, and multi-step development workflows.',
                     color: 'bg-emerald-500',
                   },
                   {
                     name: 'Claude',
-                    tag: 'Long context',
+                    tag: '2× rate',
                     description:
-                      'Strong at large codebase understanding, refactoring, long-text analysis, and stable output.',
+                      'Strong at deep understanding of large codebases, complex refactoring, long-text analysis, and stable output.',
                     color: 'bg-orange-500',
                   },
                   {
@@ -252,10 +255,10 @@ export function Docs() {
                     color: 'bg-blue-500',
                   },
                   {
-                    name: 'OpenAI-compatible',
-                    tag: 'Any SDK',
+                    name: 'Claude models / Kiro channel',
+                    tag: '2× rate',
                     description:
-                      'Keep your existing clients, frameworks, and deployment workflows unchanged.',
+                      'Designed for Claude Code, project refactoring, and long-text analysis.',
                     color: 'bg-violet-500',
                   },
                 ].map((model) => (
@@ -281,7 +284,7 @@ export function Docs() {
             <section id='network' className='scroll-mt-24 space-y-8'>
               <SectionHeading
                 eyebrow={t('Network')}
-                title={t('A route that keeps working when conditions change.')}
+                title={t('One primary API, two backup routes')}
                 description={t(
                   'Regional nodes, health checks, and intelligent scheduling work together to find a healthy path for each request.'
                 )}
@@ -291,7 +294,7 @@ export function Docs() {
                 <div className='grid gap-6 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-center'>
                   {[
                     { icon: KeyRound, title: 'Your application' },
-                    { icon: Network, title: 'Smart routing' },
+                    { icon: Network, title: 'Intelligent scheduling' },
                     { icon: Globe2, title: 'Healthy provider' },
                   ].map((node, index) => {
                     const Icon = node.icon
@@ -319,16 +322,16 @@ export function Docs() {
             <section id='quickstart' className='scroll-mt-24 space-y-8'>
               <SectionHeading
                 eyebrow={t('Quickstart')}
-                title={t('Your first request in five minutes.')}
+                title={t('Get started now — go live with a few lines of code')}
                 description={t(
-                  'Create a key, point your SDK at the base URL, and send the same request format you already know.'
+                  'Register, create an API Key, replace BASE_URL, and send your first request in minutes.'
                 )}
               />
               <div className='grid gap-4 sm:grid-cols-3'>
                 {[
-                  'Create an account and open the console.',
-                  'Create an API key for the project.',
-                  'Replace BASE_URL and send a request.',
+                  'Sign up and open the console',
+                  'Create a project token',
+                  'Copy the full API address and you are ready.',
                 ].map((step, index) => (
                   <div
                     key={step}
@@ -342,35 +345,42 @@ export function Docs() {
                 ))}
               </div>
               <CodeBlock
-                code={quickstartCode}
+                code={requestCode}
                 title={t('OpenAI-compatible request')}
               />
             </section>
 
             <section id='agents' className='scroll-mt-24 space-y-8'>
               <SectionHeading
-                eyebrow={t('Agent ready')}
-                title={t('Built for long-running work, not demos.')}
+                eyebrow={t('Agent Ready')}
+                title={t(
+                  'An entry point built for coding tools and Agent assistants.'
+                )}
                 description={t(
-                  'Use dedicated keys and predictable routing for Codex, Claude Code, Cursor, Cline, LangChain, and your own Agent services.'
+                  'More than web chat — built to plug the API into development, automation, project analysis, and multi-step Agent pipelines.'
                 )}
               />
+              <p className='text-muted-foreground max-w-3xl text-sm leading-7'>
+                {t(
+                  'High-performance AI model API relay platform with intelligent scheduling, unified model access, and production-ready operations for development, automation, and long-term business calls.'
+                )}
+              </p>
               <div className='glass-panel grid gap-6 rounded-2xl border p-6 md:grid-cols-3 md:p-8'>
                 {[
                   {
                     icon: Bot,
-                    title: 'Per-project keys',
-                    text: 'Isolate usage, permissions, and spend across tools and environments.',
+                    title: 'Call Logs',
+                    text: 'Review requests, usage, and errors in one place for easier debugging.',
                   },
                   {
                     icon: Sparkles,
-                    title: 'Long-context ready',
-                    text: 'Keep complex tasks moving with models suited to large inputs and multi-step work.',
+                    title: 'Intelligent Scheduling',
+                    text: 'Health-aware routes select the best available path for each request.',
                   },
                   {
                     icon: CircleHelp,
-                    title: 'Human support',
-                    text: 'Get practical help when an integration needs more than a generic status page.',
+                    title: 'Project tokens',
+                    text: 'Create dedicated API Keys for coding tools, backends, or Agent assistants.',
                   },
                 ].map((item) => {
                   const Icon = item.icon
@@ -399,19 +409,19 @@ export function Docs() {
                 {[
                   [
                     'Which API address should I use?',
-                    'Use the base URL shown in your console. OpenAI-compatible clients append /v1; use the root domain for native Anthropic clients.',
+                    'Use the primary API shown in the console by default. OpenAI-compatible clients append /v1; Anthropic clients use the root domain. Switch to a backup route when you hit network jitter or timeouts.',
                   ],
                   [
-                    'How is billing calculated?',
-                    'Each model group has its own rules. The usage log is authoritative and shows the model, tokens, group, and final deduction.',
+                    'How are the two models billed?',
+                    'Model groups use the rates shown in the console. The usage log is authoritative and shows the model, tokens, group, and final deduction.',
                   ],
                   [
-                    'Which tools are supported?',
-                    'OpenAI and Anthropic SDKs, LangChain, Cursor, Cline, Claude Code, Codex, and custom applications that support compatible endpoints.',
+                    'Which SDKs and tools are supported?',
+                    'Compatible with OpenAI and Anthropic SDKs, LangChain, Cursor, Cline, Claude Code, Codex, and custom applications that support compatible endpoints.',
                   ],
                   [
-                    'Can I use this for production?',
-                    'Yes. Use separate project keys, monitor logs, set sensible rate limits, and keep a backup route ready for critical workloads.',
+                    'Is there a rate limit?',
+                    'Limits depend on the configured group and account policy. For high-concurrency integrations, select the appropriate group and monitor your usage logs.',
                   ],
                 ].map(([question, answer]) => (
                   <details key={question} className='group py-5'>

@@ -20,6 +20,7 @@ import { createContext, useContext, useEffect, useMemo } from 'react'
 
 import { useStatus } from '@/hooks/use-status'
 import { removeCookie } from '@/lib/cookies'
+import { isImageDataUrl } from '@/lib/image-data-url'
 import {
   DEFAULT_THEME_CUSTOMIZATION,
   resolveThemeCustomization,
@@ -46,12 +47,16 @@ function applyBackground(background: string) {
   }
 
   try {
-    const parsed = new URL(background, window.location.origin)
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      throw new Error('Unsupported background protocol')
+    let imageUrl = background
+    if (!isImageDataUrl(background)) {
+      const parsed = new URL(background, window.location.origin)
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        throw new Error('Unsupported background protocol')
+      }
+      imageUrl = parsed.href
     }
     body.setAttribute('data-theme-background', 'custom')
-    body.style.setProperty('--site-background-image', `url("${parsed.href}")`)
+    body.style.setProperty('--site-background-image', `url("${imageUrl}")`)
   } catch {
     body.removeAttribute('data-theme-background')
     body.style.removeProperty('--site-background-image')

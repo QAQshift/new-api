@@ -17,10 +17,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { zodResolver } from '@hookform/resolvers/zod'
+import { ImagePlus, Upload, X } from 'lucide-react'
+import { useRef, type ChangeEvent } from 'react'
 import type { Resolver } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import * as z from 'zod'
 
+import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
@@ -32,6 +36,11 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  IMAGE_UPLOAD_LIMITS,
+  isImageDataUrl,
+  readImageFileAsDataUrl,
+} from '@/lib/image-data-url'
 
 import { FormDirtyIndicator } from '../components/form-dirty-indicator'
 import { FormNavigationGuard } from '../components/form-navigation-guard'
@@ -48,7 +57,7 @@ import { useUpdateOption } from '../hooks/use-update-option'
 const _systemInfoSchema = z.object({
   SystemName: z.string().min(1),
   ServerAddress: z.string().optional(),
-  Logo: z.string().url().optional().or(z.literal('')),
+  Logo: z.string().optional(),
   Footer: z.string().optional(),
   About: z.string().optional(),
   HomePageContent: z.string().optional(),
@@ -72,6 +81,7 @@ function normalizeValue(value: unknown): string {
 export function SystemInfoSection({ defaultValues }: SystemInfoSectionProps) {
   const { t } = useTranslation()
   const updateOption = useUpdateOption()
+  const logoInputRef = useRef<HTMLInputElement>(null)
 
   const normalizedDefaults: SystemInfoFormValues = {
     SystemName: normalizeValue(defaultValues.SystemName),
@@ -91,7 +101,13 @@ export function SystemInfoSection({ defaultValues }: SystemInfoSectionProps) {
       error: () => t('System name is required'),
     }),
     ServerAddress: z.string().optional(),
-    Logo: z.string().url().optional().or(z.literal('')),
+    Logo: z
+      .string()
+      .refine(
+        (value) =>
+          value === '' || /^https?:\/\//i.test(value) || isImageDataUrl(value),
+        { error: () => t('Choose a valid image file or HTTPS image URL') }
+      ),
     Footer: z.string().optional(),
     About: z.string().optional(),
     HomePageContent: z.string().optional(),
@@ -122,6 +138,30 @@ export function SystemInfoSection({ defaultValues }: SystemInfoSectionProps) {
         }
       },
     })
+
+  const handleLogoFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    try {
+      const dataUrl = await readImageFileAsDataUrl(
+        file,
+        IMAGE_UPLOAD_LIMITS.logo
+      )
+      form.setValue('Logo', dataUrl, {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : ''
+      toast.error(
+        message === 'Image file is too large'
+          ? t('Logo image must be 512 KB or smaller')
+          : t('Please choose a PNG, JPG, WebP, or GIF image')
+      )
+    }
+  }
 
   return (
     <>
@@ -179,15 +219,53 @@ export function SystemInfoSection({ defaultValues }: SystemInfoSectionProps) {
                 name='Logo'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('Logo URL')}</FormLabel>
+                    <FormLabel className='flex items-center gap-2'>
+                      <ImagePlus className='size-4' /> {t('Logo')}
+                    </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={t('https://example.com/logo.png')}
-                        {...field}
-                      />
+                      <div className='flex flex-wrap items-center gap-3'>
+                        <div className='bg-muted/50 flex size-14 items-center justify-center overflow-hidden rounded-lg border'>
+                          {field.value ? (
+                            <img
+                              src={field.value}
+                              alt={t('Logo')}
+                              className='size-full object-contain'
+                            />
+                          ) : (
+                            <ImagePlus className='text-muted-foreground size-5' />
+                          )}
+                        </div>
+                        <input
+                          ref={logoInputRef}
+                          type='file'
+                          accept='image/png,image/jpeg,image/webp,image/gif'
+                          className='hidden'
+                          onChange={handleLogoFileChange}
+                        />
+                        <Button
+                          type='button'
+                          variant='outline'
+                          onClick={() => logoInputRef.current?.click()}
+                        >
+                          <Upload className='mr-2 size-4' /> {t('Upload')}
+                        </Button>
+                        {field.value ? (
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            onClick={() =>
+                              form.setValue('Logo', '', { shouldDirty: true })
+                            }
+                          >
+                            <X className='mr-2 size-4' /> {t('Clear')}
+                          </Button>
+                        ) : null}
+                      </div>
                     </FormControl>
                     <FormDescription>
-                      {t('URL to your logo image (optional)')}
+                      {t(
+                        'Upload a PNG, JPG, WebP, or GIF logo image. Maximum size: 512 KB.'
+                      )}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

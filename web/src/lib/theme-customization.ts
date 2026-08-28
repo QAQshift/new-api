@@ -80,7 +80,7 @@ export const THEME_PRESETS = [
   {
     value: 'glass',
     name: 'Glass',
-    swatches: ['oklch(0.965 0.008 95)', 'oklch(0.57 0.12 25)'],
+    swatches: ['oklch(0.98 0.004 270)', 'oklch(0.56 0.16 255)'],
   },
 ] as const
 
