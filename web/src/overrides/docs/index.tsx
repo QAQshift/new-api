@@ -28,8 +28,10 @@ import {
   Globe2,
   KeyRound,
   Network,
+  Server,
   ShieldCheck,
   Sparkles,
+  WalletCards,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -116,11 +118,13 @@ function SectionHeading(props: {
 
 export function Docs() {
   const { t } = useTranslation()
-  const requestCode = quickstartCode.replace(
-    'https://your-domain.example',
+  const apiOrigin =
     typeof window === 'undefined'
       ? 'https://your-domain.example'
       : window.location.origin
+  const requestCode = quickstartCode.replace(
+    'https://your-domain.example',
+    apiOrigin
   )
 
   return (
@@ -157,6 +161,22 @@ export function Docs() {
               >
                 {t('Browse models')} <ChevronRight className='ml-2 size-4' />
               </Button>
+            </div>
+            <div className='mt-12 grid max-w-4xl gap-3 sm:grid-cols-3'>
+              {[
+                ['Asia Pacific Nodes', '100+'],
+                ['Total Bandwidth', '120Gbps+'],
+                ['Optimized Lines', '24/7'],
+              ].map(([label, value]) => (
+                <div key={label} className='glass-panel rounded-2xl border p-4'>
+                  <p className='text-2xl font-semibold tracking-tight'>
+                    {value}
+                  </p>
+                  <p className='text-muted-foreground mt-1 text-xs'>
+                    {t(label)}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </header>
@@ -279,6 +299,27 @@ export function Docs() {
                   </article>
                 ))}
               </div>
+              <div className='glass-panel grid gap-5 rounded-2xl border p-6 md:grid-cols-[auto_1fr_auto] md:items-center md:p-8'>
+                <div className='bg-primary/10 text-primary flex size-12 items-center justify-center rounded-xl'>
+                  <WalletCards className='size-5' />
+                </div>
+                <div>
+                  <p className='text-primary text-xs font-semibold tracking-[0.16em] uppercase'>
+                    {t('RMB top-up · USD credits')}
+                  </p>
+                  <h3 className='mt-2 text-xl font-semibold'>
+                    {t('Transparent balance, predictable long-term usage.')}
+                  </h3>
+                  <p className='text-muted-foreground mt-2 text-sm leading-6'>
+                    {t(
+                      'Top up through the payment methods enabled by the administrator, then track every deduction in the usage log.'
+                    )}
+                  </p>
+                </div>
+                <Button variant='outline' render={<a href='/pricing' />}>
+                  {t('View pricing')} <ArrowRight className='ml-2 size-4' />
+                </Button>
+              </div>
             </section>
 
             <section id='network' className='scroll-mt-24 space-y-8'>
@@ -289,6 +330,49 @@ export function Docs() {
                   'Regional nodes, health checks, and intelligent scheduling work together to find a healthy path for each request.'
                 )}
               />
+              <div className='grid gap-4 md:grid-cols-3'>
+                {[
+                  {
+                    icon: Server,
+                    title: 'Primary API',
+                    text: 'The recommended endpoint with intelligent scheduling.',
+                    address: apiOrigin,
+                  },
+                  {
+                    icon: Network,
+                    title: 'Backup API 01',
+                    text: 'An independent route for local network changes.',
+                    address: t('Configured by administrator'),
+                  },
+                  {
+                    icon: Globe2,
+                    title: 'Backup API 02',
+                    text: 'A second route for timeouts and network jitter.',
+                    address: t('Configured by administrator'),
+                  },
+                ].map((route) => {
+                  const Icon = route.icon
+                  return (
+                    <article
+                      key={route.title}
+                      className='glass-panel rounded-2xl border p-5'
+                    >
+                      <div className='flex items-center gap-3'>
+                        <div className='bg-background/75 flex size-10 items-center justify-center rounded-xl border'>
+                          <Icon className='text-primary size-5' />
+                        </div>
+                        <h3 className='font-semibold'>{t(route.title)}</h3>
+                      </div>
+                      <p className='text-muted-foreground mt-4 text-sm leading-6'>
+                        {t(route.text)}
+                      </p>
+                      <code className='bg-muted/60 mt-4 block rounded-lg px-3 py-2 text-xs break-all'>
+                        {route.address}
+                      </code>
+                    </article>
+                  )
+                })}
+              </div>
               <div className='glass-panel relative overflow-hidden rounded-2xl border p-6 md:p-8'>
                 <div className='bg-primary/[0.025] absolute inset-0 -z-10' />
                 <div className='grid gap-6 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-center'>
@@ -348,6 +432,32 @@ export function Docs() {
                 code={requestCode}
                 title={t('OpenAI-compatible request')}
               />
+              <div className='grid gap-3 sm:grid-cols-3'>
+                {[
+                  [
+                    'Integrated in 5 minutes',
+                    'Register, create a key, and replace BASE_URL.',
+                  ],
+                  [
+                    'Multiple SDKs supported',
+                    'OpenAI-compatible SDKs and CLI tools work with minimal changes.',
+                  ],
+                  [
+                    'Production-ready',
+                    'Usage logs and health-aware routing keep operations visible.',
+                  ],
+                ].map(([title, text]) => (
+                  <div
+                    key={title}
+                    className='glass-panel rounded-2xl border p-4'
+                  >
+                    <p className='font-medium'>{t(title)}</p>
+                    <p className='text-muted-foreground mt-2 text-sm leading-6'>
+                      {t(text)}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </section>
 
             <section id='agents' className='scroll-mt-24 space-y-8'>
