@@ -6,6 +6,11 @@ The custom public experience lives entirely under this directory:
 - `docs/` contains the local developer documentation.
 - `support/` contains the customer support page.
 
+The administrator-controlled `Glass` preset is intentionally neutral rather
+than cyan-tinted. Site appearance also accepts an HTTPS background image URL;
+the frontend applies a readable scrim over it and keeps the image fixed while
+content scrolls.
+
 These files are separate from the stock feature components so upstream UI
 updates can be merged without rewriting the branded pages. Route and feature
 changes are small adapters that intentionally point at this override layer.

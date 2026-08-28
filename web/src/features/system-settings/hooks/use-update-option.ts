@@ -42,6 +42,7 @@ const STATUS_RELATED_KEYS = new Set([
   'UIThemeRadius',
   'UIThemeScale',
   'UIThemeContentLayout',
+  'UIThemeBackground',
 ])
 
 export function useUpdateOption() {

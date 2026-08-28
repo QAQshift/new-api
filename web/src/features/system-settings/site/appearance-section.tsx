@@ -16,6 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { Check, ImagePlus } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
@@ -28,6 +29,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -62,6 +64,7 @@ export type AppearanceSettings = {
   UIThemeRadius: ThemeRadius
   UIThemeScale: ThemeScale
   UIThemeContentLayout: ContentLayout
+  UIThemeBackground: string
 }
 
 type AppearanceSectionProps = {
@@ -110,6 +113,25 @@ export function AppearanceSection(props: AppearanceSectionProps) {
     { value: 'full', label: t('Full width') },
     { value: 'centered', label: t('Centered') },
   ]
+  const selectedPreset = form.watch('UIThemePreset')
+  const selectedFont = form.watch('UIThemeFont')
+  const selectedRadius = form.watch('UIThemeRadius')
+  const selectedBackground = form.watch('UIThemeBackground')
+  const selectedPresetMeta =
+    THEME_PRESETS.find((preset) => preset.value === selectedPreset) ??
+    THEME_PRESETS[0]
+  const previewRadiusMap: Record<string, string> = {
+    default: '10px',
+    none: '0px',
+    sm: '5px',
+    md: '8px',
+    lg: '12px',
+    xl: '16px',
+  }
+  const previewRadius = previewRadiusMap[selectedRadius] ?? '10px'
+  const previewBackground = /^https?:\/\//i.test(selectedBackground)
+    ? `url("${selectedBackground}")`
+    : undefined
 
   return (
     <>
@@ -125,6 +147,103 @@ export function AppearanceSection(props: AppearanceSectionProps) {
             />
             <FormDirtyIndicator isDirty={isDirty} />
             <SettingsFormGrid>
+              <div className='col-span-full space-y-4'>
+                <div>
+                  <FormLabel>{t('Color preset')}</FormLabel>
+                  <FormDescription>
+                    {t('Preview and choose the global visual language.')}
+                  </FormDescription>
+                </div>
+                <div className='grid grid-cols-2 gap-3 md:grid-cols-4'>
+                  {THEME_PRESETS.map((preset) => {
+                    const isSelected = preset.value === selectedPreset
+                    return (
+                      <button
+                        key={preset.value}
+                        type='button'
+                        aria-pressed={isSelected}
+                        onClick={() =>
+                          form.setValue('UIThemePreset', preset.value, {
+                            shouldDirty: true,
+                          })
+                        }
+                        className={`group relative overflow-hidden rounded-xl border text-left transition-all ${isSelected ? 'border-primary ring-primary ring-2' : 'border-border hover:border-primary/60'}`}
+                      >
+                        <div
+                          className='h-16 p-3'
+                          style={{
+                            background: `linear-gradient(135deg, ${preset.swatches[0]}, ${preset.swatches[1]})`,
+                          }}
+                        >
+                          <div className='h-2.5 w-1/2 rounded-full bg-white/80' />
+                          <div className='mt-2 h-2 w-2/3 rounded-full bg-white/45' />
+                        </div>
+                        <div className='bg-card flex items-center justify-between px-3 py-2'>
+                          <span className='truncate text-xs font-medium'>
+                            {t(`preset.${preset.value}`)}
+                          </span>
+                          {isSelected && (
+                            <Check className='text-primary size-4 shrink-0' />
+                          )}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+                <div
+                  className='relative overflow-hidden rounded-2xl border p-5 shadow-sm'
+                  style={{
+                    borderRadius: previewRadius,
+                    backgroundColor:
+                      'color-mix(in oklch, var(--card) 78%, transparent)',
+                    backgroundImage: previewBackground,
+                    backgroundSize: previewBackground ? 'cover' : undefined,
+                    backgroundPosition: 'center',
+                    fontFamily:
+                      selectedFont === 'serif'
+                        ? 'var(--font-serif)'
+                        : 'var(--font-sans)',
+                  }}
+                >
+                  <div className='bg-background/45 absolute inset-0' />
+                  <div className='relative space-y-4'>
+                    <div className='flex items-center justify-between'>
+                      <div>
+                        <p className='text-muted-foreground text-[10px] font-semibold tracking-[0.18em] uppercase'>
+                          {t('Live preview')}
+                        </p>
+                        <p className='mt-1 text-lg font-semibold'>
+                          {t('A polished workspace')}
+                        </p>
+                      </div>
+                      <span
+                        className='size-3 rounded-full'
+                        style={{
+                          backgroundColor: selectedPresetMeta.swatches[1],
+                        }}
+                      />
+                    </div>
+                    <div className='grid grid-cols-3 gap-2'>
+                      {[t('Fast'), t('Stable'), t('Transparent')].map(
+                        (label, index) => (
+                          <div
+                            key={label}
+                            className='bg-card/70 rounded-lg border p-2.5'
+                            style={{ borderRadius: previewRadius }}
+                          >
+                            <div className='text-primary text-sm font-semibold'>
+                              {['98ms', '99.9%', '24/7'][index]}
+                            </div>
+                            <div className='text-muted-foreground mt-1 text-[10px]'>
+                              {label}
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
               <AppearanceSelect
                 form={form}
                 name='UIThemePreset'
@@ -167,6 +286,31 @@ export function AppearanceSection(props: AppearanceSectionProps) {
                   'Sets whether application content is full width or centered.'
                 )}
                 options={layoutOptions}
+              />
+              <FormField
+                control={form.control}
+                name='UIThemeBackground'
+                render={({ field }) => (
+                  <FormItem className='col-span-full'>
+                    <FormLabel className='flex items-center gap-2'>
+                      <ImagePlus className='size-4' /> {t('Background image')}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type='url'
+                        placeholder='https://example.com/background.jpg'
+                        maxLength={2048}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      {t(
+                        'Optional HTTPS image URL used as the global background. Leave blank to use the preset background.'
+                      )}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </SettingsFormGrid>
             <p className='text-muted-foreground text-sm leading-relaxed'>

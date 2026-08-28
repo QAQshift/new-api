@@ -69,6 +69,7 @@ func GetStatus(c *gin.Context) {
 	if themeContentLayout == "" {
 		themeContentLayout = "full"
 	}
+	themeBackground := common.OptionMap["UIThemeBackground"]
 
 	data := gin.H{
 		"version":                     common.Version,
@@ -90,6 +91,7 @@ func GetStatus(c *gin.Context) {
 			"radius":         themeRadius,
 			"scale":          themeScale,
 			"content_layout": themeContentLayout,
+			"background":     themeBackground,
 		},
 		"system_name":                 common.SystemName,
 		"logo":                        common.Logo,

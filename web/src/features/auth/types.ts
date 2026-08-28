@@ -140,6 +140,7 @@ export interface SystemStatus {
       radius?: string
       scale?: string
       content_layout?: string
+      background?: string
     }
     custom_oauth_providers?: CustomOAuthProviderInfo[]
     [key: string]: unknown
@@ -192,6 +193,7 @@ export interface SystemStatus {
     radius?: string
     scale?: string
     content_layout?: string
+    background?: string
   }
   custom_oauth_providers?: CustomOAuthProviderInfo[]
   [key: string]: unknown

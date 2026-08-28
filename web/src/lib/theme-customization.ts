@@ -80,7 +80,7 @@ export const THEME_PRESETS = [
   {
     value: 'glass',
     name: 'Glass',
-    swatches: ['oklch(0.96 0.02 220)', 'oklch(0.64 0.16 205)'],
+    swatches: ['oklch(0.965 0.008 95)', 'oklch(0.57 0.12 25)'],
   },
 ] as const
 
@@ -118,6 +118,7 @@ export type ThemeCustomization = {
   radius: ThemeRadius
   scale: ThemeScale
   contentLayout: ContentLayout
+  background: string
 }
 
 export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
@@ -126,6 +127,7 @@ export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
   radius: 'default',
   scale: 'default',
   contentLayout: 'full',
+  background: '',
 }
 
 export const THEME_PRESET_VALUES = new Set(
@@ -191,7 +193,9 @@ export function resolveThemeCustomization(raw: unknown): ThemeCustomization {
     ? (value.content_layout as ContentLayout)
     : DEFAULT_THEME_CUSTOMIZATION.contentLayout
 
-  return { preset, font, radius, scale, contentLayout }
+  const background =
+    typeof value.background === 'string' ? value.background.trim() : ''
+  return { preset, font, radius, scale, contentLayout, background }
 }
 
 /**

@@ -51,6 +51,7 @@ func TestGetStatusAdvertisesDefaultDashboard(t *testing.T) {
 	assert.Equal(t, "default", themeCustomization["radius"])
 	assert.Equal(t, "default", themeCustomization["scale"])
 	assert.Equal(t, "full", themeCustomization["content_layout"])
+	assert.Equal(t, "", themeCustomization["background"])
 }
 
 func TestGetStatusReturnsAdministratorThemeCustomization(t *testing.T) {
@@ -83,6 +84,7 @@ func TestGetStatusReturnsAdministratorThemeCustomization(t *testing.T) {
 		"radius":         "lg",
 		"scale":          "sm",
 		"content_layout": "centered",
+		"background":     "",
 	}, payload.Data.ThemeCustomization)
 }
 
@@ -97,6 +99,7 @@ func TestUpdateOptionRejectsInvalidThemeCustomization(t *testing.T) {
 		{name: "radius", key: "UIThemeRadius", value: "huge"},
 		{name: "scale", key: "UIThemeScale", value: "tiny"},
 		{name: "content layout", key: "UIThemeContentLayout", value: "sidebar"},
+		{name: "background", key: "UIThemeBackground", value: "javascript:alert(1)"},
 	}
 
 	for _, test := range tests {

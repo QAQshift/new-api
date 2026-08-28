@@ -78,6 +78,7 @@ func InitOptionMap() {
 	common.OptionMap["UIThemeRadius"] = "default"
 	common.OptionMap["UIThemeScale"] = "default"
 	common.OptionMap["UIThemeContentLayout"] = "full"
+	common.OptionMap["UIThemeBackground"] = ""
 	common.OptionMap["WorkerUrl"] = system_setting.WorkerUrl
 	common.OptionMap["WorkerValidKey"] = system_setting.WorkerValidKey
 	common.OptionMap["WorkerAllowHttpImageRequestEnabled"] = strconv.FormatBool(system_setting.WorkerAllowHttpImageRequestEnabled)

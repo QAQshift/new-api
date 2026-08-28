@@ -39,11 +39,20 @@ describe('resolveThemeCustomization', () => {
       radius: 'lg',
       scale: 'sm',
       contentLayout: 'centered',
+      background: '',
     })
   })
 
   it('accepts the administrator glass preset', () => {
     expect(resolveThemeCustomization({ preset: 'glass' }).preset).toBe('glass')
+  })
+
+  it('keeps the administrator background URL separate from user preferences', () => {
+    expect(
+      resolveThemeCustomization({
+        background: ' https://cdn.example.com/hero.jpg ',
+      }).background
+    ).toBe('https://cdn.example.com/hero.jpg')
   })
 
   it('falls back independently for unsupported values', () => {
@@ -59,6 +68,7 @@ describe('resolveThemeCustomization', () => {
       ...DEFAULT_THEME_CUSTOMIZATION,
       font: 'sans',
       scale: 'xl',
+      background: '',
     })
   })
 })

@@ -19,14 +19,17 @@ For commercial licensing, please contact support@quantumnous.com
 import { Link } from '@tanstack/react-router'
 import {
   ArrowRight,
+  Activity,
+  Bot,
   Check,
   Code2,
-  Gauge,
   Globe2,
   KeyRound,
   Play,
   ShieldCheck,
+  ServerCog,
   Sparkles,
+  WalletCards,
   type LucideIcon,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -44,30 +47,63 @@ const navLinks = [
 ]
 
 const models = [
-  { name: 'OpenAI', detail: 'GPT-4o · Responses API', color: 'bg-emerald-500' },
-  { name: 'Claude', detail: 'Messages · 200K context', color: 'bg-orange-500' },
-  { name: 'Gemini', detail: 'Multimodal · Long context', color: 'bg-blue-500' },
+  {
+    name: 'GPT-5.6',
+    detail:
+      'Excels at agentic coding, terminal automation, toolchain orchestration, high-frequency development, and multi-step workflows.',
+    color: 'bg-emerald-500',
+  },
+  {
+    name: 'Claude',
+    detail:
+      'Excels at deep understanding of large codebases, complex refactoring, multi-file bug fixes, long-text analysis, and stable output.',
+    color: 'bg-orange-500',
+  },
+  {
+    name: 'Gemini',
+    detail:
+      'Flexible multimodal reasoning for text, images, documents, and fast experiments.',
+    color: 'bg-blue-500',
+  },
 ]
 
 const capabilities: { icon: LucideIcon; title: string; description: string }[] =
   [
     {
-      icon: Globe2,
-      title: 'Unified access',
+      icon: Activity,
+      title: 'Low-latency routing',
       description:
-        'Switch providers and models without rewriting your application.',
-    },
-    {
-      icon: Gauge,
-      title: 'Clear usage',
-      description:
-        'Track requests, tokens, latency, and spend from one console.',
+        'Health-aware routing keeps first-token response fast and consistent.',
     },
     {
       icon: ShieldCheck,
-      title: 'Controlled by design',
+      title: 'Stable under load',
       description:
-        'Manage keys, groups, permissions, and rate limits centrally.',
+        'Retries, route health, and operational visibility protect important calls.',
+    },
+    {
+      icon: WalletCards,
+      title: 'Fair, transparent cost',
+      description:
+        'Clear model groups and usage logs make long-term budgets easier to manage.',
+    },
+    {
+      icon: Globe2,
+      title: 'Global intelligent scheduling',
+      description:
+        'Multiple regions work together to select a healthy path for each request.',
+    },
+    {
+      icon: ServerCog,
+      title: 'Engineering-first operations',
+      description:
+        'Designed for production backends, automation, and teams that need control.',
+    },
+    {
+      icon: Bot,
+      title: 'Made for Agent workflows',
+      description:
+        'Dedicated project keys and compatible endpoints fit Codex, Claude Code, and custom agents.',
     },
   ]
 
@@ -81,7 +117,7 @@ export function BrandHome() {
     <PublicLayout showMainContainer={false} navLinks={navLinks}>
       <main>
         <section className='relative overflow-hidden border-b px-6 pt-28 pb-20 md:px-10 md:pt-40 md:pb-28'>
-          <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_75%_20%,oklch(0.82_0.12_185_/_22%),transparent_38%),radial-gradient(circle_at_20%_30%,oklch(0.78_0.12_250_/_18%),transparent_35%)] dark:bg-[radial-gradient(circle_at_75%_20%,oklch(0.6_0.12_185_/_14%),transparent_38%),radial-gradient(circle_at_20%_30%,oklch(0.5_0.12_250_/_14%),transparent_35%)]' />
+          <div className='bg-primary/[0.035] dark:bg-primary/[0.06] pointer-events-none absolute inset-0 -z-10' />
           <div className='mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]'>
             <div>
               <div className='text-primary mb-6 flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase'>
@@ -282,7 +318,7 @@ export function BrandHome() {
               </p>
               <Button
                 className='mt-7 rounded-xl'
-                render={<Link to='/docs' hash='start' />}
+                render={<Link to='/docs' hash='quickstart' />}
               >
                 {t('View quick start')} <ArrowRight className='ml-2 size-4' />
               </Button>
@@ -301,6 +337,92 @@ export function BrandHome() {
               <code className='mt-3 block text-sm'>
                 Authorization: Bearer sk-...
               </code>
+            </div>
+          </div>
+        </section>
+
+        <section className='relative overflow-hidden border-y px-6 py-20 md:px-10 md:py-28'>
+          <div className='bg-primary/[0.025] pointer-events-none absolute inset-0 -z-10' />
+          <div className='mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]'>
+            <div>
+              <p className='text-primary text-xs font-semibold tracking-[0.2em] uppercase'>
+                {t('Built for the long run')}
+              </p>
+              <h2 className='mt-4 text-3xl font-bold tracking-tight md:text-5xl'>
+                {t(
+                  'More than a relay. A dependable AI layer for your product.'
+                )}
+              </h2>
+              <p className='text-muted-foreground mt-5 max-w-xl leading-7'>
+                {t(
+                  'We focus on the details that matter after the demo: predictable latency, stable routing, transparent usage, and practical support when your workload grows.'
+                )}
+              </p>
+            </div>
+            <div className='grid gap-3 sm:grid-cols-2'>
+              {[
+                ['99.9%', 'Service-minded reliability'],
+                ['< 1s', 'Fast first-token experience'],
+                ['24/7', 'Operational visibility'],
+                ['1 API', 'One integration for many models'],
+              ].map(([value, label]) => (
+                <div key={label} className='glass-panel rounded-2xl border p-5'>
+                  <div className='text-primary text-3xl font-bold tracking-tight'>
+                    {value}
+                  </div>
+                  <div className='text-muted-foreground mt-2 text-sm'>
+                    {t(label)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className='px-6 py-20 md:px-10 md:py-28'>
+          <div className='mx-auto max-w-6xl'>
+            <div className='flex flex-col justify-between gap-5 md:flex-row md:items-end'>
+              <div>
+                <p className='text-primary text-xs font-semibold tracking-[0.2em] uppercase'>
+                  {t('Agent ready')}
+                </p>
+                <h2 className='mt-4 text-3xl font-bold tracking-tight md:text-4xl'>
+                  {t('A better home for serious AI workflows.')}
+                </h2>
+              </div>
+              <Link
+                to='/docs'
+                hash='agents'
+                className='text-primary inline-flex items-center gap-2 text-sm font-medium'
+              >
+                {t('Explore the workflow')} <ArrowRight className='size-4' />
+              </Link>
+            </div>
+            <div className='mt-10 grid gap-4 md:grid-cols-3'>
+              {[
+                [
+                  'Coding',
+                  'Great for code generation, project edits, automated development, and long coding sessions.',
+                ],
+                [
+                  'Automation',
+                  'Suited for tool calling, scheduled jobs, and multi-step workflows that need predictable access.',
+                ],
+                [
+                  'Team projects',
+                  'Create dedicated keys per project and keep usage, permissions, and logs easy to audit.',
+                ],
+              ].map(([title, text]) => (
+                <article
+                  key={title}
+                  className='glass-panel rounded-2xl border p-6'
+                >
+                  <h3 className='font-semibold'>{t(title)}</h3>
+                  <p className='text-muted-foreground mt-3 text-sm leading-6'>
+                    {t(text)}
+                  </p>
+                </article>
+              ))}
             </div>
           </div>
         </section>

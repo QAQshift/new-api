@@ -41,6 +41,7 @@ const defaultSiteSettings: SiteSettings = {
   UIThemeRadius: 'default',
   UIThemeScale: 'default',
   UIThemeContentLayout: 'full',
+  UIThemeBackground: '',
 }
 
 export function SiteSettings() {

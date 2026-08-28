@@ -410,69 +410,81 @@ For commercial licensing, please contact support@quantumnous.com
  * finish used by the branded public experience.
  */
 [data-theme-preset='glass'] {
-  --background: oklch(0.965 0.018 220);
-  --foreground: oklch(0.19 0.035 230);
-  --card: oklch(1 0.01 220 / 62%);
-  --card-foreground: oklch(0.19 0.035 230);
-  --popover: oklch(1 0.01 220 / 76%);
-  --popover-foreground: oklch(0.19 0.035 230);
-  --primary: oklch(0.58 0.16 215);
+  --background: oklch(0.965 0.008 95);
+  --foreground: oklch(0.19 0.012 285);
+  --card: oklch(1 0.004 95 / 64%);
+  --card-foreground: oklch(0.19 0.012 285);
+  --popover: oklch(1 0.004 95 / 78%);
+  --popover-foreground: oklch(0.19 0.012 285);
+  --primary: oklch(0.57 0.12 25);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.9 0.035 215 / 72%);
-  --secondary-foreground: oklch(0.2 0.04 230);
-  --muted: oklch(0.91 0.025 220 / 64%);
-  --muted-foreground: oklch(0.42 0.035 230);
-  --accent: oklch(0.82 0.08 205 / 48%);
-  --accent-foreground: oklch(0.2 0.04 230);
-  --border: oklch(0.7 0.06 220 / 34%);
-  --input: oklch(0.7 0.06 220 / 42%);
-  --ring: oklch(0.58 0.16 215);
-  --sidebar: oklch(0.94 0.025 220 / 66%);
-  --sidebar-foreground: oklch(0.19 0.035 230);
-  --sidebar-primary: oklch(0.58 0.16 215);
+  --secondary: oklch(0.91 0.008 95 / 72%);
+  --secondary-foreground: oklch(0.22 0.015 285);
+  --muted: oklch(0.91 0.006 95 / 66%);
+  --muted-foreground: oklch(0.43 0.012 285);
+  --accent: oklch(0.83 0.035 25 / 50%);
+  --accent-foreground: oklch(0.22 0.015 285);
+  --border: oklch(0.62 0.012 285 / 25%);
+  --input: oklch(0.62 0.012 285 / 34%);
+  --ring: oklch(0.57 0.12 25);
+  --sidebar: oklch(0.94 0.008 95 / 70%);
+  --sidebar-foreground: oklch(0.19 0.012 285);
+  --sidebar-primary: oklch(0.57 0.12 25);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.82 0.08 205 / 52%);
-  --sidebar-accent-foreground: oklch(0.2 0.04 230);
-  --sidebar-border: oklch(0.7 0.06 220 / 32%);
-  --sidebar-ring: oklch(0.58 0.16 215);
+  --sidebar-accent: oklch(0.83 0.035 25 / 50%);
+  --sidebar-accent-foreground: oklch(0.22 0.015 285);
+  --sidebar-border: oklch(0.62 0.012 285 / 23%);
+  --sidebar-ring: oklch(0.57 0.12 25);
   --radius: 1rem;
 }
 .dark [data-theme-preset='glass'] {
-  --background: oklch(0.15 0.035 235);
-  --foreground: oklch(0.95 0.018 220);
-  --card: oklch(0.24 0.045 235 / 62%);
-  --card-foreground: oklch(0.95 0.018 220);
-  --popover: oklch(0.24 0.045 235 / 82%);
-  --popover-foreground: oklch(0.95 0.018 220);
-  --primary: oklch(0.75 0.13 205);
-  --primary-foreground: oklch(0.14 0.035 235);
-  --secondary: oklch(0.31 0.055 235 / 76%);
-  --secondary-foreground: oklch(0.95 0.018 220);
-  --muted: oklch(0.29 0.045 235 / 72%);
-  --muted-foreground: oklch(0.76 0.035 220);
-  --accent: oklch(0.4 0.09 210 / 54%);
-  --accent-foreground: oklch(0.96 0.018 220);
-  --border: oklch(0.75 0.08 215 / 28%);
-  --input: oklch(0.75 0.08 215 / 38%);
-  --ring: oklch(0.75 0.13 205);
-  --sidebar: oklch(0.18 0.04 235 / 74%);
-  --sidebar-foreground: oklch(0.95 0.018 220);
-  --sidebar-primary: oklch(0.75 0.13 205);
-  --sidebar-primary-foreground: oklch(0.14 0.035 235);
-  --sidebar-accent: oklch(0.4 0.09 210 / 58%);
-  --sidebar-accent-foreground: oklch(0.96 0.018 220);
-  --sidebar-border: oklch(0.75 0.08 215 / 24%);
-  --sidebar-ring: oklch(0.75 0.13 205);
+  --background: oklch(0.14 0.012 285);
+  --foreground: oklch(0.95 0.008 95);
+  --card: oklch(0.25 0.012 285 / 66%);
+  --card-foreground: oklch(0.95 0.008 95);
+  --popover: oklch(0.25 0.012 285 / 84%);
+  --popover-foreground: oklch(0.95 0.008 95);
+  --primary: oklch(0.75 0.11 25);
+  --primary-foreground: oklch(0.16 0.012 285);
+  --secondary: oklch(0.32 0.014 285 / 78%);
+  --secondary-foreground: oklch(0.95 0.008 95);
+  --muted: oklch(0.3 0.012 285 / 74%);
+  --muted-foreground: oklch(0.76 0.01 95);
+  --accent: oklch(0.43 0.05 25 / 54%);
+  --accent-foreground: oklch(0.96 0.008 95);
+  --border: oklch(0.78 0.012 95 / 25%);
+  --input: oklch(0.78 0.012 95 / 35%);
+  --ring: oklch(0.75 0.11 25);
+  --sidebar: oklch(0.19 0.012 285 / 78%);
+  --sidebar-foreground: oklch(0.95 0.008 95);
+  --sidebar-primary: oklch(0.75 0.11 25);
+  --sidebar-primary-foreground: oklch(0.16 0.012 285);
+  --sidebar-accent: oklch(0.43 0.05 25 / 58%);
+  --sidebar-accent-foreground: oklch(0.96 0.008 95);
+  --sidebar-border: oklch(0.78 0.012 95 / 22%);
+  --sidebar-ring: oklch(0.75 0.11 25);
 }
 
 body[data-theme-preset='glass'] {
   background-color: var(--background);
   background-image: linear-gradient(
     135deg,
-    color-mix(in oklch, var(--primary) 10%, transparent),
+    color-mix(in oklch, var(--primary) 7%, transparent),
     transparent 48%,
-    color-mix(in oklch, var(--secondary) 12%, transparent)
+    color-mix(in oklch, var(--secondary) 8%, transparent)
   );
+  background-attachment: fixed;
+}
+body[data-theme-background='custom'] {
+  background-image:
+    linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--background) 78%, transparent),
+      color-mix(in oklch, var(--background) 58%, transparent)
+    ),
+    var(--site-background-image);
+  background-size: cover;
+  background-position: center;
   background-attachment: fixed;
 }
 [data-theme-preset='glass'] [data-slot='card'],

@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -259,6 +260,16 @@ func UpdateOption(c *gin.Context) {
 			common.ApiErrorMsg(c, "无效的内容宽度设置")
 			return
 		}
+	case "UIThemeBackground":
+		value := strings.TrimSpace(option.Value.(string))
+		if value != "" {
+			parsed, parseErr := url.ParseRequestURI(value)
+			if parseErr != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" || len(value) > 2048 {
+				common.ApiErrorMsg(c, "无效的站点背景图片地址")
+				return
+			}
+		}
+		option.Value = value
 	case "GroupRatio":
 		err = ratio_setting.CheckGroupRatio(option.Value.(string))
 		if err != nil {

@@ -96,6 +96,7 @@ const SITE_SECTIONS = [
         )
           ? (settings.UIThemeContentLayout as ContentLayout)
           : DEFAULT_THEME_CUSTOMIZATION.contentLayout,
+        UIThemeBackground: settings.UIThemeBackground ?? '',
       }
       return <AppearanceSection defaultValues={defaultValues} />
     },

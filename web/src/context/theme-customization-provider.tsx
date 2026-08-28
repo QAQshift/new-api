@@ -37,6 +37,27 @@ function applyAttribute(name: string, value: string | null) {
   body.setAttribute(name, value)
 }
 
+function applyBackground(background: string) {
+  const body = document.body
+  if (!background) {
+    body.removeAttribute('data-theme-background')
+    body.style.removeProperty('--site-background-image')
+    return
+  }
+
+  try {
+    const parsed = new URL(background, window.location.origin)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      throw new Error('Unsupported background protocol')
+    }
+    body.setAttribute('data-theme-background', 'custom')
+    body.style.setProperty('--site-background-image', `url("${parsed.href}")`)
+  } catch {
+    body.removeAttribute('data-theme-background')
+    body.style.removeProperty('--site-background-image')
+  }
+}
+
 type ThemeCustomizationContextType = {
   customization: ThemeCustomization
 }
@@ -82,6 +103,7 @@ export function ThemeCustomizationProvider(props: {
         : customization.scale
     )
     applyAttribute('data-theme-content-layout', customization.contentLayout)
+    applyBackground(customization.background)
   }, [customization])
 
   const value = useMemo(() => ({ customization }), [customization])

@@ -123,6 +123,7 @@ export type SiteSettings = {
   UIThemeRadius: string
   UIThemeScale: string
   UIThemeContentLayout: string
+  UIThemeBackground: string
 }
 
 export type AuthSettings = {
