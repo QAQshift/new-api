@@ -96,7 +96,13 @@ export function PublicHeader(props: PublicHeaderProps) {
   const user = auth.user
   const isAuthenticated = !!user
   const displaySiteName = customSiteName || systemName
-  const links = dynamicLinks.length > 0 ? dynamicLinks : navLinks
+  const links = (dynamicLinks.length > 0 ? dynamicLinks : navLinks).map(
+    (link) =>
+      link.href.includes('docs.newapi.pro') ||
+      link.title.toLowerCase() === 'docs'
+        ? { ...link, href: '/docs', external: false }
+        : link
+  )
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)

@@ -403,6 +403,103 @@ For commercial licensing, please contact support@quantumnous.com
   --skeleton-highlight: oklch(0.415 0 0);
 }
 
+/* ── Glass ────────────────────────────────────────────────────────────── */
+/*
+ * Administrator-controlled glassmorphism preset. Surfaces stay readable in
+ * both modes while translucency, blur and hairline borders create the layered
+ * finish used by the branded public experience.
+ */
+[data-theme-preset='glass'] {
+  --background: oklch(0.965 0.018 220);
+  --foreground: oklch(0.19 0.035 230);
+  --card: oklch(1 0.01 220 / 62%);
+  --card-foreground: oklch(0.19 0.035 230);
+  --popover: oklch(1 0.01 220 / 76%);
+  --popover-foreground: oklch(0.19 0.035 230);
+  --primary: oklch(0.58 0.16 215);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.9 0.035 215 / 72%);
+  --secondary-foreground: oklch(0.2 0.04 230);
+  --muted: oklch(0.91 0.025 220 / 64%);
+  --muted-foreground: oklch(0.42 0.035 230);
+  --accent: oklch(0.82 0.08 205 / 48%);
+  --accent-foreground: oklch(0.2 0.04 230);
+  --border: oklch(0.7 0.06 220 / 34%);
+  --input: oklch(0.7 0.06 220 / 42%);
+  --ring: oklch(0.58 0.16 215);
+  --sidebar: oklch(0.94 0.025 220 / 66%);
+  --sidebar-foreground: oklch(0.19 0.035 230);
+  --sidebar-primary: oklch(0.58 0.16 215);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.82 0.08 205 / 52%);
+  --sidebar-accent-foreground: oklch(0.2 0.04 230);
+  --sidebar-border: oklch(0.7 0.06 220 / 32%);
+  --sidebar-ring: oklch(0.58 0.16 215);
+  --radius: 1rem;
+}
+.dark [data-theme-preset='glass'] {
+  --background: oklch(0.15 0.035 235);
+  --foreground: oklch(0.95 0.018 220);
+  --card: oklch(0.24 0.045 235 / 62%);
+  --card-foreground: oklch(0.95 0.018 220);
+  --popover: oklch(0.24 0.045 235 / 82%);
+  --popover-foreground: oklch(0.95 0.018 220);
+  --primary: oklch(0.75 0.13 205);
+  --primary-foreground: oklch(0.14 0.035 235);
+  --secondary: oklch(0.31 0.055 235 / 76%);
+  --secondary-foreground: oklch(0.95 0.018 220);
+  --muted: oklch(0.29 0.045 235 / 72%);
+  --muted-foreground: oklch(0.76 0.035 220);
+  --accent: oklch(0.4 0.09 210 / 54%);
+  --accent-foreground: oklch(0.96 0.018 220);
+  --border: oklch(0.75 0.08 215 / 28%);
+  --input: oklch(0.75 0.08 215 / 38%);
+  --ring: oklch(0.75 0.13 205);
+  --sidebar: oklch(0.18 0.04 235 / 74%);
+  --sidebar-foreground: oklch(0.95 0.018 220);
+  --sidebar-primary: oklch(0.75 0.13 205);
+  --sidebar-primary-foreground: oklch(0.14 0.035 235);
+  --sidebar-accent: oklch(0.4 0.09 210 / 58%);
+  --sidebar-accent-foreground: oklch(0.96 0.018 220);
+  --sidebar-border: oklch(0.75 0.08 215 / 24%);
+  --sidebar-ring: oklch(0.75 0.13 205);
+}
+
+body[data-theme-preset='glass'] {
+  background-color: var(--background);
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--primary) 10%, transparent),
+    transparent 48%,
+    color-mix(in oklch, var(--secondary) 12%, transparent)
+  );
+  background-attachment: fixed;
+}
+[data-theme-preset='glass'] [data-slot='card'],
+[data-theme-preset='glass'] [data-slot='popover'],
+[data-theme-preset='glass'] [data-slot='dialog-content'],
+[data-theme-preset='glass'] [data-slot='sheet-content'],
+[data-theme-preset='glass'] [data-slot='dropdown-menu-content'] {
+  background-color: color-mix(in oklch, var(--card) 78%, transparent);
+  border-color: color-mix(in oklch, var(--border) 82%, white 18%);
+  box-shadow: 0 18px 55px oklch(0.2 0.04 230 / 12%),
+    inset 0 1px 0 oklch(1 0 0 / 28%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  backdrop-filter: blur(18px) saturate(135%);
+}
+[data-theme-preset='glass'] [data-slot='button'] {
+  -webkit-backdrop-filter: blur(10px) saturate(125%);
+  backdrop-filter: blur(10px) saturate(125%);
+}
+[data-theme-preset='glass'] .glass-panel {
+  background-color: color-mix(in oklch, var(--card) 76%, transparent);
+  border-color: color-mix(in oklch, var(--border) 82%, white 18%);
+  box-shadow: 0 18px 55px oklch(0.2 0.04 230 / 12%),
+    inset 0 1px 0 oklch(1 0 0 / 28%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  backdrop-filter: blur(18px) saturate(135%);
+}
+
 /* Overview accents mirror the public blue/cyan/violet palette by default.
  * Named presets map those slots to their own chart palette so the overview
  * stays coherent with the user's selected theme. */

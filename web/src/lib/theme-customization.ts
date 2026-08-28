@@ -77,6 +77,11 @@ export const THEME_PRESETS = [
     name: 'Lavender Dream',
     swatches: ['oklch(0.5709 0.1808 306.89)', 'oklch(0.811 0.0589 201.14)'],
   },
+  {
+    value: 'glass',
+    name: 'Glass',
+    swatches: ['oklch(0.96 0.02 220)', 'oklch(0.64 0.16 205)'],
+  },
 ] as const
 
 export type ThemePreset = (typeof THEME_PRESETS)[number]['value']
@@ -161,6 +166,33 @@ export const THEME_COOKIE_KEYS = {
   scale: 'theme_scale',
   contentLayout: 'theme_content_layout',
 } as const
+
+export function resolveThemeCustomization(raw: unknown): ThemeCustomization {
+  if (!raw || typeof raw !== 'object') {
+    return DEFAULT_THEME_CUSTOMIZATION
+  }
+
+  const value = raw as Record<string, unknown>
+  const preset = THEME_PRESET_VALUES.has(value.preset as ThemePreset)
+    ? (value.preset as ThemePreset)
+    : DEFAULT_THEME_CUSTOMIZATION.preset
+  const font = THEME_FONT_VALUES.has(value.font as ThemeFont)
+    ? (value.font as ThemeFont)
+    : DEFAULT_THEME_CUSTOMIZATION.font
+  const radius = THEME_RADIUS_VALUES.has(value.radius as ThemeRadius)
+    ? (value.radius as ThemeRadius)
+    : DEFAULT_THEME_CUSTOMIZATION.radius
+  const scale = THEME_SCALE_VALUES.has(value.scale as ThemeScale)
+    ? (value.scale as ThemeScale)
+    : DEFAULT_THEME_CUSTOMIZATION.scale
+  const contentLayout = CONTENT_LAYOUT_VALUES.has(
+    value.content_layout as ContentLayout
+  )
+    ? (value.content_layout as ContentLayout)
+    : DEFAULT_THEME_CUSTOMIZATION.contentLayout
+
+  return { preset, font, radius, scale, contentLayout }
+}
 
 /**
  * Preset → default font mapping. Used by the provider to resolve the user's

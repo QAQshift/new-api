@@ -1,3 +1,17 @@
+import {
+  CONTENT_LAYOUT_VALUES,
+  DEFAULT_THEME_CUSTOMIZATION,
+  THEME_FONT_VALUES,
+  THEME_PRESET_VALUES,
+  THEME_RADIUS_VALUES,
+  THEME_SCALE_VALUES,
+  type ContentLayout,
+  type ThemeFont,
+  type ThemePreset,
+  type ThemeRadius,
+  type ThemeScale,
+} from '@/lib/theme-customization'
+
 /*
 Copyright (C) 2023-2026 QuantumNous
 
@@ -28,6 +42,10 @@ import { NoticeSection } from '../maintenance/notice-section'
 import { SidebarModulesSection } from '../maintenance/sidebar-modules-section'
 import type { SiteSettings } from '../types'
 import { createSectionRegistry } from '../utils/section-registry'
+import {
+  AppearanceSection,
+  type AppearanceSettings,
+} from './appearance-section'
 
 const SITE_SECTIONS = [
   {
@@ -49,6 +67,38 @@ const SITE_SECTIONS = [
         }}
       />
     ),
+  },
+  {
+    id: 'appearance',
+    titleKey: 'Site appearance',
+    build: (settings: SiteSettings) => {
+      const defaultValues: AppearanceSettings = {
+        UIThemePreset: THEME_PRESET_VALUES.has(
+          settings.UIThemePreset as ThemePreset
+        )
+          ? (settings.UIThemePreset as ThemePreset)
+          : DEFAULT_THEME_CUSTOMIZATION.preset,
+        UIThemeFont: THEME_FONT_VALUES.has(settings.UIThemeFont as ThemeFont)
+          ? (settings.UIThemeFont as ThemeFont)
+          : DEFAULT_THEME_CUSTOMIZATION.font,
+        UIThemeRadius: THEME_RADIUS_VALUES.has(
+          settings.UIThemeRadius as ThemeRadius
+        )
+          ? (settings.UIThemeRadius as ThemeRadius)
+          : DEFAULT_THEME_CUSTOMIZATION.radius,
+        UIThemeScale: THEME_SCALE_VALUES.has(
+          settings.UIThemeScale as ThemeScale
+        )
+          ? (settings.UIThemeScale as ThemeScale)
+          : DEFAULT_THEME_CUSTOMIZATION.scale,
+        UIThemeContentLayout: CONTENT_LAYOUT_VALUES.has(
+          settings.UIThemeContentLayout as ContentLayout
+        )
+          ? (settings.UIThemeContentLayout as ContentLayout)
+          : DEFAULT_THEME_CUSTOMIZATION.contentLayout,
+      }
+      return <AppearanceSection defaultValues={defaultValues} />
+    },
   },
   {
     id: 'notice',

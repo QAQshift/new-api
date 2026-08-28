@@ -118,6 +118,11 @@ export type SiteSettings = {
   'legal.privacy_policy': string
   HeaderNavModules: string
   SidebarModulesAdmin: string
+  UIThemePreset: string
+  UIThemeFont: string
+  UIThemeRadius: string
+  UIThemeScale: string
+  UIThemeContentLayout: string
 }
 
 export type AuthSettings = {

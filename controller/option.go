@@ -227,6 +227,38 @@ func UpdateOption(c *gin.Context) {
 			})
 			return
 		}
+	case "UIThemePreset":
+		allowed := map[string]bool{
+			"default": true, "anthropic": true, "simple-large": true,
+			"underground": true, "rose-garden": true, "lake-view": true,
+			"sunset-glow": true, "forest-whisper": true,
+			"ocean-breeze": true, "lavender-dream": true, "glass": true,
+		}
+		if !allowed[option.Value.(string)] {
+			common.ApiErrorMsg(c, "无效的站点配色预设")
+			return
+		}
+	case "UIThemeFont":
+		if option.Value != "default" && option.Value != "sans" && option.Value != "serif" {
+			common.ApiErrorMsg(c, "无效的站点字体设置")
+			return
+		}
+	case "UIThemeRadius":
+		allowed := map[string]bool{"default": true, "none": true, "sm": true, "md": true, "lg": true, "xl": true}
+		if !allowed[option.Value.(string)] {
+			common.ApiErrorMsg(c, "无效的站点圆角设置")
+			return
+		}
+	case "UIThemeScale":
+		if option.Value != "default" && option.Value != "sm" && option.Value != "lg" && option.Value != "xl" {
+			common.ApiErrorMsg(c, "无效的界面密度设置")
+			return
+		}
+	case "UIThemeContentLayout":
+		if option.Value != "full" && option.Value != "centered" {
+			common.ApiErrorMsg(c, "无效的内容宽度设置")
+			return
+		}
 	case "GroupRatio":
 		err = ratio_setting.CheckGroupRatio(option.Value.(string))
 		if err != nil {

@@ -49,6 +49,26 @@ func GetStatus(c *gin.Context) {
 
 	passkeySetting := system_setting.GetPasskeySettings()
 	legalSetting := system_setting.GetLegalSettings()
+	themePreset := common.OptionMap["UIThemePreset"]
+	if themePreset == "" {
+		themePreset = "default"
+	}
+	themeFont := common.OptionMap["UIThemeFont"]
+	if themeFont == "" {
+		themeFont = "default"
+	}
+	themeRadius := common.OptionMap["UIThemeRadius"]
+	if themeRadius == "" {
+		themeRadius = "default"
+	}
+	themeScale := common.OptionMap["UIThemeScale"]
+	if themeScale == "" {
+		themeScale = "default"
+	}
+	themeContentLayout := common.OptionMap["UIThemeContentLayout"]
+	if themeContentLayout == "" {
+		themeContentLayout = "full"
+	}
 
 	data := gin.H{
 		"version":                     common.Version,
@@ -64,6 +84,13 @@ func GetStatus(c *gin.Context) {
 		"telegram_oauth":              common.TelegramOAuthEnabled,
 		"telegram_bot_name":           common.TelegramBotName,
 		"theme":                       "default",
+		"theme_customization": gin.H{
+			"preset":         themePreset,
+			"font":           themeFont,
+			"radius":         themeRadius,
+			"scale":          themeScale,
+			"content_layout": themeContentLayout,
+		},
 		"system_name":                 common.SystemName,
 		"logo":                        common.Logo,
 		"footer_html":                 common.Footer,

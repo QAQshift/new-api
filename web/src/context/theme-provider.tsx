@@ -27,13 +27,13 @@ import {
 
 import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
 
-type Theme = 'dark' | 'light' | 'system'
-type ResolvedTheme = Exclude<Theme, 'system'>
+export type Theme = 'dark' | 'light'
+type ResolvedTheme = Theme
 
-const DEFAULT_THEME = 'system'
+const DEFAULT_THEME: Theme = 'light'
 const THEME_COOKIE_NAME = 'vite-ui-theme'
 const THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
-const THEMES = new Set<Theme>(['dark', 'light', 'system'])
+const THEMES = new Set<Theme>(['dark', 'light'])
 
 type ThemeProviderProps = {
   children: React.ReactNode
@@ -59,15 +59,8 @@ const initialState: ThemeProviderState = {
 
 const ThemeContext = createContext<ThemeProviderState>(initialState)
 
-function getSystemTheme(): ResolvedTheme {
-  if (typeof window === 'undefined') return 'light'
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light'
-}
-
 function resolveTheme(theme: Theme): ResolvedTheme {
-  return theme === 'system' ? getSystemTheme() : theme
+  return theme
 }
 
 function getStoredTheme(storageKey: string, fallback: Theme): Theme {
@@ -90,20 +83,14 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = window.document.documentElement
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-
     const applyTheme = () => {
-      const nextResolvedTheme = theme === 'system' ? getSystemTheme() : theme
+      const nextResolvedTheme = theme
       root.classList.remove('light', 'dark')
       root.classList.add(nextResolvedTheme)
       setResolvedTheme(nextResolvedTheme)
     }
 
     applyTheme()
-
-    mediaQuery.addEventListener('change', applyTheme)
-
-    return () => mediaQuery.removeEventListener('change', applyTheme)
   }, [theme])
 
   const setTheme = useCallback(

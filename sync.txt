@@ -1,0 +1,7 @@
+  git fetch upstream                                                                    
+  git switch main                                                                       
+  git merge upstream/main                                                               
+  cd web                                                                                
+  bun install --frozen-lockfile                                                         
+  bun run typecheck                                                                     
+  bun run build     

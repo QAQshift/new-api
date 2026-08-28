@@ -36,6 +36,11 @@ const defaultSiteSettings: SiteSettings = {
   'legal.privacy_policy': '',
   HeaderNavModules: '',
   SidebarModulesAdmin: '',
+  UIThemePreset: 'default',
+  UIThemeFont: 'default',
+  UIThemeRadius: 'default',
+  UIThemeScale: 'default',
+  UIThemeContentLayout: 'full',
 }
 
 export function SiteSettings() {

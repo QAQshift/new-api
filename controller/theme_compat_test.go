@@ -44,4 +44,75 @@ func TestGetStatusAdvertisesDefaultDashboard(t *testing.T) {
 	require.NoError(t, common.Unmarshal(response.Body.Bytes(), &payload))
 	assert.True(t, payload.Success)
 	assert.Equal(t, "default", payload.Data["theme"])
+	themeCustomization, ok := payload.Data["theme_customization"].(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, "default", themeCustomization["preset"])
+	assert.Equal(t, "default", themeCustomization["font"])
+	assert.Equal(t, "default", themeCustomization["radius"])
+	assert.Equal(t, "default", themeCustomization["scale"])
+	assert.Equal(t, "full", themeCustomization["content_layout"])
+}
+
+func TestGetStatusReturnsAdministratorThemeCustomization(t *testing.T) {
+	previousMap := common.OptionMap
+	common.OptionMap = map[string]string{
+		"UIThemePreset":        "forest-whisper",
+		"UIThemeFont":          "serif",
+		"UIThemeRadius":        "lg",
+		"UIThemeScale":         "sm",
+		"UIThemeContentLayout": "centered",
+	}
+	t.Cleanup(func() { common.OptionMap = previousMap })
+
+	response := httptest.NewRecorder()
+	context, _ := gin.CreateTestContext(response)
+	context.Request = httptest.NewRequest(http.MethodGet, "/api/status", nil)
+	GetStatus(context)
+
+	var payload struct {
+		Success bool `json:"success"`
+		Data    struct {
+			ThemeCustomization map[string]string `json:"theme_customization"`
+		} `json:"data"`
+	}
+	require.NoError(t, common.Unmarshal(response.Body.Bytes(), &payload))
+	assert.True(t, payload.Success)
+	assert.Equal(t, map[string]string{
+		"preset":         "forest-whisper",
+		"font":           "serif",
+		"radius":         "lg",
+		"scale":          "sm",
+		"content_layout": "centered",
+	}, payload.Data.ThemeCustomization)
+}
+
+func TestUpdateOptionRejectsInvalidThemeCustomization(t *testing.T) {
+	tests := []struct {
+		name  string
+		key   string
+		value string
+	}{
+		{name: "preset", key: "UIThemePreset", value: "unknown"},
+		{name: "font", key: "UIThemeFont", value: "comic-sans"},
+		{name: "radius", key: "UIThemeRadius", value: "huge"},
+		{name: "scale", key: "UIThemeScale", value: "tiny"},
+		{name: "content layout", key: "UIThemeContentLayout", value: "sidebar"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			response := httptest.NewRecorder()
+			context, _ := gin.CreateTestContext(response)
+			context.Request = httptest.NewRequest(
+				http.MethodPut,
+				"/api/option/",
+				strings.NewReader(`{"key":"`+test.key+`","value":"`+test.value+`"}`),
+			)
+
+			UpdateOption(context)
+
+			assert.Equal(t, http.StatusOK, response.Code)
+			assert.Contains(t, response.Body.String(), `"success":false`)
+		})
+	}
 }
