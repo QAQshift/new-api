@@ -2644,7 +2644,7 @@
     "Limit Reached": "已达上限",
     "Limit which models can be used with this key": "限制此密钥可使用的模型",
     "Limited": "受限",
-    "Limits depend on the configured group and account policy. For high-concurrency integrations, select the appropriate group and monitor your usage logs.": "限制取决于配置的分组和账户策略。高并发接入请选择合适分组并关注用量日志。",
+    "Limits depend on the configured group and account policy. For high-concurrency integrations, select the appropriate group and monitor your usage logs.": "限制取决于所配置的分组与账号策略。高并发接入请选择合适的分组并关注使用日志。",
     "Limits only token-specific Auto snapshots. Global Auto inheritance remains unlimited.": "仅限制令牌专属的 Auto 快照；继承全局 Auto 时不受此限制。",
     "Limits token selection to a probability mass": "按概率质量限制词元选择范围",
     "LingYiWanWu": "LingYiWanWu",
