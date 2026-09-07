@@ -129,7 +129,13 @@ export function BrandHome() {
     <PublicLayout showMainContainer={false} navLinks={navLinks}>
       <main>
         <section className='relative overflow-hidden border-b px-6 pt-28 pb-20 md:px-10 md:pt-40 md:pb-28'>
-          <div className='bg-primary/[0.035] dark:bg-primary/[0.06] pointer-events-none absolute inset-0 -z-10' />
+          <div
+            className='pointer-events-none absolute inset-0 -z-10'
+            style={{
+              backgroundImage:
+                'radial-gradient(42rem 26rem at 16% 4%, color-mix(in oklch, var(--primary) 13%, transparent), transparent 64%), radial-gradient(32rem 22rem at 84% 8%, color-mix(in oklch, var(--chart-3) 12%, transparent), transparent 62%)',
+            }}
+          />
           <div className='mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]'>
             <div>
               <div className='text-primary mb-6 flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase'>
@@ -137,7 +143,7 @@ export function BrandHome() {
               </div>
               <h1 className='max-w-3xl text-5xl leading-[1.05] font-bold tracking-tight md:text-7xl'>
                 {t('One gateway.')}{' '}
-                <span className='text-muted-foreground'>
+                <span className='from-primary to-chart-3 bg-gradient-to-r bg-clip-text text-transparent'>
                   {t('Every model.')}
                 </span>
               </h1>
@@ -227,7 +233,7 @@ export function BrandHome() {
         </section>
 
         <section className='border-b px-6 py-12 md:px-10'>
-          <div className='mx-auto grid max-w-6xl grid-cols-2 gap-8 md:grid-cols-4'>
+          <div className='glass-panel mx-auto grid max-w-6xl grid-cols-2 gap-8 rounded-2xl p-8 md:grid-cols-4'>
             {[
               [t('Model providers'), '40+'],
               [t('API formats'), '6'],
@@ -445,26 +451,36 @@ export function BrandHome() {
           </div>
         </section>
 
-        <section className='bg-foreground text-background px-6 py-20 md:px-10 md:py-24'>
-          <div className='mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 md:flex-row md:items-center'>
-            <div>
-              <h2 className='text-3xl font-bold tracking-tight md:text-4xl'>
-                {t('Build your next AI feature.')}
-              </h2>
-              <p className='text-background/70 mt-3 max-w-xl'>
-                {t(
-                  'A reliable gateway for teams that want to move quickly and keep control.'
-                )}
-              </p>
+        <section className='px-6 py-20 md:px-10 md:py-24'>
+          <div className='glass-panel relative mx-auto max-w-6xl overflow-hidden rounded-3xl px-8 py-12 md:px-12'>
+            <div
+              className='pointer-events-none absolute inset-0'
+              style={{
+                backgroundImage:
+                  'radial-gradient(30rem 18rem at 6% 118%, color-mix(in oklch, var(--primary) 18%, transparent), transparent 66%), radial-gradient(24rem 16rem at 96% -20%, color-mix(in oklch, var(--chart-2) 14%, transparent), transparent 64%)',
+              }}
+            />
+            <div className='relative flex flex-col items-start justify-between gap-8 md:flex-row md:items-center'>
+              <div>
+                <h2 className='text-3xl font-bold tracking-tight md:text-4xl'>
+                  {t('Build your next AI feature.')}
+                </h2>
+                <p className='text-muted-foreground mt-3 max-w-xl'>
+                  {t(
+                    'A reliable gateway for teams that want to move quickly and keep control.'
+                  )}
+                </p>
+              </div>
+              <Button
+                size='lg'
+                className='rounded-xl'
+                render={
+                  <Link to={isAuthenticated ? '/dashboard' : '/sign-up'} />
+                }
+              >
+                {t('Get started')} <ArrowRight className='ml-2 size-4' />
+              </Button>
             </div>
-            <Button
-              variant='secondary'
-              size='lg'
-              className='rounded-xl'
-              render={<Link to={isAuthenticated ? '/dashboard' : '/sign-up'} />}
-            >
-              {t('Get started')} <ArrowRight className='ml-2 size-4' />
-            </Button>
           </div>
         </section>
       </main>

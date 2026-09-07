@@ -227,21 +227,25 @@ export function AppearanceSection(props: AppearanceSectionProps) {
                   })}
                 </div>
                 <div
-                  className='relative overflow-hidden rounded-2xl border p-5 shadow-sm'
+                  className='relative overflow-hidden rounded-2xl border p-5'
                   style={{
                     borderRadius: previewRadius,
                     backgroundColor:
-                      'color-mix(in oklch, var(--card) 78%, transparent)',
+                      'color-mix(in oklch, var(--card) 72%, transparent)',
                     backgroundImage: previewBackground,
                     backgroundSize: previewBackground ? 'cover' : undefined,
                     backgroundPosition: 'center',
+                    boxShadow:
+                      '0 1px 2px color-mix(in oklch, var(--foreground) 6%, transparent), 0 8px 24px color-mix(in oklch, var(--foreground) 8%, transparent), inset 0 1px 0 color-mix(in oklch, white 60%, transparent)',
+                    backdropFilter: 'blur(20px) saturate(130%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(130%)',
                     fontFamily:
                       selectedFont === 'serif'
                         ? 'var(--font-serif)'
                         : 'var(--font-sans)',
                   }}
                 >
-                  <div className='bg-background/45 absolute inset-0' />
+                  <div className='bg-background/40 absolute inset-0' />
                   <div className='relative space-y-4'>
                     <div className='flex items-center justify-between'>
                       <div>

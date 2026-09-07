@@ -405,113 +405,409 @@ For commercial licensing, please contact support@quantumnous.com
 
 /* ── Glass ────────────────────────────────────────────────────────────── */
 /*
- * Administrator-controlled glassmorphism preset. Surfaces stay readable in
- * both modes while translucency, blur and hairline borders create the layered
- * finish used by the branded public experience.
+ * Administrator-controlled glassmorphism preset.
+ *
+ * Two deliberate finishes share one recipe:
+ *   - light: quiet luxury — near-neutral cool canvas, hairline edges, thin
+ *     layered shadows and generous whitespace. No coloured bloom.
+ *   - dark:  Apple-style deep glass — blue/violet/cyan ambient light, a
+ *     brighter card than the canvas, coloured edge reflections and grain.
+ *
+ * The finish is composed from the `--glass-*` recipe variables below. Retune
+ * the look there rather than per component: every surface in the app reads
+ * the same five ingredients (tint, blur, edge, sheen, shadow).
+ *
+ * Glass is opted OUT of the semantic surface bridge further down (see the
+ * `:not()` list) so these translucent tokens are not flattened into opaque
+ * primary-tinted colours.
  */
 [data-theme-preset='glass'] {
-  --background: oklch(0.975 0.005 270);
-  --foreground: oklch(0.16 0.01 270);
-  --card: oklch(1 0.002 270 / 68%);
-  --card-foreground: oklch(0.16 0.01 270);
-  --popover: oklch(1 0.002 270 / 82%);
-  --popover-foreground: oklch(0.16 0.01 270);
-  --primary: oklch(0.56 0.16 255);
+  --background: oklch(0.968 0.004 265);
+  --foreground: oklch(0.21 0.014 268);
+
+  --card: oklch(1 0 0 / 72%);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0 0 / 88%);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.56 0.26 264);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.93 0.004 270 / 76%);
-  --secondary-foreground: oklch(0.2 0.01 270);
-  --muted: oklch(0.93 0.003 270 / 70%);
-  --muted-foreground: oklch(0.43 0.01 270);
-  --accent: oklch(0.86 0.035 255 / 52%);
-  --accent-foreground: oklch(0.2 0.01 270);
-  --border: oklch(0.62 0.01 270 / 24%);
-  --input: oklch(0.62 0.01 270 / 32%);
-  --ring: oklch(0.56 0.16 255);
-  --sidebar: oklch(0.95 0.003 270 / 74%);
-  --sidebar-foreground: oklch(0.16 0.01 270);
-  --sidebar-primary: oklch(0.56 0.16 255);
+
+  --secondary: oklch(0.955 0.004 265 / 78%);
+  --secondary-foreground: oklch(0.28 0.016 268);
+
+  --muted: oklch(0.95 0.004 265 / 72%);
+  --muted-foreground: oklch(0.52 0.02 268);
+
+  --accent: oklch(0.925 0.012 264 / 74%);
+  --accent-foreground: var(--foreground);
+
+  --destructive: oklch(0.577 0.245 27.3);
+  --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.527 0.154 150);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.666 0.179 58.3);
+  --warning-foreground: oklch(1 0 0);
+  --info: oklch(0.56 0.26 264);
+  --info-foreground: oklch(1 0 0);
+  --neutral: oklch(0.52 0.02 268);
+  --neutral-foreground: var(--foreground);
+
+  --border: oklch(0.62 0.014 268 / 22%);
+  --input: oklch(0.62 0.014 268 / 30%);
+  --ring: oklch(0.56 0.26 264);
+
+  --chart-1: oklch(0.56 0.26 264);
+  --chart-2: oklch(0.68 0.12 200);
+  --chart-3: oklch(0.545 0.28 292);
+  --chart-4: oklch(0.666 0.179 58.3);
+  --chart-5: oklch(0.527 0.154 150);
+
+  --sidebar: oklch(0.975 0.004 265 / 80%);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: oklch(0.56 0.26 264);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.86 0.035 255 / 52%);
-  --sidebar-accent-foreground: oklch(0.2 0.01 270);
-  --sidebar-border: oklch(0.62 0.01 270 / 22%);
-  --sidebar-ring: oklch(0.56 0.16 255);
+  --sidebar-accent: oklch(0.925 0.014 264 / 76%);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: oklch(0.62 0.014 268 / 20%);
+  --sidebar-ring: oklch(0.56 0.26 264);
+
+  --skeleton-base: oklch(0.925 0.004 265);
+  --skeleton-highlight: oklch(0.965 0.003 265);
+
   --radius: 1rem;
+
+  /* ── Recipe ─────────────────────────────────────────────────────── */
+  --glass-tint: oklch(1 0 0 / 70%);
+  --glass-tint-raised: oklch(1 0 0 / 88%);
+  --glass-blur: 20px;
+  --glass-blur-raised: 28px;
+  --glass-saturate: 125%;
+
+  --glass-edge-top: oklch(1 0 0 / 85%);
+  --glass-edge-mid: oklch(0.55 0.02 268 / 12%);
+  --glass-edge-bottom: oklch(0.25 0.02 268 / 14%);
+  --glass-sheen: linear-gradient(
+    158deg,
+    oklch(1 0 0 / 55%) 0%,
+    oklch(1 0 0 / 0%) 44%
+  );
+
+  --glass-shadow-ambient: 0 1px 2px oklch(0.28 0.02 268 / 4%);
+  --glass-shadow-key: 0 8px 24px oklch(0.28 0.02 268 / 6%);
+  --glass-shadow-key-hover: 0 14px 34px oklch(0.28 0.02 268 / 10%);
+
+  /* Ambient light the glass has something to refract. Kept almost neutral
+   * in light mode — colour here would cheapen the finish. */
+  --glass-glow-1: oklch(1 0 0 / 75%);
+  --glass-glow-2: oklch(0.94 0.014 264 / 55%);
+  --glass-glow-3: oklch(0.955 0.01 200 / 45%);
+  --glass-glow-opacity: 0.6;
+  --glass-noise-opacity: 0.024;
+  --glass-glow-layers: radial-gradient(
+      58rem 38rem at 14% -12%,
+      var(--glass-glow-1),
+      transparent 62%
+    ),
+    radial-gradient(48rem 34rem at 88% 2%, var(--glass-glow-2), transparent 64%),
+    radial-gradient(
+      46rem 32rem at 52% 106%,
+      var(--glass-glow-3),
+      transparent 60%
+    );
 }
 .dark [data-theme-preset='glass'] {
-  --background: oklch(0.12 0.008 270);
-  --foreground: oklch(0.97 0.004 270);
-  --card: oklch(0.22 0.008 270 / 70%);
-  --card-foreground: oklch(0.97 0.004 270);
-  --popover: oklch(0.22 0.008 270 / 86%);
-  --popover-foreground: oklch(0.97 0.004 270);
-  --primary: oklch(0.72 0.14 255);
-  --primary-foreground: oklch(0.12 0.008 270);
-  --secondary: oklch(0.3 0.01 270 / 80%);
-  --secondary-foreground: oklch(0.97 0.004 270);
-  --muted: oklch(0.28 0.008 270 / 76%);
-  --muted-foreground: oklch(0.76 0.006 270);
-  --accent: oklch(0.4 0.05 255 / 56%);
-  --accent-foreground: oklch(0.97 0.004 270);
-  --border: oklch(0.78 0.008 270 / 24%);
-  --input: oklch(0.78 0.008 270 / 34%);
-  --ring: oklch(0.72 0.14 255);
-  --sidebar: oklch(0.17 0.008 270 / 80%);
-  --sidebar-foreground: oklch(0.97 0.004 270);
-  --sidebar-primary: oklch(0.72 0.14 255);
-  --sidebar-primary-foreground: oklch(0.12 0.008 270);
-  --sidebar-accent: oklch(0.4 0.05 255 / 60%);
-  --sidebar-accent-foreground: oklch(0.97 0.004 270);
-  --sidebar-border: oklch(0.78 0.008 270 / 21%);
-  --sidebar-ring: oklch(0.72 0.14 255);
+  --background: oklch(0.163 0.012 265);
+  --foreground: oklch(0.955 0.004 265);
+
+  --card: oklch(0.215 0.016 268 / 66%);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.215 0.016 268 / 84%);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.72 0.15 262);
+  --primary-foreground: oklch(0.16 0.012 265);
+
+  --secondary: oklch(0.28 0.014 268 / 78%);
+  --secondary-foreground: var(--foreground);
+
+  --muted: oklch(0.27 0.012 268 / 74%);
+  --muted-foreground: oklch(0.72 0.018 268);
+
+  --accent: oklch(0.34 0.03 264 / 62%);
+  --accent-foreground: var(--foreground);
+
+  --destructive: oklch(0.62 0.22 25);
+  --destructive-foreground: oklch(0.16 0.012 265);
+  --success: oklch(0.62 0.15 152);
+  --success-foreground: oklch(0.16 0.012 265);
+  --warning: oklch(0.75 0.16 70);
+  --warning-foreground: oklch(0.16 0.012 265);
+  --info: oklch(0.72 0.15 262);
+  --info-foreground: oklch(0.16 0.012 265);
+  --neutral: oklch(0.72 0.018 268);
+  --neutral-foreground: var(--foreground);
+
+  --border: oklch(0.72 0.02 268 / 22%);
+  --input: oklch(0.72 0.02 268 / 30%);
+  --ring: oklch(0.72 0.15 262);
+
+  --chart-1: oklch(0.72 0.15 262);
+  --chart-2: oklch(0.75 0.12 200);
+  --chart-3: oklch(0.66 0.22 292);
+  --chart-4: oklch(0.75 0.16 70);
+  --chart-5: oklch(0.66 0.16 152);
+
+  --sidebar: oklch(0.19 0.014 268 / 78%);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: oklch(0.72 0.15 262);
+  --sidebar-primary-foreground: oklch(0.16 0.012 265);
+  --sidebar-accent: oklch(0.34 0.03 264 / 64%);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: oklch(0.72 0.02 268 / 20%);
+  --sidebar-ring: oklch(0.72 0.15 262);
+
+  --skeleton-base: oklch(0.26 0.012 268);
+  --skeleton-highlight: oklch(0.32 0.014 268);
+
+  /* Deep glass: the card sits clearly above the canvas, edges catch a
+   * bright top reflection and a dark bottom edge, and the specular sweep
+   * is warmer than in light mode. */
+  --glass-tint: oklch(0.215 0.016 268 / 62%);
+  --glass-tint-raised: oklch(0.215 0.016 268 / 84%);
+  --glass-blur: 24px;
+  --glass-blur-raised: 32px;
+  --glass-saturate: 150%;
+
+  --glass-edge-top: oklch(1 0 0 / 20%);
+  --glass-edge-mid: oklch(0.72 0.03 268 / 10%);
+  --glass-edge-bottom: oklch(0 0 0 / 45%);
+  --glass-sheen: linear-gradient(
+    158deg,
+    oklch(1 0 0 / 12%) 0%,
+    oklch(1 0 0 / 0%) 40%
+  );
+
+  --glass-shadow-ambient: 0 1px 2px oklch(0 0 0 / 32%);
+  --glass-shadow-key: 0 18px 42px oklch(0 0 0 / 42%);
+  --glass-shadow-key-hover: 0 26px 60px oklch(0 0 0 / 52%);
+
+  --glass-glow-1: oklch(0.52 0.24 264 / 26%);
+  --glass-glow-2: oklch(0.52 0.26 292 / 20%);
+  --glass-glow-3: oklch(0.62 0.12 200 / 16%);
+  --glass-glow-opacity: 1;
+  --glass-noise-opacity: 0.036;
 }
 
+/* ── Optics layer ─────────────────────────────────────────────────────── */
+/* Ambient light and grain are painted once on the body so every glass
+ * surface above has something to refract. `background-attachment: fixed`
+ * anchors the light to the viewport while content scrolls behind it. */
 body[data-theme-preset='glass'] {
   background-color: var(--background);
-  background-image: linear-gradient(
-    135deg,
-    color-mix(in oklch, var(--primary) 7%, transparent),
-    transparent 48%,
-    color-mix(in oklch, var(--secondary) 8%, transparent)
-  );
-  background-attachment: fixed;
-}
-body[data-theme-background='custom'] {
-  background-image:
-    linear-gradient(
-      135deg,
-      color-mix(in oklch, var(--background) 78%, transparent),
-      color-mix(in oklch, var(--background) 58%, transparent)
-    ),
-    var(--site-background-image);
-  background-size: cover;
+  background-image: var(--glass-glow-layers);
+  background-repeat: no-repeat;
   background-position: center;
   background-attachment: fixed;
 }
-[data-theme-preset='glass'] [data-slot='card'],
-[data-theme-preset='glass'] [data-slot='popover'],
-[data-theme-preset='glass'] [data-slot='dialog-content'],
-[data-theme-preset='glass'] [data-slot='sheet-content'],
-[data-theme-preset='glass'] [data-slot='dropdown-menu-content'] {
-  background-color: color-mix(in oklch, var(--card) 78%, transparent);
-  border-color: color-mix(in oklch, var(--border) 82%, white 18%);
-  box-shadow:
-    0 18px 55px oklch(0.12 0.01 270 / 12%),
-    inset 0 1px 0 oklch(1 0 0 / 28%);
-  -webkit-backdrop-filter: blur(18px) saturate(135%);
-  backdrop-filter: blur(18px) saturate(135%);
+/* Film grain. One fixed overlay rasterises the turbulence tile a single
+ * time and lays it over the whole UI, which removes the plastic look of a
+ * pure gradient without a per-surface cost. Never interactive. */
+body[data-theme-preset='glass']::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 140px 140px;
+  opacity: var(--glass-noise-opacity);
 }
-[data-theme-preset='glass'] [data-slot='button'] {
-  -webkit-backdrop-filter: blur(10px) saturate(125%);
-  backdrop-filter: blur(10px) saturate(125%);
+/* A custom backdrop keeps the ambient light, swaps in the image and adds a
+ * progressive scrim so text stays legible over busy photographs. Saturation
+ * is dialled down because sampling an already-saturated photo reads dirty. */
+body[data-theme-preset='glass'][data-theme-background='custom'] {
+  background-image: var(--glass-glow-layers),
+    linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--background) 52%, transparent) 0%,
+      color-mix(in oklch, var(--background) 74%, transparent) 46%,
+      color-mix(in oklch, var(--background) 86%, transparent) 100%
+    ),
+    var(--site-background-image);
+  background-size: auto, auto, auto, auto, cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
+  --glass-saturate: 112%;
 }
-[data-theme-preset='glass'] .glass-panel {
-  background-color: color-mix(in oklch, var(--card) 76%, transparent);
-  border-color: color-mix(in oklch, var(--border) 82%, white 18%);
-  box-shadow:
-    0 18px 55px oklch(0.12 0.01 270 / 12%),
-    inset 0 1px 0 oklch(1 0 0 / 28%);
-  -webkit-backdrop-filter: blur(18px) saturate(135%);
-  backdrop-filter: blur(18px) saturate(135%);
+body[data-theme-background='custom']:not([data-theme-preset='glass']) {
+  background-image: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--background) 52%, transparent) 0%,
+      color-mix(in oklch, var(--background) 74%, transparent) 46%,
+      color-mix(in oklch, var(--background) 86%, transparent) 100%
+    ),
+    var(--site-background-image);
+  background-size: auto, cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+/* ── Surface layer ────────────────────────────────────────────────────── */
+/*
+ * One recipe applied by data-slot, so cards, popovers, dialogs, sheets,
+ * menus, tables, the sidebar and the branded public panels all share a
+ * single optical language. Components need no changes.
+ */
+[data-theme-preset='glass'] :is(
+    [data-slot='card'],
+    [data-slot='popover-content'],
+    [data-slot='dialog-content'],
+    [data-slot='sheet-content'],
+    [data-slot='dropdown-menu-content'],
+    [data-slot='table-container'],
+    [data-slot='sidebar-inner'],
+    [data-slot='sidebar'][data-mobile='true'],
+    [data-slot='sidebar']:not([data-state]),
+    .glass-panel
+  ) {
+  position: relative;
+  background-color: var(--glass-tint);
+  background-image: var(--glass-sheen);
+  box-shadow: inset 0 1px 0 var(--glass-edge-top),
+    inset 0 -1px 0 var(--glass-edge-bottom), var(--glass-shadow-ambient),
+    var(--glass-shadow-key);
+  -webkit-backdrop-filter: blur(var(--glass-blur))
+    saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+/* Floating layers sit on top of the page, so they blur harder and tint
+ * stronger to keep their content separated from whatever scrolls beneath. */
+[data-theme-preset='glass'] :is(
+    [data-slot='popover-content'],
+    [data-slot='dialog-content'],
+    [data-slot='sheet-content'],
+    [data-slot='dropdown-menu-content']
+  ) {
+  background-color: var(--glass-tint-raised);
+  --glass-blur: var(--glass-blur-raised);
+}
+/* The app header is a full-width bar rather than a panel: it only needs a
+ * blur and a bottom edge, never a perimeter ring. */
+[data-theme-preset='glass'] [data-slot='app-header'] {
+  background-color: color-mix(in oklch, var(--background) 55%, transparent);
+  box-shadow: inset 0 -1px 0 var(--glass-edge-bottom);
+  -webkit-backdrop-filter: blur(var(--glass-blur-raised))
+    saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur-raised))
+    saturate(var(--glass-saturate));
+}
+
+/* Gradient hairline ring. A real `border-image` cannot follow a radius, so
+ * the edge is drawn as a 1px gradient ring masked out of a pseudo element.
+ * Where `mask-composite` is missing the flat hairlines above stay instead. */
+@supports (mask-composite: exclude) or (-webkit-mask-composite: xor) {
+  [data-theme-preset='glass'] :is(
+      [data-slot='card'],
+      [data-slot='popover-content'],
+      [data-slot='dialog-content'],
+      [data-slot='sheet-content'],
+      [data-slot='dropdown-menu-content'],
+      [data-slot='table-container'],
+      [data-slot='sidebar-inner'],
+      [data-slot='sidebar'][data-mobile='true'],
+      [data-slot='sidebar']:not([data-state]),
+      .glass-panel
+    ) {
+    border: 0 solid transparent;
+  }
+  [data-theme-preset='glass'] :is(
+      [data-slot='card'],
+      [data-slot='popover-content'],
+      [data-slot='dialog-content'],
+      [data-slot='sheet-content'],
+      [data-slot='dropdown-menu-content'],
+      [data-slot='table-container'],
+      [data-slot='sidebar-inner'],
+      [data-slot='sidebar'][data-mobile='true'],
+      [data-slot='sidebar']:not([data-state]),
+      .glass-panel
+    )::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background-image: linear-gradient(
+      180deg,
+      var(--glass-edge-top) 0%,
+      var(--glass-edge-mid) 48%,
+      var(--glass-edge-bottom) 100%
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+/* Hover lift. Pointer-driven only, so touch devices never stick. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  [data-theme-preset='glass'] :is([data-slot='card'], .glass-panel) {
+    transition:
+      transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  [data-theme-preset='glass'] :is([data-slot='card'], .glass-panel):hover {
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 var(--glass-edge-top),
+      inset 0 -1px 0 var(--glass-edge-bottom), var(--glass-shadow-ambient),
+      var(--glass-shadow-key-hover);
+  }
+}
+
+/* Small screens pay the most for offscreen blurs. */
+@media (max-width: 767px) {
+  [data-theme-preset='glass'] {
+    --glass-blur: 14px;
+    --glass-blur-raised: 20px;
+  }
+}
+
+/* Users who ask for less transparency still get the palette and the
+ * layered shadows — just no blur, no grain and near-opaque surfaces. */
+@media (prefers-reduced-transparency: reduce) {
+  [data-theme-preset='glass'] {
+    --glass-tint: oklch(1 0 0 / 96%);
+    --glass-tint-raised: oklch(1 0 0 / 98%);
+    --glass-noise-opacity: 0;
+  }
+  .dark [data-theme-preset='glass'] {
+    --glass-tint: oklch(0.215 0.016 268 / 96%);
+    --glass-tint-raised: oklch(0.215 0.016 268 / 98%);
+  }
+  [data-theme-preset='glass'] :is(
+      [data-slot='card'],
+      [data-slot='popover-content'],
+      [data-slot='dialog-content'],
+      [data-slot='sheet-content'],
+      [data-slot='dropdown-menu-content'],
+      [data-slot='table-container'],
+      [data-slot='sidebar-inner'],
+      [data-slot='sidebar'][data-mobile='true'],
+      [data-slot='sidebar']:not([data-state]),
+      .glass-panel
+    ),
+  [data-theme-preset='glass'] [data-slot='app-header'] {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 /* Overview accents mirror the public blue/cyan/violet palette by default.
@@ -537,10 +833,13 @@ body[data-theme-background='custom'] {
  *   - `anthropic`: warm cream surfaces are a brand choice, NOT a primary-mix
  *     derivation (the Anthropic system deliberately uses warm neutrals for
  *     cards/borders rather than tinting them with the clay accent).
- *   - `simple-large`: keeps intentionally neutral, high-contrast surfaces. */
+ *   - `simple-large`: keeps intentionally neutral, high-contrast surfaces.
+ *   - `glass`: every surface token is translucent by design. Mixing them
+ *     against `--background` here would flatten the alpha away and tint the
+ *     glass with the accent, which is exactly what made it look flat. */
 [data-theme-preset]:not([data-theme-preset='default']):not(
   [data-theme-preset='anthropic']
-):not([data-theme-preset='simple-large']) {
+):not([data-theme-preset='simple-large']):not([data-theme-preset='glass']) {
   --card: color-mix(in oklch, var(--primary) 3%, var(--background));
   --popover: color-mix(in oklch, var(--primary) 5%, var(--background));
   --muted: color-mix(in oklch, var(--primary) 7%, var(--background));
@@ -565,7 +864,9 @@ body[data-theme-background='custom'] {
 .dark
   [data-theme-preset]:not([data-theme-preset='default']):not(
     [data-theme-preset='anthropic']
-  ):not([data-theme-preset='simple-large']) {
+  ):not([data-theme-preset='simple-large']):not(
+    [data-theme-preset='glass']
+  ) {
   --card: color-mix(in oklch, var(--primary) 8%, var(--background));
   --popover: color-mix(in oklch, var(--primary) 12%, var(--background));
   --muted: color-mix(in oklch, var(--primary) 12%, var(--background));
