@@ -264,35 +264,81 @@ func GetHomePageContent(c *gin.Context) {
 	return
 }
 
-// GetDocsContent returns only administrator-published documentation extensions.
-// The built-in documentation remains the frontend fallback when this list is empty.
+// GetDocsContent returns administrator overrides and extension pages.
+// The frontend merges this payload over its built-in document definition.
 func GetDocsContent(c *gin.Context) {
 	common.OptionMapRWMutex.RLock()
 	raw := common.OptionMap["console_setting.docs"]
 	common.OptionMapRWMutex.RUnlock()
 
 	docs := make([]map[string]any, 0)
+	version := 2
 	if raw != "" {
-		var configured []struct {
-			ID        string `json:"id"`
-			Title     string `json:"title"`
-			Summary   string `json:"summary"`
-			Content   string `json:"content"`
-			Published bool   `json:"published"`
-			Order     int    `json:"order"`
+		var envelope struct {
+			Version  int `json:"version"`
+			Sections []struct {
+				ID        string `json:"id"`
+				SectionID string `json:"sectionId,omitempty"`
+				Eyebrow   string `json:"eyebrow,omitempty"`
+				Title     string `json:"title"`
+				Summary   string `json:"summary"`
+				Content   string `json:"content"`
+				Blocks    []map[string]any `json:"blocks,omitempty"`
+				Published bool `json:"published"`
+				Order     int    `json:"order"`
+			} `json:"sections"`
 		}
-		if err := common.UnmarshalJsonStr(raw, &configured); err == nil {
-			for _, doc := range configured {
-				if !doc.Published || strings.TrimSpace(doc.Title) == "" || strings.TrimSpace(doc.Content) == "" {
+		if err := common.UnmarshalJsonStr(raw, &envelope); err == nil && envelope.Sections != nil {
+			if envelope.Version > 0 {
+				version = envelope.Version
+			}
+			for _, doc := range envelope.Sections {
+				if (!doc.Published && strings.TrimSpace(doc.SectionID) == "") || strings.TrimSpace(doc.Title) == "" {
+					continue
+				}
+				if !doc.Published {
+					docs = append(docs, map[string]any{
+						"id":        doc.ID,
+						"sectionId": doc.SectionID,
+						"published": false,
+						"order":     doc.Order,
+					})
 					continue
 				}
 				docs = append(docs, map[string]any{
-					"id":      doc.ID,
-					"title":   doc.Title,
-					"summary": doc.Summary,
-					"content": doc.Content,
-					"order":   doc.Order,
+					"id":        doc.ID,
+					"sectionId": doc.SectionID,
+					"eyebrow":   doc.Eyebrow,
+					"title":     doc.Title,
+					"summary":   doc.Summary,
+					"content":   doc.Content,
+					"blocks":    doc.Blocks,
+					"published": doc.Published,
+					"order":     doc.Order,
 				})
+			}
+		} else {
+			var configured []struct {
+				ID        string `json:"id"`
+				Title     string `json:"title"`
+				Summary   string `json:"summary"`
+				Content   string `json:"content"`
+				Published bool   `json:"published"`
+				Order     int    `json:"order"`
+			}
+			if err := common.UnmarshalJsonStr(raw, &configured); err == nil {
+				for _, doc := range configured {
+					if !doc.Published || strings.TrimSpace(doc.Title) == "" || strings.TrimSpace(doc.Content) == "" {
+						continue
+					}
+					docs = append(docs, map[string]any{
+						"id":      doc.ID,
+						"title":   doc.Title,
+						"summary": doc.Summary,
+						"content": doc.Content,
+						"order":   doc.Order,
+					})
+				}
 			}
 		}
 	}
@@ -304,7 +350,10 @@ func GetDocsContent(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
-		"data":    docs,
+		"data": gin.H{
+			"version":  version,
+			"sections": docs,
+		},
 	})
 }
 

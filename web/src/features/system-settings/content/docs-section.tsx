@@ -34,6 +34,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Markdown } from '@/components/ui/markdown'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  defaultDocSections,
+  type DocBlock,
+} from '@/overrides/docs/default-document'
 
 import { SettingsSwitchField } from '../components/settings-form-layout'
 import { SettingsSection } from '../components/settings-section'
@@ -41,9 +45,12 @@ import { useUpdateOption } from '../hooks/use-update-option'
 
 type ManagedDocument = {
   id: string
+  sectionId?: string
+  eyebrow?: string
   title: string
   summary: string
   content: string
+  blocks?: DocBlock[]
   published: boolean
   order: number
 }
@@ -268,9 +275,12 @@ curl -L https://你的域名/v1/videos/task_xxx/content \\
 `
 
 const EMPTY_EDITOR: EditorState = {
+  sectionId: '',
+  eyebrow: '',
   title: '',
   summary: '',
   content: '',
+  blocks: [],
   published: false,
   order: 0,
 }
@@ -278,14 +288,17 @@ const EMPTY_EDITOR: EditorState = {
 function parseDocuments(data: string): ManagedDocument[] {
   try {
     const parsed: unknown = JSON.parse(data || '[]')
-    if (!Array.isArray(parsed)) return []
-    return parsed.flatMap((item, index) => {
+    let records: unknown = []
+    if (Array.isArray(parsed)) {
+      records = parsed
+    } else if (parsed && typeof parsed === 'object' && 'sections' in parsed) {
+      records = (parsed as { sections?: unknown }).sections
+    }
+    if (!Array.isArray(records)) return []
+    return records.flatMap((item, index) => {
       if (!item || typeof item !== 'object') return []
       const value = item as Partial<ManagedDocument>
-      if (
-        typeof value.title !== 'string' ||
-        typeof value.content !== 'string'
-      ) {
+      if (typeof value.title !== 'string') {
         return []
       }
       return [
@@ -294,9 +307,12 @@ function parseDocuments(data: string): ManagedDocument[] {
             typeof value.id === 'string' && value.id
               ? value.id
               : `doc-${index + 1}`,
+          sectionId: typeof value.sectionId === 'string' ? value.sectionId : '',
+          eyebrow: typeof value.eyebrow === 'string' ? value.eyebrow : '',
           title: value.title,
           summary: typeof value.summary === 'string' ? value.summary : '',
-          content: value.content,
+          content: typeof value.content === 'string' ? value.content : '',
+          blocks: Array.isArray(value.blocks) ? value.blocks : [],
           published: value.published === true,
           order:
             typeof value.order === 'number' && value.order >= 0
@@ -321,12 +337,14 @@ export function DocsSection(props: DocsSectionProps) {
   const [preview, setPreview] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   const [copiedDefault, setCopiedDefault] = useState(false)
+  const [blocksDraft, setBlocksDraft] = useState('[]')
 
   useEffect(() => {
     setDocuments(parseDocuments(props.data))
     setEditingId(null)
     setEditor(EMPTY_EDITOR)
     setHasChanges(false)
+    setBlocksDraft('[]')
   }, [props.data])
 
   const updateEditor = <K extends keyof EditorState>(
@@ -339,23 +357,45 @@ export function DocsSection(props: DocsSectionProps) {
   const startNew = () => {
     setEditingId('new')
     setEditor({ ...EMPTY_EDITOR, order: documents.length })
+    setBlocksDraft('[]')
     setPreview(false)
   }
 
   const startEdit = (document: ManagedDocument) => {
     setEditingId(document.id)
     setEditor({
+      sectionId: document.sectionId ?? '',
+      eyebrow: document.eyebrow ?? '',
       title: document.title,
       summary: document.summary,
       content: document.content,
+      blocks: document.blocks ?? [],
       published: document.published,
       order: document.order,
     })
+    setBlocksDraft(JSON.stringify(document.blocks ?? [], null, 2))
     setPreview(false)
   }
 
   const saveDocument = () => {
-    if (!editor.title.trim() || !editor.content.trim()) {
+    if (!editor.title.trim()) {
+      toast.error(t('Document title and content are required'))
+      return
+    }
+    let blocks: DocBlock[] = []
+    try {
+      const parsed: unknown = JSON.parse(blocksDraft || '[]')
+      if (!Array.isArray(parsed)) throw new Error('blocks must be an array')
+      blocks = parsed as DocBlock[]
+    } catch {
+      toast.error(t('Structured blocks must be valid JSON'))
+      return
+    }
+    if (
+      !editor.sectionId?.trim() &&
+      !editor.content.trim() &&
+      blocks.length === 0
+    ) {
       toast.error(t('Document title and content are required'))
       return
     }
@@ -365,8 +405,11 @@ export function DocsSection(props: DocsSectionProps) {
       id,
       ...editor,
       title: editor.title.trim(),
+      sectionId: editor.sectionId?.trim() || undefined,
+      eyebrow: editor.eyebrow?.trim() || undefined,
       summary: editor.summary.trim(),
       content: editor.content.trim(),
+      blocks,
       order: Math.max(0, Math.floor(editor.order)),
     }
     setDocuments((current) => {
@@ -385,6 +428,7 @@ export function DocsSection(props: DocsSectionProps) {
     if (editingId === id) {
       setEditingId(null)
       setEditor(EMPTY_EDITOR)
+      setBlocksDraft('[]')
     }
     setHasChanges(true)
   }
@@ -394,7 +438,7 @@ export function DocsSection(props: DocsSectionProps) {
       const ordered = [...documents].sort((a, b) => a.order - b.order)
       await updateOption.mutateAsync({
         key: 'console_setting.docs',
-        value: JSON.stringify(ordered),
+        value: JSON.stringify({ version: 2, sections: ordered }),
       })
       setHasChanges(false)
       toast.success(t('Documentation settings saved'))
@@ -424,6 +468,7 @@ export function DocsSection(props: DocsSectionProps) {
       content: DEFAULT_DOCUMENT_MARKDOWN,
       order: documents.length,
     })
+    setBlocksDraft('[]')
     setPreview(false)
   }
 
@@ -597,6 +642,30 @@ export function DocsSection(props: DocsSectionProps) {
                 </div>
               ) : (
                 <div className='space-y-4'>
+                  <label className='block space-y-1.5'>
+                    <span className='text-sm font-medium'>
+                      {t('Built-in section override')}
+                    </span>
+                    <select
+                      value={editor.sectionId ?? ''}
+                      onChange={(event) =>
+                        updateEditor('sectionId', event.target.value)
+                      }
+                      className='bg-background w-full rounded-md border px-3 py-2 text-sm'
+                    >
+                      <option value=''>{t('Custom document')}</option>
+                      {defaultDocSections.map((section) => (
+                        <option key={section.id} value={section.id}>
+                          {section.title} ({section.id})
+                        </option>
+                      ))}
+                    </select>
+                    <span className='text-muted-foreground block text-xs'>
+                      {t(
+                        'Select a built-in section to append administrator Markdown and override its title and summary.'
+                      )}
+                    </span>
+                  </label>
                   <div className='grid gap-4 sm:grid-cols-[minmax(0,1fr)_7rem]'>
                     <label className='space-y-1.5'>
                       <span className='text-sm font-medium'>{t('Title')}</span>
@@ -622,6 +691,19 @@ export function DocsSection(props: DocsSectionProps) {
                     </label>
                   </div>
                   <label className='block space-y-1.5'>
+                    <span className='text-sm font-medium'>
+                      {t('Eyebrow label')}
+                    </span>
+                    <Input
+                      value={editor.eyebrow ?? ''}
+                      maxLength={100}
+                      onChange={(event) =>
+                        updateEditor('eyebrow', event.target.value)
+                      }
+                      placeholder={t('Optional small label above the title')}
+                    />
+                  </label>
+                  <label className='block space-y-1.5'>
                     <span className='text-sm font-medium'>{t('Summary')}</span>
                     <Input
                       value={editor.summary}
@@ -646,6 +728,24 @@ export function DocsSection(props: DocsSectionProps) {
                       className='min-h-80 font-mono text-sm'
                       placeholder={t('Write Markdown content here...')}
                     />
+                  </label>
+                  <label className='block space-y-1.5'>
+                    <span className='text-sm font-medium'>
+                      {t('Structured blocks JSON')}
+                    </span>
+                    <Textarea
+                      value={blocksDraft}
+                      onChange={(event) => setBlocksDraft(event.target.value)}
+                      className='min-h-40 font-mono text-xs'
+                      placeholder={t(
+                        'Optional JSON blocks for code, images, endpoints, tables, or steps'
+                      )}
+                    />
+                    <span className='text-muted-foreground block text-xs'>
+                      {t(
+                        'When blocks are provided, they replace Markdown and use the same interactive renderers as the built-in documentation.'
+                      )}
+                    </span>
                   </label>
                   <SettingsSwitchField
                     checked={editor.published}

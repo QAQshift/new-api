@@ -18,12 +18,44 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery } from '@tanstack/react-query'
 import { Check, Clipboard, Copy, Download, ExternalLink } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
 import { Markdown } from '@/components/ui/markdown'
 import { api } from '@/lib/api'
+
+import {
+  defaultDocCategories,
+  defaultDocSections,
+  type DocBlock,
+} from './default-document'
+
+type DocOverride = {
+  id: string
+  sectionId?: string
+  eyebrow?: string
+  title: string
+  summary: string
+  content: string
+  blocks?: DocBlock[]
+  published?: boolean
+  order: number
+}
+
+type DocsConfiguration = {
+  version: number
+  sections: DocOverride[]
+}
+
+type DocsResponse = { data?: DocsConfiguration | DocOverride[] }
+
+function getConfiguredDocuments(data: DocsResponse['data']): DocOverride[] {
+  if (Array.isArray(data)) return data
+  return data?.sections ?? []
+}
+
+const DocsConfigurationContext = createContext<Record<string, DocOverride>>({})
 
 // ---------------------------------------------------------------------------
 // Branded documentation content with runtime-resolved endpoints.
@@ -182,24 +214,121 @@ function Section(props: {
   description?: string
   children: React.ReactNode
 }) {
+  const overrides = useContext(DocsConfigurationContext)
+  const override = overrides[props.id]
+  if (override?.published === false) return null
+  let sectionBody: React.ReactNode = (
+    <div className='mt-6'>{props.children}</div>
+  )
+  if (override?.blocks?.length) {
+    sectionBody = (
+      <div className='mt-6 space-y-6'>
+        {override.blocks.map((block) => (
+          <DocBlockRenderer
+            key={`${block.type}-${JSON.stringify(block)}`}
+            block={block}
+          />
+        ))}
+      </div>
+    )
+  } else if (override?.content) {
+    sectionBody = (
+      <div className='mt-6'>
+        <Markdown>{override.content}</Markdown>
+      </div>
+    )
+  }
+
   return (
     <section
       id={props.id}
       className='scroll-mt-24 border-t pt-10 first:border-0 first:pt-0'
     >
       <p className='text-primary text-xs font-semibold tracking-[0.2em] uppercase'>
-        {props.eyebrow}
+        {override?.eyebrow || props.eyebrow}
       </p>
       <h2 className='mt-2 text-2xl font-semibold tracking-tight md:text-3xl'>
-        {props.title}
+        {override?.title || props.title}
       </h2>
-      {props.description && (
+      {(override?.summary || props.description) && (
         <p className='text-muted-foreground mt-3 max-w-3xl leading-7'>
-          {props.description}
+          {override?.summary || props.description}
         </p>
       )}
-      <div className='mt-6'>{props.children}</div>
+      {sectionBody}
     </section>
+  )
+}
+
+function DocBlockRenderer(props: { block: DocBlock }) {
+  const block = props.block
+  if (block.type === 'markdown') {
+    return <Markdown>{block.content}</Markdown>
+  }
+  if (block.type === 'code') {
+    return <CodeBlock code={block.content} title={block.title} />
+  }
+  if (block.type === 'image') {
+    return (
+      <TutorialFigure
+        src={block.src}
+        alt={block.alt}
+        caption={block.caption ?? block.alt}
+      />
+    )
+  }
+  if (block.type === 'endpoint') {
+    return (
+      <div className='rounded-xl border px-4 py-2'>
+        <EndpointRow
+          method={block.method}
+          path={block.path}
+          desc={block.description}
+        />
+      </div>
+    )
+  }
+  if (block.type === 'table') {
+    return (
+      <div className='overflow-x-auto rounded-xl border'>
+        <table className='w-full text-sm'>
+          <thead className='bg-muted/50 text-muted-foreground'>
+            <tr>
+              {block.columns.map((column) => (
+                <th key={column} className='px-4 py-2 text-left font-medium'>
+                  {column}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {block.rows.map((row) => (
+              <tr key={row.join('|')} className='border-t'>
+                {row.map((cell) => (
+                  <td key={`${row.join('|')}-${cell}`} className='px-4 py-2'>
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+  if (block.type !== 'steps') return null
+  return (
+    <div className='grid gap-4 sm:grid-cols-2'>
+      {block.items.map((item) => (
+        <StepCard
+          key={`${item.title}-${item.content}`}
+          index={block.items.indexOf(item) + 1}
+          title={item.title}
+        >
+          <Markdown>{item.content}</Markdown>
+        </StepCard>
+      ))}
+    </div>
   )
 }
 
@@ -247,89 +376,17 @@ function BlockLink(props: {
   )
 }
 
-const docNav = [
-  ['start', '快速开始'],
-  ['endpoints', '线路与地址'],
-  ['api-key', '创建 API Key'],
-  ['cc-switch', 'CC Switch'],
-  ['claude-code', 'Claude Code'],
-  ['codex-tools', 'Codex 工具下载'],
-  ['codex-cli', 'Codex CLI'],
-  ['codex-sol-context', 'Sol 105万上下文'],
-  ['chatgpt', 'ChatGPT'],
-  ['vscode', 'VS Code'],
-  ['text-api', '文字模型 API'],
-  ['video-overview', '视频 API'],
-  ['video-models', '模型参数'],
-  ['video-assets', '参考素材'],
-  ['video-result', '查询与下载'],
-  ['errors', '错误排查'],
-  ['custom-docs', '管理员扩展'],
-] as const
-
-const docCategories = [
-  {
-    id: 'getting-started',
-    label: 'Getting started',
-    sections: ['start', 'endpoints', 'api-key'],
-  },
-  {
-    id: 'client-setup',
-    label: 'Client setup',
-    sections: [
-      'cc-switch',
-      'claude-code',
-      'codex-tools',
-      'codex-cli',
-      'codex-sol-context',
-      'chatgpt',
-      'vscode',
-    ],
-  },
-  {
-    id: 'text-api',
-    label: 'Text API',
-    sections: ['text-api'],
-  },
-  {
-    id: 'video-api',
-    label: 'Video API',
-    sections: [
-      'video-overview',
-      'video-models',
-      'video-assets',
-      'video-result',
-    ],
-  },
-  {
-    id: 'support',
-    label: 'Troubleshooting',
-    sections: ['errors'],
-  },
-  {
-    id: 'custom',
-    label: 'Custom documentation',
-    sections: ['custom-docs'],
-  },
-] as const
-
-type PublishedDocument = {
-  id: string
-  title: string
-  summary: string
-  content: string
-  order: number
-}
+const docCategories = defaultDocCategories
 
 function CustomDocsSection() {
   const { t } = useTranslation()
   const { data } = useQuery({
     queryKey: ['public-docs-content'],
     queryFn: async () => {
-      const response = await api.get<{ data?: PublishedDocument[] }>(
-        '/api/docs/content'
-      )
-      return (response.data.data ?? []).sort((a, b) => a.order - b.order)
+      const response = await api.get<DocsResponse>('/api/docs/content')
+      return getConfiguredDocuments(response.data.data)
+        .filter((document) => !document.sectionId)
+        .sort((a, b) => a.order - b.order)
     },
     staleTime: 60_000,
   })
@@ -872,13 +929,58 @@ function ErrorCard(props: { code: string; title: string; text: string }) {
 
 export function Docs() {
   const { t } = useTranslation()
+  const { data: configuredDocuments } = useQuery({
+    queryKey: ['public-docs-content'],
+    queryFn: async () => {
+      const response = await api.get<DocsResponse>('/api/docs/content')
+      return getConfiguredDocuments(response.data.data)
+    },
+    staleTime: 60_000,
+  })
+  const configuredOverrides = useMemo(
+    () =>
+      Object.fromEntries(
+        (configuredDocuments ?? [])
+          .filter((document) => document.sectionId)
+          .map((document) => [document.sectionId, document])
+      ),
+    [configuredDocuments]
+  )
+  const visibleDocNav = useMemo(
+    () =>
+      defaultDocSections
+        .filter(
+          (section) => configuredOverrides[section.id]?.published !== false
+        )
+        .map((section) => [
+          section.id,
+          configuredOverrides[section.id]?.title || section.title,
+        ]),
+    [configuredOverrides]
+  )
+  const visibleCategories = useMemo(
+    () =>
+      docCategories
+        .map((category) => ({
+          ...category,
+          sections: category.sections.filter(
+            (sectionId) =>
+              sectionId === 'custom-docs' ||
+              visibleDocNav.some(([id]) => id === sectionId)
+          ),
+        }))
+        .filter((category) => category.sections.length > 0),
+    [visibleDocNav]
+  )
   const [activeCategory, setActiveCategory] = useState(() => {
     const sectionId =
       typeof window !== 'undefined' ? window.location.hash.slice(1) : ''
     return (
-      docCategories.find((category) =>
+      visibleCategories.find((category) =>
         category.sections.includes(sectionId as never)
-      )?.id ?? docCategories[0].id
+      )?.id ??
+      visibleCategories[0]?.id ??
+      docCategories[0].id
     )
   })
   const scrollToSection = (sectionId: string) => {
@@ -892,7 +994,7 @@ export function Docs() {
   }
 
   useEffect(() => {
-    const sections = docNav
+    const sections = visibleDocNav
       .map(([id]) => document.querySelector<HTMLElement>(`#${id}`))
       .filter((section): section is HTMLElement => section !== null)
     if (sections.length === 0) return
@@ -904,7 +1006,7 @@ export function Docs() {
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
         const sectionId = visible[0]?.target.id
         if (!sectionId) return
-        const category = docCategories.find((item) =>
+        const category = visibleCategories.find((item) =>
           item.sections.includes(sectionId as never)
         )
         if (category) setActiveCategory(category.id)
@@ -914,477 +1016,490 @@ export function Docs() {
 
     sections.forEach((section) => observer.observe(section))
     return () => observer.disconnect()
-  }, [])
+  }, [visibleCategories, visibleDocNav])
 
   return (
     <PublicLayout showMainContainer={false}>
-      <div className='mx-auto max-w-7xl px-4 pt-24 pb-10 md:px-8 md:pt-28 md:pb-14'>
-        <header className='border-b pb-8'>
-          <p className='text-primary text-xs font-semibold tracking-[0.2em] uppercase'>
-            {t('API DOCUMENTATION')}
-          </p>
-          <h1 className='mt-3 text-3xl font-semibold tracking-tight md:text-4xl'>
-            {t('From first request to production')}
-          </h1>
-          <p className='text-muted-foreground mt-3 max-w-3xl text-sm leading-7 md:text-base'>
-            {t(
-              'Choose a documentation category for your task. Each section includes copyable requests, parameter notes, and troubleshooting steps.'
-            )}
-          </p>
-        </header>
+      <DocsConfigurationContext.Provider value={configuredOverrides}>
+        <div className='mx-auto max-w-7xl px-4 pt-24 pb-10 md:px-8 md:pt-28 md:pb-14'>
+          <header className='border-b pb-8'>
+            <p className='text-primary text-xs font-semibold tracking-[0.2em] uppercase'>
+              {t('API DOCUMENTATION')}
+            </p>
+            <h1 className='mt-3 text-3xl font-semibold tracking-tight md:text-4xl'>
+              {t('From first request to production')}
+            </h1>
+            <p className='text-muted-foreground mt-3 max-w-3xl text-sm leading-7 md:text-base'>
+              {t(
+                'Choose a documentation category for your task. Each section includes copyable requests, parameter notes, and troubleshooting steps.'
+              )}
+            </p>
+          </header>
 
-        <div
-          className='bg-background/85 supports-[backdrop-filter]:bg-background/65 sticky top-16 z-30 mt-6 flex gap-1 overflow-x-auto rounded-xl border p-1 shadow-sm backdrop-blur-xl'
-          role='tablist'
-          aria-label={t('Documentation categories')}
-        >
-          {docCategories.map((category) => (
-            <button
-              key={category.id}
-              type='button'
-              role='tab'
-              aria-selected={activeCategory === category.id}
-              aria-controls='docs-section-nav'
-              onClick={() => {
-                setActiveCategory(category.id)
-                scrollToSection(category.sections[0])
-              }}
-              className={`shrink-0 rounded-lg px-3 py-2 text-sm transition-colors md:px-4 ${
-                activeCategory === category.id
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {t(category.label)}
-            </button>
-          ))}
-        </div>
-
-        <div className='grid gap-8 pt-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-12'>
-          <aside
-            id='docs-section-nav'
-            className='lg:sticky lg:top-28 lg:h-fit'
-            aria-label={t('Section navigation')}
+          <div
+            className='bg-background/85 supports-[backdrop-filter]:bg-background/65 sticky top-16 z-30 mt-6 flex gap-1 overflow-x-auto rounded-xl border p-1 shadow-sm backdrop-blur-xl'
+            role='tablist'
+            aria-label={t('Documentation categories')}
           >
-            <div className='glass-panel max-h-[calc(100vh-9rem)] overflow-y-auto rounded-2xl border p-4'>
-              <p className='text-muted-foreground mb-3 text-xs font-semibold tracking-[0.16em] uppercase'>
-                {t('Documentation outline')}
-              </p>
-              <nav className='space-y-4' aria-label={t('Section navigation')}>
-                {docCategories.map((category) => (
-                  <div key={category.id}>
-                    <button
-                      type='button'
-                      onClick={() => {
-                        setActiveCategory(category.id)
-                        scrollToSection(category.sections[0])
-                      }}
-                      className={`mb-1 px-3 text-xs font-semibold tracking-wide uppercase transition-colors ${
-                        activeCategory === category.id
-                          ? 'text-primary'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {t(category.label)}
-                    </button>
-                    <div className='space-y-0.5'>
-                      {docNav
-                        .filter(([id]) =>
-                          category.sections.includes(id as never)
-                        )
-                        .map(([id, label]) => (
-                          <a
-                            key={id}
-                            href={`#${id}`}
-                            onClick={(event) => {
-                              event.preventDefault()
-                              scrollToSection(id)
-                            }}
-                            className='text-muted-foreground hover:text-foreground hover:bg-muted/60 block rounded-lg px-3 py-1.5 text-sm transition-colors'
-                          >
-                            {label}
-                          </a>
-                        ))}
+            {visibleCategories.map((category) => (
+              <button
+                key={category.id}
+                type='button'
+                role='tab'
+                aria-selected={activeCategory === category.id}
+                aria-controls='docs-section-nav'
+                onClick={() => {
+                  setActiveCategory(category.id)
+                  scrollToSection(category.sections[0])
+                }}
+                className={`shrink-0 rounded-lg px-3 py-2 text-sm transition-colors md:px-4 ${
+                  activeCategory === category.id
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {t(category.label)}
+              </button>
+            ))}
+          </div>
+
+          <div className='grid gap-8 pt-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-12'>
+            <aside
+              id='docs-section-nav'
+              className='lg:sticky lg:top-28 lg:h-fit'
+              aria-label={t('Section navigation')}
+            >
+              <div className='glass-panel max-h-[calc(100vh-9rem)] overflow-y-auto rounded-2xl border p-4'>
+                <p className='text-muted-foreground mb-3 text-xs font-semibold tracking-[0.16em] uppercase'>
+                  {t('Documentation outline')}
+                </p>
+                <nav className='space-y-4' aria-label={t('Section navigation')}>
+                  {visibleCategories.map((category) => (
+                    <div key={category.id}>
+                      <button
+                        type='button'
+                        onClick={() => {
+                          setActiveCategory(category.id)
+                          scrollToSection(category.sections[0])
+                        }}
+                        className={`mb-1 px-3 text-xs font-semibold tracking-wide uppercase transition-colors ${
+                          activeCategory === category.id
+                            ? 'text-primary'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {t(category.label)}
+                      </button>
+                      <div className='space-y-0.5'>
+                        {visibleDocNav
+                          .filter(([id]) =>
+                            category.sections.includes(id as never)
+                          )
+                          .map(([id, label]) => (
+                            <a
+                              key={id}
+                              href={`#${id}`}
+                              onClick={(event) => {
+                                event.preventDefault()
+                                scrollToSection(id)
+                              }}
+                              className='text-muted-foreground hover:text-foreground hover:bg-muted/60 block rounded-lg px-3 py-1.5 text-sm transition-colors'
+                            >
+                              {label}
+                            </a>
+                          ))}
+                      </div>
+                    </div>
+                  ))}
+                </nav>
+              </div>
+            </aside>
+
+            <main className='min-w-0 space-y-8'>
+              {/* 1. Getting started */}
+              <Section
+                id='start'
+                eyebrow='GETTING STARTED'
+                title='五分钟完成首次调用'
+                description='普通用户推荐使用 CC Switch 一键配置；开发者可以直接复制接口示例。一个分组使用一个 Key 即可，多建 Key 不会增加并发。'
+              >
+                <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+                  <StepCard index={1} title='下载 CC Switch'>
+                    <p>
+                      按 Windows、macOS 或 Linux
+                      下载并安装，打开后保持后台运行。
+                    </p>
+                    <BlockLink href='#cc-switch'>前往下载</BlockLink>
+                  </StepCard>
+                  <StepCard index={2} title='创建 API Key'>
+                    <p>进入 API 密钥页面，选择要使用的模型分组并创建密钥。</p>
+                  </StepCard>
+                  <StepCard index={3} title='一键导入配置'>
+                    <p>
+                      在密钥右侧选择 CC Switch，勾选 Claude Code、Codex
+                      等目标工具。
+                    </p>
+                  </StepCard>
+                  <StepCard index={4} title='发送最小测试'>
+                    <p>
+                      文字先发一条短消息，视频先用 480p、4 秒验证密钥和参数。
+                    </p>
+                  </StepCard>
+                </div>
+              </Section>
+
+              {/* 2. Endpoints */}
+              <Section
+                id='endpoints'
+                eyebrow='ENDPOINTS'
+                title='线路与请求地址'
+                description='OpenAI 兼容客户端填写带 /v1 的地址；Claude Code 填根域名，不要在末尾增加 /v1。'
+              >
+                <div className='grid gap-4 md:grid-cols-3'>
+                  <div className='glass-panel rounded-xl border p-5'>
+                    <div className='flex items-center justify-between'>
+                      <h3 className='font-semibold'>主线路</h3>
+                      <span className='bg-primary/10 text-primary rounded px-2 py-0.5 text-xs'>
+                        默认推荐
+                      </span>
+                    </div>
+                    <p className='text-muted-foreground mt-2 text-sm'>
+                      回国加速，适合国内客户端和日常调用
+                    </p>
+                    <div className='mt-4 space-y-3'>
+                      <CopyRow
+                        label='OpenAI 兼容'
+                        value={`https://${SITE}/v1`}
+                      />
+                      <CopyRow label='Claude Code' value={`https://${SITE}`} />
                     </div>
                   </div>
-                ))}
-              </nav>
-            </div>
-          </aside>
-
-          <main className='min-w-0 space-y-8'>
-            {/* 1. Getting started */}
-            <Section
-              id='start'
-              eyebrow='GETTING STARTED'
-              title='五分钟完成首次调用'
-              description='普通用户推荐使用 CC Switch 一键配置；开发者可以直接复制接口示例。一个分组使用一个 Key 即可，多建 Key 不会增加并发。'
-            >
-              <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-                <StepCard index={1} title='下载 CC Switch'>
-                  <p>
-                    按 Windows、macOS 或 Linux 下载并安装，打开后保持后台运行。
-                  </p>
-                  <BlockLink href='#cc-switch'>前往下载</BlockLink>
-                </StepCard>
-                <StepCard index={2} title='创建 API Key'>
-                  <p>进入 API 密钥页面，选择要使用的模型分组并创建密钥。</p>
-                </StepCard>
-                <StepCard index={3} title='一键导入配置'>
-                  <p>
-                    在密钥右侧选择 CC Switch，勾选 Claude Code、Codex
-                    等目标工具。
-                  </p>
-                </StepCard>
-                <StepCard index={4} title='发送最小测试'>
-                  <p>文字先发一条短消息，视频先用 480p、4 秒验证密钥和参数。</p>
-                </StepCard>
-              </div>
-            </Section>
-
-            {/* 2. Endpoints */}
-            <Section
-              id='endpoints'
-              eyebrow='ENDPOINTS'
-              title='线路与请求地址'
-              description='OpenAI 兼容客户端填写带 /v1 的地址；Claude Code 填根域名，不要在末尾增加 /v1。'
-            >
-              <div className='grid gap-4 md:grid-cols-3'>
-                <div className='glass-panel rounded-xl border p-5'>
-                  <div className='flex items-center justify-between'>
-                    <h3 className='font-semibold'>主线路</h3>
-                    <span className='bg-primary/10 text-primary rounded px-2 py-0.5 text-xs'>
-                      默认推荐
-                    </span>
-                  </div>
-                  <p className='text-muted-foreground mt-2 text-sm'>
-                    回国加速，适合国内客户端和日常调用
-                  </p>
-                  <div className='mt-4 space-y-3'>
-                    <CopyRow label='OpenAI 兼容' value={`https://${SITE}/v1`} />
-                    <CopyRow label='Claude Code' value={`https://${SITE}`} />
+                  <div className='rounded-xl border p-5 md:col-span-2'>
+                    <h3 className='font-semibold'>线路说明</h3>
+                    <p className='text-muted-foreground mt-2 text-sm leading-6'>
+                      文档会根据当前浏览器地址自动生成主线路。若管理员配置了备用域名，请以控制台公告为准，避免使用已失效的旧线路。
+                    </p>
                   </div>
                 </div>
-                <div className='rounded-xl border p-5 md:col-span-2'>
-                  <h3 className='font-semibold'>线路说明</h3>
-                  <p className='text-muted-foreground mt-2 text-sm leading-6'>
-                    文档会根据当前浏览器地址自动生成主线路。若管理员配置了备用域名，请以控制台公告为准，避免使用已失效的旧线路。
-                  </p>
-                </div>
-              </div>
-            </Section>
+              </Section>
 
-            {/* 3. Authentication */}
-            <Section
-              id='api-key'
-              eyebrow='AUTHENTICATION'
-              title='创建并使用 API Key'
-              description='所有 API 请求都需要鉴权。密钥只展示给本人，不要放进前端代码、公开仓库或截图。'
-            >
-              <div className='grid gap-4 sm:grid-cols-2'>
-                <StepCard index={1} title='进入 API 密钥'>
-                  <p>在控制台打开 API 密钥页面，点击创建密钥。</p>
-                </StepCard>
-                <StepCard index={2} title='选择分组'>
-                  <p>文字、Claude 与视频分组权限不同，按目标模型选择。</p>
-                </StepCard>
-                <StepCard index={3} title='保存并复制'>
-                  <p>
-                    复制完整 sk- 密钥，配置到客户端或 Authorization Header。
-                  </p>
-                </StepCard>
-                <StepCard index={4} title='不要重复创建'>
-                  <p>同一分组一个密钥即可；并发能力由分组和上游决定。</p>
-                </StepCard>
-              </div>
-              <div className='mt-6'>
-                <p className='mb-1 text-sm font-medium'>标准鉴权 Header</p>
-                <CodeBlock code='Authorization: Bearer sk-你的API密钥' />
-                <p className='text-muted-foreground mt-2 text-sm'>
-                  点击密钥右侧复制按钮获取完整 API Key
-                </p>
-              </div>
-              <div className='mt-6 grid gap-4 md:grid-cols-2'>
-                <TutorialFigure
-                  src='https://api.bblabu.ai/tutorial-assets/api-key-copy.jpg'
-                  alt={t('API key creation and copy example')}
-                  caption={t(
-                    'Create a key in the console and copy the complete sk- value. The full key is shown only once.'
-                  )}
-                />
-                <div className='bg-muted/30 rounded-xl border p-5'>
-                  <h3 className='font-semibold'>{t('Before you configure')}</h3>
-                  <ul className='text-muted-foreground mt-3 space-y-2 text-sm leading-6'>
-                    <li>
-                      {t(
-                        'Make sure the key group includes the model you need.'
-                      )}
-                    </li>
-                    <li>
-                      {t(
-                        'Never commit an API key to a Git repository or frontend code.'
-                      )}
-                    </li>
-                    <li>
-                      {t(
-                        'For the first request, use short text and a small output limit.'
-                      )}
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </Section>
-
-            {/* 4. CC Switch */}
-            <CCSwitchSection />
-
-            {/* 5. Claude Code */}
-            <Section
-              id='claude-code'
-              eyebrow='CLAUDE CODE'
-              title='Claude Code 安装与配置'
-              description='Claude Code 是 Anthropic 的命令行编程工具。先安装客户端，再使用 CC Switch 一键导入；也可以手动配置环境变量。'
-            >
-              <div className='grid gap-4 sm:grid-cols-3'>
-                <CodeBlock
-                  code='curl -fsSL https://claude.ai/install.sh | bash'
-                  title='macOS / Linux'
-                />
-                <CodeBlock
-                  code='brew install --cask claude-code'
-                  title='macOS Homebrew'
-                />
-                <CodeBlock
-                  code='irm https://claude.ai/install.ps1 | iex'
-                  title='Windows PowerShell'
-                />
-              </div>
-              <BlockLink
-                href='https://docs.anthropic.com/en/docs/claude-code/overview'
-                external
+              {/* 3. Authentication */}
+              <Section
+                id='api-key'
+                eyebrow='AUTHENTICATION'
+                title='创建并使用 API Key'
+                description='所有 API 请求都需要鉴权。密钥只展示给本人，不要放进前端代码、公开仓库或截图。'
               >
-                Claude Code 官方文档
-              </BlockLink>
-              <p className='text-muted-foreground mt-3 text-sm'>
-                查看最新安装要求、更新方式和系统支持情况。
-              </p>
+                <div className='grid gap-4 sm:grid-cols-2'>
+                  <StepCard index={1} title='进入 API 密钥'>
+                    <p>在控制台打开 API 密钥页面，点击创建密钥。</p>
+                  </StepCard>
+                  <StepCard index={2} title='选择分组'>
+                    <p>文字、Claude 与视频分组权限不同，按目标模型选择。</p>
+                  </StepCard>
+                  <StepCard index={3} title='保存并复制'>
+                    <p>
+                      复制完整 sk- 密钥，配置到客户端或 Authorization Header。
+                    </p>
+                  </StepCard>
+                  <StepCard index={4} title='不要重复创建'>
+                    <p>同一分组一个密钥即可；并发能力由分组和上游决定。</p>
+                  </StepCard>
+                </div>
+                <div className='mt-6'>
+                  <p className='mb-1 text-sm font-medium'>标准鉴权 Header</p>
+                  <CodeBlock code='Authorization: Bearer sk-你的API密钥' />
+                  <p className='text-muted-foreground mt-2 text-sm'>
+                    点击密钥右侧复制按钮获取完整 API Key
+                  </p>
+                </div>
+                <div className='mt-6 grid gap-4 md:grid-cols-2'>
+                  <TutorialFigure
+                    src='https://api.bblabu.ai/tutorial-assets/api-key-copy.jpg'
+                    alt={t('API key creation and copy example')}
+                    caption={t(
+                      'Create a key in the console and copy the complete sk- value. The full key is shown only once.'
+                    )}
+                  />
+                  <div className='bg-muted/30 rounded-xl border p-5'>
+                    <h3 className='font-semibold'>
+                      {t('Before you configure')}
+                    </h3>
+                    <ul className='text-muted-foreground mt-3 space-y-2 text-sm leading-6'>
+                      <li>
+                        {t(
+                          'Make sure the key group includes the model you need.'
+                        )}
+                      </li>
+                      <li>
+                        {t(
+                          'Never commit an API key to a Git repository or frontend code.'
+                        )}
+                      </li>
+                      <li>
+                        {t(
+                          'For the first request, use short text and a small output limit.'
+                        )}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </Section>
 
-              <h3 className='mt-8 text-lg font-semibold'>
-                推荐：使用 CC Switch 配置
-              </h3>
-              <p className='text-muted-foreground mt-2 text-sm leading-6'>
-                安装完成后返回上方，一键导入密钥、主线路和模型。
-              </p>
-              <div className='mt-4 grid gap-4 sm:grid-cols-2'>
-                <StepCard index={1} title='检查安装'>
-                  <CodeBlock code='claude --version' />
-                </StepCard>
-                <StepCard index={2} title='启动并验证'>
-                  <CodeBlock code='claude' />
-                  <p>输入一条测试消息，能正常回复即配置成功。</p>
-                </StepCard>
-              </div>
-              <p className='text-muted-foreground mt-4 text-sm'>
-                Windows 请在系统环境变量中添加相同变量；修改后重新打开终端。
-              </p>
-              <CodeBlock
-                code={`# macOS / Linux
+              {/* 4. CC Switch */}
+              <CCSwitchSection />
+
+              {/* 5. Claude Code */}
+              <Section
+                id='claude-code'
+                eyebrow='CLAUDE CODE'
+                title='Claude Code 安装与配置'
+                description='Claude Code 是 Anthropic 的命令行编程工具。先安装客户端，再使用 CC Switch 一键导入；也可以手动配置环境变量。'
+              >
+                <div className='grid gap-4 sm:grid-cols-3'>
+                  <CodeBlock
+                    code='curl -fsSL https://claude.ai/install.sh | bash'
+                    title='macOS / Linux'
+                  />
+                  <CodeBlock
+                    code='brew install --cask claude-code'
+                    title='macOS Homebrew'
+                  />
+                  <CodeBlock
+                    code='irm https://claude.ai/install.ps1 | iex'
+                    title='Windows PowerShell'
+                  />
+                </div>
+                <BlockLink
+                  href='https://docs.anthropic.com/en/docs/claude-code/overview'
+                  external
+                >
+                  Claude Code 官方文档
+                </BlockLink>
+                <p className='text-muted-foreground mt-3 text-sm'>
+                  查看最新安装要求、更新方式和系统支持情况。
+                </p>
+
+                <h3 className='mt-8 text-lg font-semibold'>
+                  推荐：使用 CC Switch 配置
+                </h3>
+                <p className='text-muted-foreground mt-2 text-sm leading-6'>
+                  安装完成后返回上方，一键导入密钥、主线路和模型。
+                </p>
+                <div className='mt-4 grid gap-4 sm:grid-cols-2'>
+                  <StepCard index={1} title='检查安装'>
+                    <CodeBlock code='claude --version' />
+                  </StepCard>
+                  <StepCard index={2} title='启动并验证'>
+                    <CodeBlock code='claude' />
+                    <p>输入一条测试消息，能正常回复即配置成功。</p>
+                  </StepCard>
+                </div>
+                <p className='text-muted-foreground mt-4 text-sm'>
+                  Windows 请在系统环境变量中添加相同变量；修改后重新打开终端。
+                </p>
+                <CodeBlock
+                  code={`# macOS / Linux
 export ANTHROPIC_BASE_URL="https://${SITE}"
 export ANTHROPIC_AUTH_TOKEN="sk-你的API密钥"
 
 # 启动 Claude Code
 claude`}
-              />
-              <p className='text-muted-foreground mt-3 text-sm font-medium'>
-                Claude Code 的 Base URL 必须填写根域名 https://
-                <code>{SITE}</code>
-                ，不要添加/v1。
-              </p>
-            </Section>
+                />
+                <p className='text-muted-foreground mt-3 text-sm font-medium'>
+                  Claude Code 的 Base URL 必须填写根域名 https://
+                  <code>{SITE}</code>
+                  ，不要添加/v1。
+                </p>
+              </Section>
 
-            {/* 6. Codex toolkit */}
-            <CodexToolsSection />
+              {/* 6. Codex toolkit */}
+              <CodexToolsSection />
 
-            {/* 7. Codex CLI */}
-            <Section
-              id='codex-cli'
-              eyebrow='OPENAI CODEX'
-              title='Codex CLI 下载与接入'
-              description='Codex CLI 是 OpenAI 的命令行编程工具。需要 Node.js 和 npm；安装后建议通过 CC Switch 导入本站 OpenAI 分组配置。'
-            >
-              <BlockLink href='https://nodejs.org/en/download/' external>
-                先安装 Node.js
-              </BlockLink>
-              <p className='text-muted-foreground mt-2 text-sm'>
-                尚未安装 npm 的用户，先从 Node.js 官方下载 LTS 版本。
-              </p>
-              <BlockLink
-                href='https://developers.openai.com/codex/cli/'
-                external
+              {/* 7. Codex CLI */}
+              <Section
+                id='codex-cli'
+                eyebrow='OPENAI CODEX'
+                title='Codex CLI 下载与接入'
+                description='Codex CLI 是 OpenAI 的命令行编程工具。需要 Node.js 和 npm；安装后建议通过 CC Switch 导入本站 OpenAI 分组配置。'
               >
-                Codex CLI 官方文档
-              </BlockLink>
-              <p className='text-muted-foreground mt-2 text-sm'>
-                查看 OpenAI 官方安装、更新和使用说明。
-              </p>
-              <h3 className='mt-8 text-lg font-semibold'>安装后导入本站配置</h3>
-              <p className='text-muted-foreground mt-2 text-sm leading-6'>
-                在 CC Switch 中勾选 Codex，OpenAI Base URL 使用 {SITE}/v1。
-              </p>
-              <div className='mt-4 grid gap-4 sm:grid-cols-2'>
-                <CodeBlock
-                  code={`# 使用 npm 安装（Windows / macOS / Linux）
+                <BlockLink href='https://nodejs.org/en/download/' external>
+                  先安装 Node.js
+                </BlockLink>
+                <p className='text-muted-foreground mt-2 text-sm'>
+                  尚未安装 npm 的用户，先从 Node.js 官方下载 LTS 版本。
+                </p>
+                <BlockLink
+                  href='https://developers.openai.com/codex/cli/'
+                  external
+                >
+                  Codex CLI 官方文档
+                </BlockLink>
+                <p className='text-muted-foreground mt-2 text-sm'>
+                  查看 OpenAI 官方安装、更新和使用说明。
+                </p>
+                <h3 className='mt-8 text-lg font-semibold'>
+                  安装后导入本站配置
+                </h3>
+                <p className='text-muted-foreground mt-2 text-sm leading-6'>
+                  在 CC Switch 中勾选 Codex，OpenAI Base URL 使用 {SITE}/v1。
+                </p>
+                <div className='mt-4 grid gap-4 sm:grid-cols-2'>
+                  <CodeBlock
+                    code={`# 使用 npm 安装（Windows / macOS / Linux）
 npm install -g @openai/codex
 
 # macOS 也可以使用 Homebrew
 brew install --cask codex`}
-                />
-                <CodeBlock
-                  code={`# 检查并启动
+                  />
+                  <CodeBlock
+                    code={`# 检查并启动
 codex --version
 codex`}
-                />
-              </div>
-            </Section>
+                  />
+                </div>
+              </Section>
 
-            {/* 8. GPT-5.6 Sol 1M context */}
-            <Section
-              id='codex-sol-context'
-              eyebrow='GPT-5.6 SOL'
-              title='Codex 原生支持 105 万上下文'
-              description='GPT-5.6 Sol 原生支持 105 万 token 上下文，现在直接把 Codex 上下文拉满。'
-            >
-              <p className='text-muted-foreground'>
-                保存后重启 Codex，新会话直接起飞
-              </p>
-              <p className='mt-3 text-sm'>
-                修改 ~/.codex/config.toml 后保存并重启 Codex，新会话即可使用 105
-                万 token 上下文；临时测试可以用右侧命令直接启动。
-              </p>
-              <div className='mt-4 grid gap-4 lg:grid-cols-2'>
-                <CodeBlock
-                  code={`# 打开 ~/.codex/config.toml，顶部加上这三行
+              {/* 8. GPT-5.6 Sol 1M context */}
+              <Section
+                id='codex-sol-context'
+                eyebrow='GPT-5.6 SOL'
+                title='Codex 原生支持 105 万上下文'
+                description='GPT-5.6 Sol 原生支持 105 万 token 上下文，现在直接把 Codex 上下文拉满。'
+              >
+                <p className='text-muted-foreground'>
+                  保存后重启 Codex，新会话直接起飞
+                </p>
+                <p className='mt-3 text-sm'>
+                  修改 ~/.codex/config.toml 后保存并重启 Codex，新会话即可使用
+                  105 万 token 上下文；临时测试可以用右侧命令直接启动。
+                </p>
+                <div className='mt-4 grid gap-4 lg:grid-cols-2'>
+                  <CodeBlock
+                    code={`# 打开 ~/.codex/config.toml，顶部加上这三行
 model = "gpt-5.6-sol"
 model_context_window = 1000000
 model_auto_compact_token_limit = 900000`}
-                />
-                <CodeBlock
-                  code={`# 临时测试用这条命令
+                  />
+                  <CodeBlock
+                    code={`# 临时测试用这条命令
 codex -m gpt-5.6-sol -c model_context_window=1000000 -c model_auto_compact_token_limit=900000`}
-                />
-              </div>
-            </Section>
+                  />
+                </div>
+              </Section>
 
-            {/* 9. ChatGPT app */}
-            <Section
-              id='chatgpt'
-              eyebrow='CHATGPT APP'
-              title='ChatGPT 官方客户端'
-              description='需要使用 ChatGPT 网页版或官方桌面、手机客户端时，从官方入口下载，避免安装第三方仿冒软件。'
-            >
-              <div className='grid gap-4 sm:grid-cols-2'>
-                <div className='glass-panel rounded-xl border p-5'>
-                  <h4 className='font-semibold'>ChatGPT 网页版</h4>
-                  <p className='text-muted-foreground mt-2 text-sm'>
-                    无需安装，浏览器打开后使用 OpenAI 账号登录。
-                  </p>
-                  <BlockLink href='https://chatgpt.com/' external>
-                    ChatGPT 网页版
-                  </BlockLink>
+              {/* 9. ChatGPT app */}
+              <Section
+                id='chatgpt'
+                eyebrow='CHATGPT APP'
+                title='ChatGPT 官方客户端'
+                description='需要使用 ChatGPT 网页版或官方桌面、手机客户端时，从官方入口下载，避免安装第三方仿冒软件。'
+              >
+                <div className='grid gap-4 sm:grid-cols-2'>
+                  <div className='glass-panel rounded-xl border p-5'>
+                    <h4 className='font-semibold'>ChatGPT 网页版</h4>
+                    <p className='text-muted-foreground mt-2 text-sm'>
+                      无需安装，浏览器打开后使用 OpenAI 账号登录。
+                    </p>
+                    <BlockLink href='https://chatgpt.com/' external>
+                      ChatGPT 网页版
+                    </BlockLink>
+                  </div>
+                  <div className='glass-panel rounded-xl border p-5'>
+                    <h4 className='font-semibold'>ChatGPT 官方下载页</h4>
+                    <p className='text-muted-foreground mt-2 text-sm'>
+                      提供 macOS、Windows、iOS 和 Android 官方客户端入口。
+                    </p>
+                    <BlockLink
+                      href='https://openai.com/chatgpt/download/'
+                      external
+                    >
+                      ChatGPT 官方下载页
+                    </BlockLink>
+                  </div>
                 </div>
-                <div className='glass-panel rounded-xl border p-5'>
-                  <h4 className='font-semibold'>ChatGPT 官方下载页</h4>
-                  <p className='text-muted-foreground mt-2 text-sm'>
-                    提供 macOS、Windows、iOS 和 Android 官方客户端入口。
-                  </p>
-                  <BlockLink
-                    href='https://openai.com/chatgpt/download/'
-                    external
-                  >
-                    ChatGPT 官方下载页
-                  </BlockLink>
-                </div>
-              </div>
-              <p className='text-muted-foreground mt-4 text-sm leading-6'>
-                官方 ChatGPT 应用搭配 CC Switch 工具，在里面配置好本站的 Base
-                URL 和 API Key 后即可正常使用本站 API。
-              </p>
-            </Section>
+                <p className='text-muted-foreground mt-4 text-sm leading-6'>
+                  官方 ChatGPT 应用搭配 CC Switch 工具，在里面配置好本站的 Base
+                  URL 和 API Key 后即可正常使用本站 API。
+                </p>
+              </Section>
 
-            {/* 10. VS Code */}
-            <Section
-              id='vscode'
-              eyebrow='VS CODE'
-              title='VS Code 与 AI 扩展'
-              description='习惯在编辑器里使用 AI 的用户，可以先安装 VS Code，再安装 OpenAI Codex 或 Anthropic Claude Code 扩展。'
-            >
-              <div className='grid gap-4 sm:grid-cols-2'>
-                <div className='glass-panel rounded-xl border p-5'>
-                  <h4 className='font-semibold'>下载 Visual Studio Code</h4>
-                  <p className='text-muted-foreground mt-2 text-sm'>
-                    官方页面会根据 Windows、macOS 或 Linux 提供对应安装包。
-                  </p>
-                  <BlockLink
-                    href='https://code.visualstudio.com/Download'
-                    external
-                  >
-                    下载 Visual Studio Code
-                  </BlockLink>
+              {/* 10. VS Code */}
+              <Section
+                id='vscode'
+                eyebrow='VS CODE'
+                title='VS Code 与 AI 扩展'
+                description='习惯在编辑器里使用 AI 的用户，可以先安装 VS Code，再安装 OpenAI Codex 或 Anthropic Claude Code 扩展。'
+              >
+                <div className='grid gap-4 sm:grid-cols-2'>
+                  <div className='glass-panel rounded-xl border p-5'>
+                    <h4 className='font-semibold'>下载 Visual Studio Code</h4>
+                    <p className='text-muted-foreground mt-2 text-sm'>
+                      官方页面会根据 Windows、macOS 或 Linux 提供对应安装包。
+                    </p>
+                    <BlockLink
+                      href='https://code.visualstudio.com/Download'
+                      external
+                    >
+                      下载 Visual Studio Code
+                    </BlockLink>
+                  </div>
+                  <div className='glass-panel rounded-xl border p-5'>
+                    <h4 className='font-semibold'>OpenAI Codex 扩展</h4>
+                    <p className='text-muted-foreground mt-2 text-sm'>
+                      在 VS Code 扩展市场查看并安装 OpenAI 官方扩展。
+                    </p>
+                    <BlockLink
+                      href='https://marketplace.visualstudio.com/items?itemName=OpenAI.chatgpt'
+                      external
+                    >
+                      OpenAI Codex 扩展
+                    </BlockLink>
+                  </div>
                 </div>
-                <div className='glass-panel rounded-xl border p-5'>
-                  <h4 className='font-semibold'>OpenAI Codex 扩展</h4>
-                  <p className='text-muted-foreground mt-2 text-sm'>
-                    在 VS Code 扩展市场查看并安装 OpenAI 官方扩展。
-                  </p>
-                  <BlockLink
-                    href='https://marketplace.visualstudio.com/items?itemName=OpenAI.chatgpt'
-                    external
-                  >
-                    OpenAI Codex 扩展
-                  </BlockLink>
-                </div>
-              </div>
-              <div className='mt-4 grid gap-4 sm:grid-cols-2'>
-                <div className='glass-panel rounded-xl border p-5'>
-                  <h4 className='font-semibold'>Anthropic Claude Code 扩展</h4>
-                  <p className='text-muted-foreground mt-2 text-sm'>
-                    在 VS Code 扩展市场查看并安装 Anthropic 官方扩展。
-                  </p>
-                  <BlockLink
-                    href='https://marketplace.visualstudio.com/items?itemName=Anthropic.claude-code'
-                    external
-                  >
-                    Anthropic Claude Code 扩展
-                  </BlockLink>
-                </div>
-                <CodeBlock
-                  code={`# OpenAI Codex 扩展
+                <div className='mt-4 grid gap-4 sm:grid-cols-2'>
+                  <div className='glass-panel rounded-xl border p-5'>
+                    <h4 className='font-semibold'>
+                      Anthropic Claude Code 扩展
+                    </h4>
+                    <p className='text-muted-foreground mt-2 text-sm'>
+                      在 VS Code 扩展市场查看并安装 Anthropic 官方扩展。
+                    </p>
+                    <BlockLink
+                      href='https://marketplace.visualstudio.com/items?itemName=Anthropic.claude-code'
+                      external
+                    >
+                      Anthropic Claude Code 扩展
+                    </BlockLink>
+                  </div>
+                  <CodeBlock
+                    code={`# OpenAI Codex 扩展
 code --install-extension OpenAI.chatgpt
 
 # Anthropic Claude Code 扩展
 code --install-extension Anthropic.claude-code`}
-                />
-              </div>
-              <p className='text-muted-foreground mt-4 text-sm leading-6'>
-                扩展安装完成后，先确认 CC Switch 已选中本站配置，再重启 VS Code
-                并发送一条短消息验证连接。
-              </p>
-            </Section>
+                  />
+                </div>
+                <p className='text-muted-foreground mt-4 text-sm leading-6'>
+                  扩展安装完成后，先确认 CC Switch 已选中本站配置，再重启 VS
+                  Code 并发送一条短消息验证连接。
+                </p>
+              </Section>
 
-            {/* 11. Text models */}
-            <Section
-              id='text-api'
-              eyebrow='TEXT MODELS'
-              title='文字模型 API'
-              description='本站同时兼容 OpenAI Chat Completions、Responses API 与 Anthropic Messages。模型名称以模型广场和所选分组为准。'
-            >
-              <h3 className='text-lg font-semibold'>Chat Completions</h3>
-              <p className='text-muted-foreground mt-2 text-sm'>
-                适合大多数 OpenAI 兼容客户端与现有 SDK。
-              </p>
-              <div className='mt-3'>
-                <CodeBlock
-                  code={`curl https://${SITE}/v1/chat/completions \\
+              {/* 11. Text models */}
+              <Section
+                id='text-api'
+                eyebrow='TEXT MODELS'
+                title='文字模型 API'
+                description='本站同时兼容 OpenAI Chat Completions、Responses API 与 Anthropic Messages。模型名称以模型广场和所选分组为准。'
+              >
+                <h3 className='text-lg font-semibold'>Chat Completions</h3>
+                <p className='text-muted-foreground mt-2 text-sm'>
+                  适合大多数 OpenAI 兼容客户端与现有 SDK。
+                </p>
+                <div className='mt-3'>
+                  <CodeBlock
+                    code={`curl https://${SITE}/v1/chat/completions \\
   -H "Authorization: Bearer sk-你的API密钥" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -1394,16 +1509,16 @@ code --install-extension Anthropic.claude-code`}
     ],
     "stream": true
   }'`}
-                />
-              </div>
+                  />
+                </div>
 
-              <h3 className='mt-8 text-lg font-semibold'>Responses API</h3>
-              <p className='text-muted-foreground mt-2 text-sm'>
-                适合 Codex、新版 OpenAI SDK 与长上下文调用。
-              </p>
-              <div className='mt-3'>
-                <CodeBlock
-                  code={`curl https://${SITE}/v1/responses \\
+                <h3 className='mt-8 text-lg font-semibold'>Responses API</h3>
+                <p className='text-muted-foreground mt-2 text-sm'>
+                  适合 Codex、新版 OpenAI SDK 与长上下文调用。
+                </p>
+                <div className='mt-3'>
+                  <CodeBlock
+                    code={`curl https://${SITE}/v1/responses \\
   -H "Authorization: Bearer sk-你的API密钥" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -1411,16 +1526,18 @@ code --install-extension Anthropic.claude-code`}
     "input": "分析这段文本并给出三个要点",
     "stream": true
   }'`}
-                />
-              </div>
+                  />
+                </div>
 
-              <h3 className='mt-8 text-lg font-semibold'>Anthropic Messages</h3>
-              <p className='text-muted-foreground mt-2 text-sm'>
-                使用 Claude 分组密钥，客户端 Base URL 填根域名。
-              </p>
-              <div className='mt-3'>
-                <CodeBlock
-                  code={`curl https://${SITE}/v1/messages \\
+                <h3 className='mt-8 text-lg font-semibold'>
+                  Anthropic Messages
+                </h3>
+                <p className='text-muted-foreground mt-2 text-sm'>
+                  使用 Claude 分组密钥，客户端 Base URL 填根域名。
+                </p>
+                <div className='mt-3'>
+                  <CodeBlock
+                    code={`curl https://${SITE}/v1/messages \\
   -H "x-api-key: sk-你的API密钥" \\
   -H "anthropic-version: 2023-06-01" \\
   -H "content-type: application/json" \\
@@ -1431,33 +1548,37 @@ code --install-extension Anthropic.claude-code`}
       {"role": "user", "content": "你好，请用中文回复"}
     ]
   }'`}
-                />
-              </div>
-            </Section>
+                  />
+                </div>
+              </Section>
 
-            {/* 12. Video overview */}
-            <Section
-              id='video-overview'
-              eyebrow='VIDEO API'
-              title='创建视频任务'
-              description='视频生成为异步任务。提交成功会返回 task_id；创建接口返回后，使用查询接口轮询状态。'
-            >
-              <div className='rounded-xl border px-4 py-2'>
-                <EndpointRow method='POST' path='/v1/videos' desc='创建任务' />
-                <EndpointRow
-                  method='GET'
-                  path='/v1/videos/{task_id}'
-                  desc='查询状态'
-                />
-                <EndpointRow
-                  method='GET'
-                  path='/v1/videos/{task_id}/content'
-                  desc='播放或下载'
-                />
-              </div>
-              <div className='mt-4'>
-                <CodeBlock
-                  code={`curl https://${SITE}/v1/videos \\
+              {/* 12. Video overview */}
+              <Section
+                id='video-overview'
+                eyebrow='VIDEO API'
+                title='创建视频任务'
+                description='视频生成为异步任务。提交成功会返回 task_id；创建接口返回后，使用查询接口轮询状态。'
+              >
+                <div className='rounded-xl border px-4 py-2'>
+                  <EndpointRow
+                    method='POST'
+                    path='/v1/videos'
+                    desc='创建任务'
+                  />
+                  <EndpointRow
+                    method='GET'
+                    path='/v1/videos/{task_id}'
+                    desc='查询状态'
+                  />
+                  <EndpointRow
+                    method='GET'
+                    path='/v1/videos/{task_id}/content'
+                    desc='播放或下载'
+                  />
+                </div>
+                <div className='mt-4'>
+                  <CodeBlock
+                    code={`curl https://${SITE}/v1/videos \\
   -H "Authorization: Bearer sk-你的视频分组API密钥" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -1467,9 +1588,10 @@ code --install-extension Anthropic.claude-code`}
     "duration": 5,
     "resolution": "720p"
   }'`}
-                />
-                <CodeBlock
-                  code={`curl https://${SITE}/v1/videos \\
+                  />
+                  <br />
+                  <CodeBlock
+                    code={`curl https://${SITE}/v1/videos \\
   -H "Authorization: Bearer sk-你的Grok分组API密钥" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -1480,54 +1602,54 @@ code --install-extension Anthropic.claude-code`}
     "aspect_ratio": "16:9",
     "images": []
   }'`}
-                />
-              </div>
-              <p className='text-muted-foreground mt-4 text-sm leading-6'>
-                Seedance 与 MiniMax 请求使用对应视频分组密钥；Grok 视频请求使用
-                Grok 分组密钥。分组与模型不匹配时无法调用。
-              </p>
-            </Section>
+                  />
+                </div>
+                <p className='text-muted-foreground mt-4 text-sm leading-6'>
+                  Seedance 与 MiniMax 请求使用对应视频分组密钥；Grok
+                  视频请求使用 Grok 分组密钥。分组与模型不匹配时无法调用。
+                </p>
+              </Section>
 
-            {/* 13. Video models + params */}
-            <VideoModelsSection />
+              {/* 13. Video models + params */}
+              <VideoModelsSection />
 
-            {/* 14. Reference assets */}
-            <Section
-              id='video-assets'
-              eyebrow='REFERENCE ASSETS'
-              title='图片、视频与音频素材'
-              description='参考素材必须是上游能够直接访问的公网 HTTPS URL。需要登录、临时 blob:、本地 file: 或带防盗链的地址无法使用。'
-            >
-              <div className='grid gap-4 sm:grid-cols-2'>
-                <div className='glass-panel rounded-xl border p-5'>
-                  <h4 className='font-semibold'>首尾帧</h4>
-                  <p className='text-muted-foreground mt-2 text-sm'>
-                    使用 first_image，可选 last_image；ratio 固定传 Auto。
-                  </p>
+              {/* 14. Reference assets */}
+              <Section
+                id='video-assets'
+                eyebrow='REFERENCE ASSETS'
+                title='图片、视频与音频素材'
+                description='参考素材必须是上游能够直接访问的公网 HTTPS URL。需要登录、临时 blob:、本地 file: 或带防盗链的地址无法使用。'
+              >
+                <div className='grid gap-4 sm:grid-cols-2'>
+                  <div className='glass-panel rounded-xl border p-5'>
+                    <h4 className='font-semibold'>首尾帧</h4>
+                    <p className='text-muted-foreground mt-2 text-sm'>
+                      使用 first_image，可选 last_image；ratio 固定传 Auto。
+                    </p>
+                  </div>
+                  <div className='glass-panel rounded-xl border p-5'>
+                    <h4 className='font-semibold'>全能参考</h4>
+                    <p className='text-muted-foreground mt-2 text-sm'>
+                      使用 referenceImages、referenceVideos、referenceAudios
+                      数组。
+                    </p>
+                  </div>
+                  <div className='glass-panel rounded-xl border p-5'>
+                    <h4 className='font-semibold'>素材可访问性</h4>
+                    <p className='text-muted-foreground mt-2 text-sm'>
+                      提交前在无登录浏览器中打开 URL，确认可以直接下载文件。
+                    </p>
+                  </div>
+                  <div className='glass-panel rounded-xl border p-5'>
+                    <h4 className='font-semibold'>素材计费</h4>
+                    <p className='text-muted-foreground mt-2 text-sm'>
+                      参考视频输入时长会参与最终计费，请预留足够额度。
+                    </p>
+                  </div>
                 </div>
-                <div className='glass-panel rounded-xl border p-5'>
-                  <h4 className='font-semibold'>全能参考</h4>
-                  <p className='text-muted-foreground mt-2 text-sm'>
-                    使用 referenceImages、referenceVideos、referenceAudios
-                    数组。
-                  </p>
-                </div>
-                <div className='glass-panel rounded-xl border p-5'>
-                  <h4 className='font-semibold'>素材可访问性</h4>
-                  <p className='text-muted-foreground mt-2 text-sm'>
-                    提交前在无登录浏览器中打开 URL，确认可以直接下载文件。
-                  </p>
-                </div>
-                <div className='glass-panel rounded-xl border p-5'>
-                  <h4 className='font-semibold'>素材计费</h4>
-                  <p className='text-muted-foreground mt-2 text-sm'>
-                    参考视频输入时长会参与最终计费，请预留足够额度。
-                  </p>
-                </div>
-              </div>
-              <div className='mt-4'>
-                <CodeBlock
-                  code={`curl https://${SITE}/v1/videos \\
+                <div className='mt-4'>
+                  <CodeBlock
+                    code={`curl https://${SITE}/v1/videos \\
   -H "Authorization: Bearer sk-你的视频分组API密钥" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -1539,19 +1661,19 @@ code --install-extension Anthropic.claude-code`}
     "referenceImages": ["https://example.com/reference.jpg"],
     "referenceVideos": ["https://example.com/motion.mp4"]
   }'`}
-                />
-              </div>
-            </Section>
+                  />
+                </div>
+              </Section>
 
-            {/* 15. Task lifecycle */}
-            <Section
-              id='video-result'
-              eyebrow='TASK LIFECYCLE'
-              title='查询、播放与下载'
-              description='提交接口只负责创建任务。请保存 task_id，间隔 3-5 秒查询一次；完成后通过 content 接口获取真实 MP4。'
-            >
-              <CodeBlock
-                code={`# 查询任务状态
+              {/* 15. Task lifecycle */}
+              <Section
+                id='video-result'
+                eyebrow='TASK LIFECYCLE'
+                title='查询、播放与下载'
+                description='提交接口只负责创建任务。请保存 task_id，间隔 3-5 秒查询一次；完成后通过 content 接口获取真实 MP4。'
+              >
+                <CodeBlock
+                  code={`# 查询任务状态
 curl https://${SITE}/v1/videos/task_xxx \\
   -H "Authorization: Bearer sk-你的视频分组API密钥"
 
@@ -1559,75 +1681,78 @@ curl https://${SITE}/v1/videos/task_xxx \\
 curl -L https://${SITE}/v1/videos/task_xxx/content \\
   -H "Authorization: Bearer sk-你的视频分组API密钥" \\
   -o result.mp4`}
-              />
-              <div className='mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
-                <div className='rounded-lg border p-3'>
-                  <p className='font-mono text-sm font-semibold'>queued</p>
-                  <p className='text-muted-foreground mt-1 text-sm'>
-                    任务已进入队列，继续等待
-                  </p>
+                />
+                <div className='mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+                  <div className='rounded-lg border p-3'>
+                    <p className='font-mono text-sm font-semibold'>queued</p>
+                    <p className='text-muted-foreground mt-1 text-sm'>
+                      任务已进入队列，继续等待
+                    </p>
+                  </div>
+                  <div className='rounded-lg border p-3'>
+                    <p className='font-mono text-sm font-semibold'>
+                      in_progress
+                    </p>
+                    <p className='text-muted-foreground mt-1 text-sm'>
+                      正在生成，保持轮询
+                    </p>
+                  </div>
+                  <div className='rounded-lg border p-3'>
+                    <p className='font-mono text-sm font-semibold'>completed</p>
+                    <p className='text-muted-foreground mt-1 text-sm'>
+                      生成完成，可以播放或下载
+                    </p>
+                  </div>
+                  <div className='rounded-lg border p-3'>
+                    <p className='font-mono text-sm font-semibold'>failed</p>
+                    <p className='text-muted-foreground mt-1 text-sm'>
+                      读取失败原因，修正后重新创建
+                    </p>
+                  </div>
                 </div>
-                <div className='rounded-lg border p-3'>
-                  <p className='font-mono text-sm font-semibold'>in_progress</p>
-                  <p className='text-muted-foreground mt-1 text-sm'>
-                    正在生成，保持轮询
-                  </p>
-                </div>
-                <div className='rounded-lg border p-3'>
-                  <p className='font-mono text-sm font-semibold'>completed</p>
-                  <p className='text-muted-foreground mt-1 text-sm'>
-                    生成完成，可以播放或下载
-                  </p>
-                </div>
-                <div className='rounded-lg border p-3'>
-                  <p className='font-mono text-sm font-semibold'>failed</p>
-                  <p className='text-muted-foreground mt-1 text-sm'>
-                    读取失败原因，修正后重新创建
-                  </p>
-                </div>
-              </div>
-            </Section>
+              </Section>
 
-            {/* 16. Troubleshooting */}
-            <Section
-              id='errors'
-              eyebrow='TROUBLESHOOTING'
-              title='常见错误排查'
-              description='先根据 HTTP 状态码定位问题。视频任务若已返回 task_id，不要重复提交创建请求。'
-            >
-              <div className='grid gap-4 sm:grid-cols-2'>
-                <ErrorCard
-                  code='401'
-                  title='API Key 无效或分组不匹配'
-                  text='重新复制完整密钥，确认视频请求使用视频模型分组创建的 Key。'
-                />
-                <ErrorCard
-                  code='403'
-                  title='预扣费额度不足'
-                  text='视频任务会按所选模型、清晰度和计费方式预扣费。降低清晰度，或补充钱包/套餐额度后重试。'
-                />
-                <ErrorCard
-                  code='404'
-                  title='接口路径或模型名称错误'
-                  text='OpenAI 地址需要 /v1；视频模型名称区分大小写，请直接复制本文档名称。'
-                />
-                <ErrorCard
-                  code='422'
-                  title='请求参数不符合模型范围'
-                  text='检查 duration、resolution、ratio 与参考素材数量是否符合所选模型。'
-                />
-                <ErrorCard
-                  code='502/503/504'
-                  title='上游繁忙或任务暂时不可用'
-                  text='保留 task_id，稍后查询；创建失败且没有 task_id 时再重新提交，避免重复计费。'
-                />
-              </div>
-            </Section>
+              {/* 16. Troubleshooting */}
+              <Section
+                id='errors'
+                eyebrow='TROUBLESHOOTING'
+                title='常见错误排查'
+                description='先根据 HTTP 状态码定位问题。视频任务若已返回 task_id，不要重复提交创建请求。'
+              >
+                <div className='grid gap-4 sm:grid-cols-2'>
+                  <ErrorCard
+                    code='401'
+                    title='API Key 无效或分组不匹配'
+                    text='重新复制完整密钥，确认视频请求使用视频模型分组创建的 Key。'
+                  />
+                  <ErrorCard
+                    code='403'
+                    title='预扣费额度不足'
+                    text='视频任务会按所选模型、清晰度和计费方式预扣费。降低清晰度，或补充钱包/套餐额度后重试。'
+                  />
+                  <ErrorCard
+                    code='404'
+                    title='接口路径或模型名称错误'
+                    text='OpenAI 地址需要 /v1；视频模型名称区分大小写，请直接复制本文档名称。'
+                  />
+                  <ErrorCard
+                    code='422'
+                    title='请求参数不符合模型范围'
+                    text='检查 duration、resolution、ratio 与参考素材数量是否符合所选模型。'
+                  />
+                  <ErrorCard
+                    code='502/503/504'
+                    title='上游繁忙或任务暂时不可用'
+                    text='保留 task_id，稍后查询；创建失败且没有 task_id 时再重新提交，避免重复计费。'
+                  />
+                </div>
+              </Section>
 
-            <CustomDocsSection />
-          </main>
+              <CustomDocsSection />
+            </main>
+          </div>
         </div>
-      </div>
+      </DocsConfigurationContext.Provider>
     </PublicLayout>
   )
 }

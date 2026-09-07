@@ -134,9 +134,12 @@ const (
 
 type managedDocOption struct {
 	ID        string `json:"id"`
+	SectionID string `json:"sectionId,omitempty"`
+	Eyebrow   string `json:"eyebrow,omitempty"`
 	Title     string `json:"title"`
 	Summary   string `json:"summary"`
 	Content   string `json:"content"`
+	Blocks    []map[string]any `json:"blocks,omitempty"`
 	Published bool   `json:"published"`
 	Order     int    `json:"order"`
 }
@@ -145,14 +148,34 @@ func validateManagedDocs(value string) error {
 	if strings.TrimSpace(value) == "" || strings.TrimSpace(value) == "null" {
 		return fmt.Errorf("文档配置必须是有效的 JSON 数组")
 	}
-	var docs []managedDocOption
-	if err := common.UnmarshalJsonStr(value, &docs); err != nil {
+	var raw any
+	if err := common.UnmarshalJsonStr(value, &raw); err != nil {
+		return fmt.Errorf("文档配置必须是有效的 JSON 数组")
+	}
+	docs := make([]managedDocOption, 0)
+	switch parsed := raw.(type) {
+	case []any:
+		bytes, err := common.Marshal(parsed)
+		if err != nil || common.Unmarshal(bytes, &docs) != nil {
+			return fmt.Errorf("文档配置必须是有效的 JSON 数组")
+		}
+	case map[string]any:
+		sections, ok := parsed["sections"]
+		if !ok {
+			return fmt.Errorf("文档配置必须包含 sections 数组")
+		}
+		bytes, err := common.Marshal(sections)
+		if err != nil || common.Unmarshal(bytes, &docs) != nil {
+			return fmt.Errorf("文档配置必须包含有效的 sections 数组")
+		}
+	default:
 		return fmt.Errorf("文档配置必须是有效的 JSON 数组")
 	}
 	if len(docs) > maxDocsCount {
 		return fmt.Errorf("文档数量不能超过 %d 篇", maxDocsCount)
 	}
 	seenIDs := make(map[string]struct{}, len(docs))
+	seenSectionIDs := make(map[string]struct{}, len(docs))
 	for _, doc := range docs {
 		id := strings.TrimSpace(doc.ID)
 		if id == "" {
@@ -162,14 +185,37 @@ func validateManagedDocs(value string) error {
 			return fmt.Errorf("文档 ID 不能重复: %s", id)
 		}
 		seenIDs[id] = struct{}{}
+		if doc.SectionID != "" {
+			if _, exists := seenSectionIDs[doc.SectionID]; exists {
+				return fmt.Errorf("内置章节不能重复覆盖: %s", doc.SectionID)
+			}
+			seenSectionIDs[doc.SectionID] = struct{}{}
+		}
 		if strings.TrimSpace(doc.Title) == "" || len([]rune(doc.Title)) > maxDocTitleLength {
 			return fmt.Errorf("文档标题不能为空且不能超过 %d 个字符", maxDocTitleLength)
 		}
 		if len([]rune(doc.Summary)) > maxDocSummaryLength {
 			return fmt.Errorf("文档摘要不能超过 %d 个字符", maxDocSummaryLength)
 		}
-		if strings.TrimSpace(doc.Content) == "" || len([]rune(doc.Content)) > maxDocContentLength {
-			return fmt.Errorf("文档内容不能为空且不能超过 %d 个字符", maxDocContentLength)
+		if doc.SectionID == "" && strings.TrimSpace(doc.Content) == "" && len(doc.Blocks) == 0 {
+			return fmt.Errorf("自定义文档内容不能为空")
+		}
+		if len([]rune(doc.Content)) > maxDocContentLength {
+			return fmt.Errorf("文档内容不能超过 %d 个字符", maxDocContentLength)
+		}
+		if len(doc.Blocks) > 100 {
+			return fmt.Errorf("每个章节不能超过 100 个内容块")
+		}
+		for _, block := range doc.Blocks {
+			blockType, ok := block["type"].(string)
+			if !ok {
+				return fmt.Errorf("内容块必须包含 type")
+			}
+			switch blockType {
+			case "markdown", "code", "image", "endpoint", "table", "steps":
+			default:
+				return fmt.Errorf("不支持的内容块类型: %s", blockType)
+			}
 		}
 		if doc.Order < 0 {
 			return fmt.Errorf("文档排序不能为负数")
