@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery } from '@tanstack/react-query'
 import { Check, Clipboard, Copy, Download, ExternalLink } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
@@ -881,21 +881,44 @@ export function Docs() {
       )?.id ?? docCategories[0].id
     )
   })
-  const currentCategory = useMemo(
-    () =>
-      docCategories.find((category) => category.id === activeCategory) ??
-      docCategories[0],
-    [activeCategory]
-  )
-  const currentNav = useMemo(
-    () =>
-      docNav.filter(([id]) => currentCategory.sections.includes(id as never)),
-    [currentCategory]
-  )
+  const scrollToSection = (sectionId: string) => {
+    const section = document.querySelector<HTMLElement>(`#${sectionId}`)
+    if (!section) return
+    const headerOffset = 128
+    const top =
+      section.getBoundingClientRect().top + window.scrollY - headerOffset
+    window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' })
+    window.history.replaceState(null, '', `#${sectionId}`)
+  }
+
+  useEffect(() => {
+    const sections = docNav
+      .map(([id]) => document.querySelector<HTMLElement>(`#${id}`))
+      .filter((section): section is HTMLElement => section !== null)
+    if (sections.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+        const sectionId = visible[0]?.target.id
+        if (!sectionId) return
+        const category = docCategories.find((item) =>
+          item.sections.includes(sectionId as never)
+        )
+        if (category) setActiveCategory(category.id)
+      },
+      { rootMargin: '-128px 0px -55% 0px', threshold: 0 }
+    )
+
+    sections.forEach((section) => observer.observe(section))
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <PublicLayout showMainContainer={false}>
-      <div className='mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-10'>
+      <div className='mx-auto max-w-7xl px-4 pt-24 pb-10 md:px-8 md:pt-28 md:pb-14'>
         <header className='border-b pb-8'>
           <p className='text-primary text-xs font-semibold tracking-[0.2em] uppercase'>
             {t('API DOCUMENTATION')}
@@ -908,57 +931,82 @@ export function Docs() {
               'Choose a documentation category for your task. Each section includes copyable requests, parameter notes, and troubleshooting steps.'
             )}
           </p>
-          <div
-            className='bg-muted/40 mt-6 flex gap-1 overflow-x-auto rounded-xl border p-1'
-            role='tablist'
-            aria-label={t('Documentation categories')}
-          >
-            {docCategories.map((category) => (
-              <button
-                key={category.id}
-                type='button'
-                role='tab'
-                aria-selected={activeCategory === category.id}
-                aria-controls='docs-section-nav'
-                onClick={() => {
-                  setActiveCategory(category.id)
-                  const firstSection = document.querySelector<HTMLElement>(
-                    `#${category.sections[0]}`
-                  )
-                  firstSection?.scrollIntoView({ behavior: 'smooth' })
-                }}
-                className={`shrink-0 rounded-lg px-3 py-2 text-sm transition-colors md:px-4 ${
-                  activeCategory === category.id
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {t(category.label)}
-              </button>
-            ))}
-          </div>
         </header>
 
-        <div className='grid gap-8 pt-8 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-12'>
+        <div
+          className='bg-background/85 supports-[backdrop-filter]:bg-background/65 sticky top-16 z-30 mt-6 flex gap-1 overflow-x-auto rounded-xl border p-1 shadow-sm backdrop-blur-xl'
+          role='tablist'
+          aria-label={t('Documentation categories')}
+        >
+          {docCategories.map((category) => (
+            <button
+              key={category.id}
+              type='button'
+              role='tab'
+              aria-selected={activeCategory === category.id}
+              aria-controls='docs-section-nav'
+              onClick={() => {
+                setActiveCategory(category.id)
+                scrollToSection(category.sections[0])
+              }}
+              className={`shrink-0 rounded-lg px-3 py-2 text-sm transition-colors md:px-4 ${
+                activeCategory === category.id
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t(category.label)}
+            </button>
+          ))}
+        </div>
+
+        <div className='grid gap-8 pt-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-12'>
           <aside
             id='docs-section-nav'
-            className='lg:sticky lg:top-20 lg:h-fit'
-            role='tabpanel'
+            className='lg:sticky lg:top-28 lg:h-fit'
             aria-label={t('Section navigation')}
           >
-            <div className='glass-panel rounded-2xl border p-4'>
+            <div className='glass-panel max-h-[calc(100vh-9rem)] overflow-y-auto rounded-2xl border p-4'>
               <p className='text-muted-foreground mb-3 text-xs font-semibold tracking-[0.16em] uppercase'>
-                {t('In this section')}
+                {t('Documentation outline')}
               </p>
-              <nav className='space-y-1' aria-label={t('Section navigation')}>
-                {currentNav.map(([id, label]) => (
-                  <a
-                    key={id}
-                    href={`#${id}`}
-                    className='text-muted-foreground hover:text-foreground hover:bg-muted/60 block rounded-lg px-3 py-2 text-sm transition-colors'
-                  >
-                    {label}
-                  </a>
+              <nav className='space-y-4' aria-label={t('Section navigation')}>
+                {docCategories.map((category) => (
+                  <div key={category.id}>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        setActiveCategory(category.id)
+                        scrollToSection(category.sections[0])
+                      }}
+                      className={`mb-1 px-3 text-xs font-semibold tracking-wide uppercase transition-colors ${
+                        activeCategory === category.id
+                          ? 'text-primary'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t(category.label)}
+                    </button>
+                    <div className='space-y-0.5'>
+                      {docNav
+                        .filter(([id]) =>
+                          category.sections.includes(id as never)
+                        )
+                        .map(([id, label]) => (
+                          <a
+                            key={id}
+                            href={`#${id}`}
+                            onClick={(event) => {
+                              event.preventDefault()
+                              scrollToSection(id)
+                            }}
+                            className='text-muted-foreground hover:text-foreground hover:bg-muted/60 block rounded-lg px-3 py-1.5 text-sm transition-colors'
+                          >
+                            {label}
+                          </a>
+                        ))}
+                    </div>
+                  </div>
                 ))}
               </nav>
             </div>
