@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
@@ -261,6 +262,50 @@ func GetHomePageContent(c *gin.Context) {
 		"data":    common.OptionMap["HomePageContent"],
 	})
 	return
+}
+
+// GetDocsContent returns only administrator-published documentation extensions.
+// The built-in documentation remains the frontend fallback when this list is empty.
+func GetDocsContent(c *gin.Context) {
+	common.OptionMapRWMutex.RLock()
+	raw := common.OptionMap["console_setting.docs"]
+	common.OptionMapRWMutex.RUnlock()
+
+	docs := make([]map[string]any, 0)
+	if raw != "" {
+		var configured []struct {
+			ID        string `json:"id"`
+			Title     string `json:"title"`
+			Summary   string `json:"summary"`
+			Content   string `json:"content"`
+			Published bool   `json:"published"`
+			Order     int    `json:"order"`
+		}
+		if err := common.UnmarshalJsonStr(raw, &configured); err == nil {
+			for _, doc := range configured {
+				if !doc.Published || strings.TrimSpace(doc.Title) == "" || strings.TrimSpace(doc.Content) == "" {
+					continue
+				}
+				docs = append(docs, map[string]any{
+					"id":      doc.ID,
+					"title":   doc.Title,
+					"summary": doc.Summary,
+					"content": doc.Content,
+					"order":   doc.Order,
+				})
+			}
+		}
+	}
+	sort.SliceStable(docs, func(i, j int) bool {
+		left, _ := docs[i]["order"].(int)
+		right, _ := docs[j]["order"].(int)
+		return left < right
+	})
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data":    docs,
+	})
 }
 
 func SendEmailVerification(c *gin.Context) {

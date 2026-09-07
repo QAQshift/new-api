@@ -126,7 +126,57 @@ type OptionUpdateRequest struct {
 const (
 	maxLogoDataBytes       = 512 * 1024
 	maxBackgroundDataBytes = 4 * 1024 * 1024
+	maxDocsCount           = 100
+	maxDocTitleLength      = 200
+	maxDocSummaryLength    = 500
+	maxDocContentLength    = 200_000
 )
+
+type managedDocOption struct {
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	Summary   string `json:"summary"`
+	Content   string `json:"content"`
+	Published bool   `json:"published"`
+	Order     int    `json:"order"`
+}
+
+func validateManagedDocs(value string) error {
+	if strings.TrimSpace(value) == "" || strings.TrimSpace(value) == "null" {
+		return fmt.Errorf("文档配置必须是有效的 JSON 数组")
+	}
+	var docs []managedDocOption
+	if err := common.UnmarshalJsonStr(value, &docs); err != nil {
+		return fmt.Errorf("文档配置必须是有效的 JSON 数组")
+	}
+	if len(docs) > maxDocsCount {
+		return fmt.Errorf("文档数量不能超过 %d 篇", maxDocsCount)
+	}
+	seenIDs := make(map[string]struct{}, len(docs))
+	for _, doc := range docs {
+		id := strings.TrimSpace(doc.ID)
+		if id == "" {
+			return fmt.Errorf("每篇文档都必须有唯一 ID")
+		}
+		if _, exists := seenIDs[id]; exists {
+			return fmt.Errorf("文档 ID 不能重复: %s", id)
+		}
+		seenIDs[id] = struct{}{}
+		if strings.TrimSpace(doc.Title) == "" || len([]rune(doc.Title)) > maxDocTitleLength {
+			return fmt.Errorf("文档标题不能为空且不能超过 %d 个字符", maxDocTitleLength)
+		}
+		if len([]rune(doc.Summary)) > maxDocSummaryLength {
+			return fmt.Errorf("文档摘要不能超过 %d 个字符", maxDocSummaryLength)
+		}
+		if strings.TrimSpace(doc.Content) == "" || len([]rune(doc.Content)) > maxDocContentLength {
+			return fmt.Errorf("文档内容不能为空且不能超过 %d 个字符", maxDocContentLength)
+		}
+		if doc.Order < 0 {
+			return fmt.Errorf("文档排序不能为负数")
+		}
+	}
+	return nil
+}
 
 func isValidImageOption(value string, maxDataBytes int) bool {
 	if value == "" {
@@ -437,6 +487,15 @@ func UpdateOption(c *gin.Context) {
 		}
 	case "console_setting.uptime_kuma_groups":
 		err = console_setting.ValidateConsoleSettings(option.Value.(string), "UptimeKumaGroups")
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+	case "console_setting.docs":
+		err = validateManagedDocs(option.Value.(string))
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"success": false,

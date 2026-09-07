@@ -16,11 +16,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { useQuery } from '@tanstack/react-query'
 import { Check, Clipboard, Copy, Download, ExternalLink } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
+import { Markdown } from '@/components/ui/markdown'
+import { api } from '@/lib/api'
 
 // ---------------------------------------------------------------------------
 // Branded documentation content with runtime-resolved endpoints.
@@ -31,7 +34,7 @@ import { PublicLayout } from '@/components/layout'
 const SITE =
   typeof window !== 'undefined' && window.location.host
     ? window.location.host
-    : 'hub.aflowxai.com'
+    : 'localhost'
 const OFFICIAL_CODEX_RELEASES =
   'https://github.com/openai/codex/releases/latest'
 
@@ -261,6 +264,7 @@ const docNav = [
   ['video-assets', '参考素材'],
   ['video-result', '查询与下载'],
   ['errors', '错误排查'],
+  ['custom-docs', '管理员扩展'],
 ] as const
 
 const docCategories = [
@@ -302,7 +306,69 @@ const docCategories = [
     label: 'Troubleshooting',
     sections: ['errors'],
   },
+  {
+    id: 'custom',
+    label: 'Custom documentation',
+    sections: ['custom-docs'],
+  },
 ] as const
+
+type PublishedDocument = {
+  id: string
+  title: string
+  summary: string
+  content: string
+  order: number
+}
+
+function CustomDocsSection() {
+  const { t } = useTranslation()
+  const { data } = useQuery({
+    queryKey: ['public-docs-content'],
+    queryFn: async () => {
+      const response = await api.get<{ data?: PublishedDocument[] }>(
+        '/api/docs/content'
+      )
+      return (response.data.data ?? []).sort((a, b) => a.order - b.order)
+    },
+    staleTime: 60_000,
+  })
+
+  return (
+    <Section
+      id='custom-docs'
+      eyebrow={t('ADMIN EXTENSION')}
+      title={t('Custom documentation')}
+      description={t(
+        'These pages are maintained by the site administrator and extend the built-in API documentation.'
+      )}
+    >
+      <div className='space-y-8'>
+        {!data || data.length === 0 ? (
+          <div className='text-muted-foreground rounded-xl border border-dashed p-8 text-center text-sm'>
+            {t('No administrator documentation has been published yet.')}
+          </div>
+        ) : null}
+        {data?.map((document) => (
+          <article
+            key={document.id}
+            className='glass-panel rounded-xl border p-5 md:p-7'
+          >
+            <h3 className='text-xl font-semibold'>{document.title}</h3>
+            {document.summary && (
+              <p className='text-muted-foreground mt-2 leading-7'>
+                {document.summary}
+              </p>
+            )}
+            <div className='mt-5 border-t pt-5'>
+              <Markdown>{document.content}</Markdown>
+            </div>
+          </article>
+        ))}
+      </div>
+    </Section>
+  )
+}
 
 // ---------------------------------------------------------------------------
 // CC Switch download platform tabs
@@ -1509,6 +1575,8 @@ curl -L https://${SITE}/v1/videos/task_xxx/content \\
                 />
               </div>
             </Section>
+
+            <CustomDocsSection />
           </main>
         </div>
       </div>

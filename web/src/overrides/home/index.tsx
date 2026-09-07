@@ -141,9 +141,10 @@ export function BrandHome() {
               <div className='text-primary mb-6 flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase'>
                 <Sparkles className='size-4' /> {t('AI API gateway')}
               </div>
-              <h1 className='max-w-3xl text-5xl leading-[1.05] font-bold tracking-tight md:text-7xl'>
+              <h1 className='max-w-3xl text-5xl leading-[1.14] font-bold tracking-tight text-balance md:text-6xl lg:text-7xl lg:leading-[1.08]'>
                 {t('One gateway.')}{' '}
-                <span className='from-primary to-chart-3 bg-gradient-to-r bg-clip-text text-transparent'>
+                <br className='hidden lg:block' />
+                <span className='from-primary to-chart-3 bg-gradient-to-r bg-clip-text whitespace-nowrap text-transparent'>
                   {t('Every model.')}
                 </span>
               </h1>
@@ -172,7 +173,7 @@ export function BrandHome() {
                   {t('Read documentation')}
                 </Button>
               </div>
-              <div className='text-muted-foreground mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm'>
+              <div className='text-muted-foreground mt-8 flex flex-wrap gap-x-4 gap-y-2 text-sm sm:gap-x-5'>
                 {[
                   t('OpenAI compatible'),
                   t('Usage visibility'),
@@ -186,12 +187,16 @@ export function BrandHome() {
               </div>
             </div>
 
-            <div className='glass-panel border-border/80 bg-card/80 shadow-primary/5 rounded-2xl border p-4 shadow-2xl backdrop-blur'>
-              <div className='glass-panel border-border/70 bg-background rounded-xl border p-5'>
-                <div className='mb-6 flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <span className='size-2 rounded-full bg-emerald-500' />
-                    <span className='text-sm font-medium'>
+            <div className='glass-panel shadow-primary/5 relative overflow-hidden rounded-2xl p-3 shadow-2xl'>
+              <div className='bg-background/70 rounded-xl border p-4'>
+                <div className='mb-4 flex items-center justify-between'>
+                  <div className='flex items-center gap-2.5'>
+                    <span className='flex gap-1.5'>
+                      <span className='size-2.5 rounded-full bg-red-400/70' />
+                      <span className='size-2.5 rounded-full bg-amber-400/70' />
+                      <span className='size-2.5 rounded-full bg-emerald-400/80' />
+                    </span>
+                    <span className='text-muted-foreground font-mono text-xs'>
                       {t('Live gateway')}
                     </span>
                   </div>
@@ -199,33 +204,40 @@ export function BrandHome() {
                     {t('99.98% uptime')}
                   </span>
                 </div>
-                <div className='bg-muted/60 rounded-lg p-4 font-mono text-xs leading-6'>
-                  <div className='text-muted-foreground'>
-                    POST{' '}
-                    <span className='text-foreground'>
-                      /v1/chat/completions
-                    </span>
-                  </div>
-                  <div className='text-muted-foreground mt-2'>
-                    model: <span className='text-primary'>gpt-4o</span>
-                  </div>
-                  <div className='text-muted-foreground'>
-                    status:{' '}
+                <div className='bg-muted/50 space-y-1 rounded-lg p-4 font-mono text-xs leading-6'>
+                  <div>
                     <span className='text-emerald-600 dark:text-emerald-400'>
-                      200 · 842ms
+                      POST
+                    </span>{' '}
+                    <span className='text-foreground'>/v1/chat/completions</span>
+                  </div>
+                  <div className='text-muted-foreground'>
+                    authorization: Bearer sk-******
+                  </div>
+                  <div className='text-muted-foreground pt-2'>
+                    model: <span className='text-primary'>gpt-6-astra</span>
+                  </div>
+                  <div className='text-muted-foreground'>
+                    stream: <span className='text-foreground'>true</span>
+                  </div>
+                  <div className='pt-2'>
+                    <span className='text-emerald-600 dark:text-emerald-400'>
+                      200
+                    </span>{' '}
+                    <span className='text-muted-foreground'>
+                      · 842ms · 1,024 tokens
                     </span>
                   </div>
                 </div>
-                <div className='mt-5 flex items-center justify-between text-xs'>
+                <div className='mt-4 flex items-center justify-between text-xs'>
                   <span className='text-muted-foreground'>{t('Base URL')}</span>
                   <code className='text-foreground'>/v1</code>
                 </div>
               </div>
-              <div className='text-muted-foreground flex items-center justify-between px-2 pt-4 text-xs'>
+              <div className='text-muted-foreground flex items-center justify-between px-2 pt-3 text-xs'>
                 <span>{systemName}</span>
                 <span className='flex items-center gap-1'>
-                  <Play className='size-3 fill-current' />{' '}
-                  {t('Ready to deploy')}
+                  <Play className='size-3 fill-current' /> {t('Ready to deploy')}
                 </span>
               </div>
             </div>
