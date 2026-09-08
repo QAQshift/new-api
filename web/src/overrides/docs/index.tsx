@@ -17,720 +17,265 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Download } from 'lucide-react'
-import { type ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { PublicLayout } from '@/components/layout'
-import { Markdown } from '@/components/ui/markdown'
 import { api } from '@/lib/api'
+
+import { PublicLayout } from '@/components/layout'
 import { subscribeDocsChanged } from '@/lib/docs-sync'
 
+import { DocBlocksView } from './doc-blocks'
 import {
-  defaultDocCategories,
-  defaultDocSections,
   type DocBlock,
+  type DocCategory,
+  type DocSection,
+  type DocsDocument,
+  defaultDocument,
 } from './default-document'
-import {
-  BlockLink,
-  CodeBlock,
-  CopyRow,
-  DocBlockRenderer,
-  EndpointRow,
-  StepCard,
-  TutorialFigure,
-} from './doc-blocks'
 
-type DocOverride = {
-  id: string
+type StoredSection = {
+  id?: string
   sectionId?: string
+  categoryId?: string
   eyebrow?: string
-  title: string
-  summary: string
-  content: string
+  title?: string
+  summary?: string
+  content?: string
   blocks?: DocBlock[]
   published?: boolean
-  order: number
+  order?: number
 }
 
-export type DocsPreviewDocument = DocOverride
-
-type DocsConfiguration = {
-  version: number
-  sections: DocOverride[]
+type StoredDocs = {
+  version?: number
+  categories?: DocCategory[]
+  sections?: StoredSection[]
 }
 
-type DocsResponse = { data?: DocsConfiguration | DocOverride[] }
+type DocsResponse = { data?: StoredDocs | StoredSection[] }
 
-function getConfiguredDocuments(data: DocsResponse['data']): DocOverride[] {
-  if (Array.isArray(data)) return data
-  return data?.sections ?? []
+function normalizeSection(
+  stored: StoredSection,
+  fallbackCategoryId: string,
+  fallbackOrder: number
+): DocSection | null {
+  const id = (stored.id || stored.sectionId || '').trim()
+  const title = (stored.title || '').trim()
+  if (!id || !title) return null
+  let blocks: DocBlock[] = []
+  if (stored.blocks && stored.blocks.length > 0) {
+    blocks = stored.blocks
+  } else if (stored.content?.trim()) {
+    blocks = [{ type: 'markdown', content: stored.content }]
+  }
+  return {
+    id,
+    categoryId: (stored.categoryId || fallbackCategoryId || 'custom').trim(),
+    eyebrow: stored.eyebrow?.trim() || '',
+    title,
+    summary: stored.summary?.trim() || '',
+    published: stored.published !== false,
+    order: typeof stored.order === 'number' ? stored.order : fallbackOrder,
+    blocks,
+  }
 }
 
-function getPreviewDocumentFromUrl(): DocOverride | null {
+function parseStoredDocs(data: DocsResponse['data']): {
+  categories: DocCategory[]
+  sections: StoredSection[]
+  isV3: boolean
+} {
+  if (Array.isArray(data)) {
+    return { categories: [], sections: data, isV3: false }
+  }
+  const stored = data ?? {}
+  const sections = Array.isArray(stored.sections) ? stored.sections : []
+  const categories = Array.isArray(stored.categories)
+    ? stored.categories
+    : []
+  const isV3 = stored.version === 3 || categories.length > 0
+  return { categories, sections, isV3 }
+}
+
+function getPreviewSectionFromUrl(): StoredSection | null {
   if (typeof window === 'undefined') return null
   const encoded = new URLSearchParams(window.location.search).get('previewDoc')
   if (!encoded) return null
   try {
     const parsed: unknown = JSON.parse(encoded)
     if (!parsed || typeof parsed !== 'object') return null
-    const document = parsed as Partial<DocOverride>
-    if (typeof document.sectionId !== 'string' || !document.sectionId) {
-      return null
+    const preview = parsed as Partial<StoredSection>
+    let sectionId = ''
+    if (typeof preview.id === 'string' && preview.id) {
+      sectionId = preview.id
+    } else if (typeof preview.sectionId === 'string') {
+      sectionId = preview.sectionId
     }
+    if (!sectionId) return null
     return {
-      id: 'preview-document',
-      sectionId: document.sectionId,
-      eyebrow: typeof document.eyebrow === 'string' ? document.eyebrow : '',
-      title: typeof document.title === 'string' ? document.title : '',
-      summary: typeof document.summary === 'string' ? document.summary : '',
-      content: typeof document.content === 'string' ? document.content : '',
-      blocks: Array.isArray(document.blocks) ? document.blocks : [],
+      ...preview,
+      id: sectionId,
+      sectionId,
       published: true,
-      order: 0,
     }
   } catch {
     return null
   }
 }
 
-const DocsConfigurationContext = createContext<Record<string, DocOverride>>({})
+/**
+ * Build the effective public document. A saved v3 document is authoritative
+ * (the admin editor always saves the full document, preloaded with built-in
+ * defaults). Legacy v2 payloads keep the old override semantics: overrides
+ * replace built-in section chrome/content, standalone docs are appended to a
+ * dedicated custom category.
+ */
+function buildEffectiveDocument(data: DocsResponse['data']): DocsDocument {
+  const previewStored = getPreviewSectionFromUrl()
+  const stored = parseStoredDocs(data)
+  const base = defaultDocument
 
-// ---------------------------------------------------------------------------
-// Branded documentation content with runtime-resolved endpoints.
-// ---------------------------------------------------------------------------
-
-// Resolve the public API host at runtime so the docs work in every deployment,
-// including local development and reverse-proxy setups.
-const SITE =
-  typeof window !== 'undefined' && window.location.host
-    ? window.location.host
-    : 'localhost'
-const OFFICIAL_CODEX_RELEASES =
-  'https://github.com/openai/codex/releases/latest'
-
-const docCategories = defaultDocCategories
-
-function Section(props: {
-  id: string
-  eyebrow: string
-  title: string
-  description?: string
-  children: React.ReactNode
-}) {
-  const overrides = useContext(DocsConfigurationContext)
-  const override = overrides[props.id]
-  if (override?.published === false) return null
-  let sectionBody: React.ReactNode = (
-    <div className='mt-6'>{props.children}</div>
-  )
-  if (override?.blocks?.length) {
-    sectionBody = (
-      <div className='mt-6 space-y-6'>
-        {override.blocks.map((block) => (
-          <DocBlockRenderer
-            key={`${block.type}-${JSON.stringify(block)}`}
-            block={block}
-          />
-        ))}
-      </div>
-    )
-  } else if (override?.content) {
-    sectionBody = (
-      <div className='mt-6'>
-        <Markdown>{override.content}</Markdown>
-      </div>
-    )
+  if (stored.isV3) {
+    const categories = stored.categories.length
+      ? [...stored.categories].sort((a, b) => a.order - b.order)
+      : base.categories
+    const knownCategoryIds = new Set(categories.map((category) => category.id))
+    const sectionsById = new Map<string, DocSection>()
+    stored.sections.forEach((storedSection, index) => {
+      const fallback = knownCategoryIds.has(
+        storedSection.categoryId?.trim() || ''
+      )
+        ? (storedSection.categoryId as string)
+        : (categories[0]?.id ?? 'custom')
+      const section = normalizeSection(
+        storedSection,
+        fallback,
+        (storedSection.order ?? index) as number
+      )
+      if (section) sectionsById.set(section.id, section)
+    })
+    const previewSection = previewStored
+      ? normalizeSection(previewStored, categories[0]?.id ?? 'custom', 0)
+      : null
+    if (previewSection) sectionsById.set(previewSection.id, previewSection)
+    const sections = [...sectionsById.values()]
+      .filter((section) => section.published)
+      .sort((a, b) => a.order - b.order)
+    return { version: 3, categories, sections }
   }
 
+  // Legacy merge: overrides apply on top of the built-in document.
+  const overrideById = new Map<string, StoredSection>()
+  const customDocs: StoredSection[] = []
+  const records = previewStored
+    ? [...stored.sections, previewStored]
+    : stored.sections
+  for (const record of records) {
+    const sectionId = (record.sectionId || '').trim()
+    if (sectionId) {
+      overrideById.set(sectionId, record)
+    } else if (record.published !== false && record.title?.trim()) {
+      customDocs.push(record)
+    }
+  }
+
+  const sections: DocSection[] = []
+  for (const baseSection of base.sections) {
+    const override = overrideById.get(baseSection.id)
+    if (override && override.published === false) continue
+    let overrideBlocks = baseSection.blocks
+    if (override?.blocks?.length) {
+      overrideBlocks = override.blocks
+    } else if (override?.content?.trim()) {
+      overrideBlocks = [{ type: 'markdown', content: override.content }]
+    }
+    const section = normalizeSection(
+      {
+        ...baseSection,
+        ...(override
+          ? {
+              eyebrow: override.eyebrow ?? baseSection.eyebrow,
+              title: override.title || baseSection.title,
+              summary: override.summary ?? baseSection.summary,
+              blocks: overrideBlocks,
+            }
+          : {}),
+        id: baseSection.id,
+      },
+      baseSection.categoryId,
+      baseSection.order
+    )
+    if (section) sections.push(section)
+  }
+
+  const hasCustomCategory = base.categories.some(
+    (category) => category.id === 'custom'
+  )
+  const categories = [...base.categories]
+  if (!hasCustomCategory) {
+    categories.push({
+      id: 'custom',
+      label: 'Custom documentation',
+      order: 90,
+    })
+  }
+  customDocs.forEach((record, index) => {
+    const section = normalizeSection(
+      record,
+      'custom',
+      1000 + (record.order ?? index)
+    )
+    if (section) sections.push(section)
+  })
+
+  return {
+    version: 3,
+    categories: categories.sort((a, b) => a.order - b.order),
+    sections: sections.sort((a, b) => a.order - b.order),
+  }
+}
+
+function DocSectionView(props: { section: DocSection }) {
+  const section = props.section
   return (
     <section
-      id={props.id}
+      id={section.id}
       className='scroll-mt-24 border-t pt-10 first:border-0 first:pt-0'
     >
-      <p className='text-primary text-xs font-semibold tracking-[0.2em] uppercase'>
-        {override?.eyebrow || props.eyebrow}
-      </p>
-      <h2 className='mt-2 text-2xl font-semibold tracking-tight md:text-3xl'>
-        {override?.title || props.title}
-      </h2>
-      {(override?.summary || props.description) && (
-        <p className='text-muted-foreground mt-3 max-w-3xl leading-7'>
-          {override?.summary || props.description}
+      {section.eyebrow && (
+        <p className='text-primary text-xs font-semibold tracking-[0.2em] uppercase'>
+          {section.eyebrow}
         </p>
       )}
-      {sectionBody}
+      <h2 className='mt-2 text-2xl font-semibold tracking-tight md:text-3xl'>
+        {section.title}
+      </h2>
+      {section.summary && (
+        <p className='text-muted-foreground mt-3 max-w-3xl leading-7'>
+          {section.summary}
+        </p>
+      )}
+      {section.blocks.length > 0 && (
+        <div className='mt-6'>
+          <DocBlocksView blocks={section.blocks} />
+        </div>
+      )}
     </section>
   )
 }
 
-function CustomDocsSection() {
-  const { t } = useTranslation()
-  const { data } = useQuery({
-    queryKey: ['public-docs-content', 'custom'],
-    queryFn: async () => {
-      const previewDocument = getPreviewDocumentFromUrl()
-      try {
-        const response = await api.get<DocsResponse>('/api/docs/content')
-        const documents = getConfiguredDocuments(response.data.data)
-        return (previewDocument ? [...documents, previewDocument] : documents)
-          .filter((document) => !document.sectionId)
-          .sort((a, b) => a.order - b.order)
-      } catch {
-        return previewDocument ? [previewDocument] : []
-      }
-    },
-  })
-
-  return (
-    <Section
-      id='custom-docs'
-      eyebrow={t('ADMIN EXTENSION')}
-      title={t('Custom documentation')}
-      description={t(
-        'These pages are maintained by the site administrator and extend the built-in API documentation.'
-      )}
-    >
-      <div className='space-y-8'>
-        {!data || data.length === 0 ? (
-          <div className='text-muted-foreground rounded-xl border border-dashed p-8 text-center text-sm'>
-            {t('No administrator documentation has been published yet.')}
-          </div>
-        ) : null}
-        {data?.map((document) => (
-          <article
-            key={document.id}
-            className='glass-panel rounded-xl border p-5 md:p-7'
-          >
-            <h3 className='text-xl font-semibold'>{document.title}</h3>
-            {document.summary && (
-              <p className='text-muted-foreground mt-2 leading-7'>
-                {document.summary}
-              </p>
-            )}
-            <div className='mt-5 border-t pt-5'>
-              <Markdown>{document.content}</Markdown>
-            </div>
-          </article>
-        ))}
-      </div>
-    </Section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// CC Switch download platform tabs
-// ---------------------------------------------------------------------------
-function CCSwitchSection() {
-  const { t } = useTranslation()
-  const [platform, setPlatform] = useState<'windows' | 'macos' | 'linux'>(
-    'windows'
-  )
-  const files = {
-    windows: [
-      {
-        name: 'CC-Switch-v3.19.2-Windows.msi',
-        desc: 'Windows x64 安装版 · 推荐',
-      },
-      {
-        name: 'CC-Switch-v3.19.2-Windows-Portable.zip',
-        desc: 'Windows x64 绿色版 · 无需安装',
-      },
-      {
-        name: 'CC-Switch-v3.19.2-Windows-arm64.msi',
-        desc: 'Windows ARM64 安装版',
-      },
-    ],
-    macos: [
-      {
-        name: 'CC-Switch-v3.19.2-macOS-universal.dmg',
-        desc: 'macOS 通用安装包',
-      },
-    ],
-    linux: [{ name: 'CC-Switch-v3.19.2-Linux.AppImage', desc: 'Linux 图形版' }],
-  }
-  return (
-    <Section
-      id='cc-switch'
-      eyebrow='CLIENT SETUP'
-      title='下载 CC Switch 并一键导入'
-      description='第一次接入建议先安装 CC Switch。它可以统一管理 Claude Code、Codex 等工具的 API Key、线路和模型，不需要手动修改多个配置文件。'
-    >
-      <div className='rounded-xl border p-6'>
-        <div className='flex flex-wrap items-center justify-between gap-3'>
-          <div>
-            <p className='font-semibold'>CC Switch 下载</p>
-            <p className='text-muted-foreground text-sm'>v3.19.2</p>
-            <p className='text-muted-foreground mt-2 max-w-xl text-sm leading-6'>
-              选择你的操作系统。Windows 普通电脑选择 x64 安装版；苹果电脑选择
-              macOS 通用安装包。
-            </p>
-          </div>
-          <BlockLink
-            href='https://github.com/farion1231/cc-switch/releases/latest'
-            external
-          >
-            查看最新版本
-          </BlockLink>
-        </div>
-        <div className='mt-4 flex gap-2'>
-          {(
-            [
-              ['windows', 'Windows'],
-              ['macos', 'macOS'],
-              ['linux', 'Linux'],
-            ] as const
-          ).map(([key, label]) => (
-            <button
-              type='button'
-              key={key}
-              onClick={() => setPlatform(key)}
-              className={`rounded-lg border px-4 py-1.5 text-sm transition-colors ${
-                platform === key
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'hover:bg-muted/60'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <div className='mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3'>
-          {files[platform].map((f) => (
-            <div key={f.name} className='rounded-lg border p-4'>
-              <p className='text-sm font-medium'>{f.desc}</p>
-              <p className='text-muted-foreground mt-1 font-mono text-xs break-all'>
-                {f.name}
-              </p>
-              <a
-                href='https://github.com/farion1231/cc-switch/releases/latest'
-                target='_blank'
-                rel='noreferrer'
-                className='text-primary mt-3 inline-flex items-center gap-1 text-xs hover:underline'
-              >
-                <Download className='size-3.5' /> 官方下载
-              </a>
-            </div>
-          ))}
-        </div>
-        <p className='text-muted-foreground mt-4 text-xs leading-6'>
-          下载按钮会打开 CC Switch 官方 GitHub Release 页面。macOS
-          首次打开若被系统拦截，请到系统设置的隐私与安全性中允许打开。
-        </p>
-      </div>
-
-      <h3 className='mt-8 text-lg font-semibold'>安装后从本站一键导入</h3>
-      <p className='text-muted-foreground mt-2 leading-7'>
-        不需要手抄地址。先创建对应分组的密钥，再从密钥右侧菜单导入到 CC Switch。
-      </p>
-      <div className='mt-4 grid gap-4 sm:grid-cols-2'>
-        <StepCard index={1} title='安装并打开 CC Switch'>
-          <p>完成上方下载和安装，首次启动后保持 CC Switch 在后台运行。</p>
-        </StepCard>
-        <StepCard index={2} title='创建对应分组密钥'>
-          <p>进入 API 密钥页面，选择 Claude、OpenAI 等实际要用的分组。</p>
-        </StepCard>
-        <StepCard index={3} title='点击 CC Switch 导入'>
-          <p>打开密钥右侧应用菜单，选择 CC Switch，浏览器会唤起客户端。</p>
-        </StepCard>
-        <StepCard index={4} title='勾选工具并应用'>
-          <p>勾选 Claude Code、Codex 等目标工具，保存并切换到本站供应商。</p>
-        </StepCard>
-      </div>
-      <ul className='text-muted-foreground mt-4 space-y-1 text-sm'>
-        <li>在目标密钥右侧打开应用菜单</li>
-        <li>从应用列表选择 CC Switch</li>
-        <li className='text-foreground font-medium'>模型必须与密钥分组匹配</li>
-      </ul>
-
-      <h3 className='mt-8 text-lg font-semibold'>
-        {t('Import flow reference')}
-      </h3>
-      <p className='text-muted-foreground mt-2 text-sm leading-6'>
-        {t(
-          'These screenshots show a typical flow for opening CC Switch, selecting tools, and applying the configuration.'
-        )}
-      </p>
-      <div className='mt-4 grid gap-4 md:grid-cols-3'>
-        <TutorialFigure
-          src='https://api.bblabu.ai/tutorial-assets/cc-switch-1.png'
-          alt={t('Open CC Switch from the key menu')}
-          caption={t('Step 1: Choose CC Switch from the API key menu.')}
-        />
-        <TutorialFigure
-          src='https://api.bblabu.ai/tutorial-assets/cc-switch-2.png'
-          alt={t('Select client tools to configure')}
-          caption={t(
-            'Step 2: Select the tools you want to configure, such as Claude Code or Codex.'
-          )}
-        />
-        <TutorialFigure
-          src='https://api.bblabu.ai/tutorial-assets/cc-switch-3.png'
-          alt={t('Apply the CC Switch configuration')}
-          caption={t(
-            'Step 3: Confirm the endpoint and model, then save and apply.'
-          )}
-        />
-      </div>
-
-      <h3 className='mt-8 text-lg font-semibold'>手动创建配置时怎么填</h3>
-      <div className='mt-3 grid gap-3 sm:grid-cols-2'>
-        <CopyRow label='CODEX / OPENAI 兼容' value={`https://${SITE}/v1`} />
-        <CopyRow label='CLAUDE CODE' value={`https://${SITE}`} />
-      </div>
-      <p className='text-muted-foreground mt-3 text-sm leading-6'>
-        填入本站 API Key
-        后获取模型列表，再选择与密钥分组匹配的模型。切换配置后若未生效，关闭并重新打开终端。
-      </p>
-    </Section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Codex toolkit download cards
-// ---------------------------------------------------------------------------
-function CodexToolCard(props: {
-  title: string
-  build: string
-  desc: string
-  files: { name: string; size: string; sha: string }[]
-}) {
-  return (
-    <div className='glass-panel rounded-xl border p-5'>
-      <div className='flex flex-wrap items-center justify-between gap-2'>
-        <h4 className='font-semibold'>{props.title}</h4>
-        <span className='text-muted-foreground font-mono text-xs'>
-          {props.build}
-        </span>
-      </div>
-      <p className='text-muted-foreground mt-2 text-sm leading-6'>
-        {props.desc}
-      </p>
-      <p className='text-muted-foreground mt-2 text-xs'>
-        下面列出的平台名称仅用于快速定位，实际文件名、版本和校验值请以官方
-        Release 页面为准。
-      </p>
-      <div className='mt-4 space-y-3'>
-        {props.files.map((f) => (
-          <div key={f.name} className='rounded-lg border p-3'>
-            <div className='flex flex-wrap items-center justify-between gap-2'>
-              <span className='text-foreground text-sm font-medium'>
-                {f.name}
-              </span>
-              <span className='text-muted-foreground text-xs'>
-                官方页面提供
-              </span>
-            </div>
-            <div className='text-muted-foreground mt-1 flex items-center gap-2'>
-              <code className='font-mono text-[11px] break-all'>
-                SHA-256（请以官方 Release 页面为准）
-              </code>
-            </div>
-            <a
-              href={OFFICIAL_CODEX_RELEASES}
-              target='_blank'
-              rel='noreferrer'
-              className='text-primary mt-2 inline-flex items-center gap-1 text-xs hover:underline'
-            >
-              <Download className='size-3.5' /> 官方发布页
-            </a>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function CodexToolsSection() {
-  return (
-    <Section
-      id='codex-tools'
-      eyebrow='CODEX TOOLKIT'
-      title='Codex 安装器与聊天记录迁移器'
-      description='适合需要快速初始化 Codex 环境或迁移已有聊天记录的用户。下载按钮会打开 OpenAI Codex 官方 GitHub Release 页面。'
-    >
-      <div className='grid gap-4 lg:grid-cols-2'>
-        <CodexToolCard
-          title='Codex 一键安装器'
-          build='build-65-1-995cbc0'
-          desc='用于辅助初始化 Codex 运行环境。安装完成后，仍需在 CC Switch 中导入本站 API Key 与线路。'
-          files={[
-            {
-              name: 'codex-installer-windows-x64.exe',
-              size: '152.3 MB',
-              sha: '46b195a0bd0ba6e38242d93f433651eecd6dee852be30f560af17222d94e4012',
-            },
-            {
-              name: 'codex-installer-macos-universal2.dmg',
-              size: '5.0 MB',
-              sha: 'cca61827189da7d45b1ce14bf21c54206aea2f586ae57263d951b4a998bf50a9',
-            },
-          ]}
-        />
-        <CodexToolCard
-          title='Codex 聊天记录迁移器'
-          build='build-27140614657-3-99a5c13'
-          desc='用于迁移已有 Codex 聊天记录，不负责配置 API 线路。普通用户优先选择 Windows、macOS 或 Linux 图形版。'
-          files={[
-            {
-              name: 'codex-chat-migrator-windows-x64.zip',
-              size: '12.4 MB',
-              sha: '4468987b681aed60f3cfcf8edc1d81060a8a6ae42a53723cf587b8b3146dc3a4',
-            },
-            {
-              name: 'codex-chat-migrator-macos-universal2.zip',
-              size: '68.7 MB',
-              sha: 'a32e0acf386680560865ce706a1084443d4c21d85c3207f21c80208473d175a5',
-            },
-            {
-              name: 'codex-chat-migrator-linux-x64-gui.tar.gz',
-              size: '22.4 MB',
-              sha: '54edd1e50b808b6d442bfec08d3f145dfd76ea96c0549eb28bed0970239ff32a',
-            },
-            {
-              name: 'codex-chat-migrator-linux-x64-cli.tar.gz',
-              size: '17.9 MB',
-              sha: 'e87a3bc13cb6017bfe8f13ddecb645f017902cadfb173a7f2fe553caa9956243',
-            },
-          ]}
-        />
-      </div>
-      <p className='text-muted-foreground mt-4 text-xs leading-6'>
-        上述文件和校验值来自公开发布信息，本站不托管安装包。下载前请在官方
-        Release 页面核对版本与 SHA-256；迁移前请先备份现有 Codex 数据。
-      </p>
-    </Section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Video model parameter cards
-// ---------------------------------------------------------------------------
-function ModelCard(props: {
-  name: string
-  vendor: string
-  rows: [string, string][]
-}) {
-  return (
-    <div className='glass-panel rounded-xl border p-5'>
-      <div className='flex items-baseline justify-between gap-2'>
-        <h4 className='font-mono text-base font-semibold'>{props.name}</h4>
-        <span className='text-muted-foreground text-xs'>{props.vendor}</span>
-      </div>
-      <dl className='mt-3 space-y-2 text-sm'>
-        {props.rows.map(([k, v]) => (
-          <div
-            key={k}
-            className='flex justify-between gap-4 border-b pb-2 last:border-0'
-          >
-            <dt className='text-muted-foreground shrink-0'>{k}</dt>
-            <dd className='text-right'>{v}</dd>
-          </div>
-        ))}
-      </dl>
-    </div>
-  )
-}
-
-function VideoModelsSection() {
-  const models: [string, string, [string, string][]][] = [
-    [
-      'Seedance-2.0',
-      'ByteDance 视频模型',
-      [
-        ['时长', '4-15 秒'],
-        ['清晰度', '480p / 720p / 1080p / 4K'],
-        ['画面比例', '21:9 / 16:9 / 4:3 / 1:1 / 3:4 / 9:16 / Auto'],
-        ['参考素材', '最多 9 图、3 视频、3 音频，合计不超过 12 个'],
-        ['计费', '按输出秒数和清晰度计费'],
-      ],
-    ],
-    [
-      'Seedance-2.5',
-      'ByteDance 视频模型',
-      [
-        ['时长', '4-30 秒'],
-        ['清晰度', '480p / 720p'],
-        ['画面比例', '21:9 / 16:9 / 4:3 / 1:1 / 3:4 / 9:16 / Auto'],
-        ['参考素材', '最多 30 图、10 视频、10 音频，合计不超过 50 个'],
-        ['计费', '按输出秒数、清晰度和参考视频输入时长计费'],
-      ],
-    ],
-    [
-      'minimax-h3',
-      'miniMax 视频模型',
-      [
-        ['时长', '4-15 秒'],
-        ['清晰度', '768p / 2k'],
-        ['画面比例', '21:9 / 16:9 / 4:3 / 1:1 / 3:4 / 9:16'],
-        ['参考素材', '最多 9 图、3 视频、3 音频，合计不超过 12 个'],
-        ['计费', '按输出秒数和清晰度计费'],
-      ],
-    ],
-    [
-      'minimax-h3-vip',
-      'miniMax三方视频模型',
-      [
-        ['时长', '5-15 秒'],
-        ['清晰度', '720p / 2K'],
-        ['画面比例', 'auto / 1:1 / 16:9 / 9:16 / 3:4 / 4:3 / 21:9'],
-        [
-          '参考素材',
-          '最多 5 张图片、1 个音频，不支持视频参考；音频必须搭配图片',
-        ],
-        ['计费', '按清晰度固定按次计费，输出固定带音频'],
-      ],
-    ],
-    [
-      'grok-video',
-      'Grok',
-      [
-        ['时长', '1-15 秒'],
-        ['清晰度', '480p / 720p'],
-        ['画面比例', '21:9 / 16:9 / 4:3 / 1:1 / 3:4 / 9:16'],
-        ['参考素材', '支持文生视频或 1 张参考图'],
-        ['计费', '以当前控制台实时价格为准'],
-      ],
-    ],
-    [
-      'grok-video-1.5',
-      'Grok',
-      [
-        ['时长', '1-15 秒'],
-        ['清晰度', '1080p'],
-        ['画面比例', '21:9 / 16:9 / 4:3 / 1:1 / 3:4 / 9:16'],
-        ['参考素材', '最多 7 张参考图；1080p 最多 1 张'],
-        ['计费', '以当前控制台实时价格为准'],
-      ],
-    ],
-  ]
-  return (
-    <Section
-      id='video-models'
-      eyebrow='MODEL MATRIX'
-      title='视频模型与参数范围'
-      description='以下是常见模型的示例参数范围，便于理解请求结构。实际可用模型、参数和价格以当前控制台模型列表及分组配置为准；Seedance / MiniMax 首次建议 4 秒低清晰度，Grok 可从 1 秒开始测试。'
-    >
-      <div className='grid gap-4 md:grid-cols-2'>
-        {models.map(([name, vendor, rows]) => (
-          <ModelCard key={name} name={name} vendor={vendor} rows={rows} />
-        ))}
-      </div>
-
-      <h3 className='mt-8 text-lg font-semibold'>请求字段说明</h3>
-      <div className='mt-3 overflow-x-auto rounded-xl border'>
-        <table className='w-full text-sm'>
-          <thead className='bg-muted/50 text-muted-foreground'>
-            <tr>
-              <th className='px-4 py-2 text-left font-medium'>字段</th>
-              <th className='px-4 py-2 text-left font-medium'>类型</th>
-              <th className='px-4 py-2 text-left font-medium'>要求</th>
-              <th className='px-4 py-2 text-left font-medium'>说明</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              [
-                'model',
-                'string',
-                '必填',
-                '模型名称，必须与所选视频分组支持的模型一致',
-              ],
-              [
-                'prompt',
-                'string',
-                '必填',
-                '视频描述；参考素材可在提示词中使用 @图1、@视频1、@音频1',
-              ],
-              ['ratio', 'string', '可选', '画面比例；首尾帧模式传 Auto'],
-              [
-                'duration',
-                'integer',
-                '可选',
-                '输出视频秒数，必须在对应模型范围内',
-              ],
-              [
-                'resolution',
-                'string',
-                '可选',
-                '清晰度，必须使用对应模型支持的档位',
-              ],
-              [
-                'aspect_ratio',
-                'string',
-                'Grok 可选',
-                'Grok 视频模型使用的画面比例字段',
-              ],
-              [
-                'images',
-                'string[]',
-                'Grok 可选',
-                'Grok 图生视频使用的公网 HTTPS 图片 URL 数组',
-              ],
-              ['first_image', 'string', '可选', '首帧图片的公开 HTTPS URL'],
-              ['last_image', 'string', '可选', '尾帧图片的公开 HTTPS URL'],
-              [
-                'referenceImages',
-                'string[]',
-                '可选',
-                '参考图片的公开 HTTPS URL 数组',
-              ],
-              [
-                'referenceVideos',
-                'string[]',
-                '可选',
-                '参考视频的公开 HTTPS URL 数组',
-              ],
-              [
-                'referenceAudios',
-                'string[]',
-                '可选',
-                '参考音频的公开 HTTPS URL 数组',
-              ],
-            ].map((row) => (
-              <tr key={row[0]} className='border-t'>
-                <td className='px-4 py-2 font-mono text-xs'>{row[0]}</td>
-                <td className='px-4 py-2 font-mono text-xs'>{row[1]}</td>
-                <td className='px-4 py-2'>{row[2]}</td>
-                <td className='text-muted-foreground px-4 py-2'>{row[3]}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Section>
-  )
-}
-
-function ErrorCard(props: { code: string; title: string; text: string }) {
-  return (
-    <div className='glass-panel rounded-xl border p-5'>
-      <div className='flex items-center gap-3'>
-        <span className='rounded bg-rose-500/15 px-2 py-0.5 font-mono text-sm font-semibold text-rose-500'>
-          {props.code}
-        </span>
-        <h4 className='font-semibold'>{props.title}</h4>
-      </div>
-      <p className='text-muted-foreground mt-3 text-sm leading-6'>
-        {props.text}
-      </p>
-    </div>
-  )
-}
-
-export function Docs(props: { previewDocuments?: DocsPreviewDocument[] } = {}) {
+export function Docs() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const { data: configuredDocuments } = useQuery({
+  const { data } = useQuery({
     queryKey: ['public-docs-content'],
     queryFn: async () => {
-      const previewDocument = getPreviewDocumentFromUrl()
       try {
         const response = await api.get<DocsResponse>('/api/docs/content')
-        const documents = getConfiguredDocuments(response.data.data)
-        return previewDocument ? [...documents, previewDocument] : documents
+        return response.data.data
       } catch {
-        return previewDocument ? [previewDocument] : []
+        return undefined
       }
     },
   })
@@ -741,50 +286,36 @@ export function Docs(props: { previewDocuments?: DocsPreviewDocument[] } = {}) {
     })
   }, [queryClient])
 
-  const configuredOverrides = useMemo(
+  const docsDocument = useMemo(() => buildEffectiveDocument(data), [data])
+
+  const categories = useMemo(
     () =>
-      Object.fromEntries(
-        [...(configuredDocuments ?? []), ...(props.previewDocuments ?? [])]
-          .filter((document) => document.sectionId)
-          .map((document) => [document.sectionId, document])
-      ),
-    [configuredDocuments, props.previewDocuments]
-  )
-  const visibleDocNav = useMemo(
-    () =>
-      defaultDocSections
-        .filter(
-          (section) => configuredOverrides[section.id]?.published !== false
-        )
-        .map((section) => [
-          section.id,
-          configuredOverrides[section.id]?.title || section.title,
-        ]),
-    [configuredOverrides]
-  )
-  const visibleCategories = useMemo(
-    () =>
-      docCategories
+      docsDocument.categories
         .map((category) => ({
           ...category,
-          sections: category.sections.filter(
-            (sectionId) =>
-              sectionId === 'custom-docs' ||
-              visibleDocNav.some(([id]) => id === sectionId)
-          ),
+          sections: docsDocument.sections
+            .filter((section) => section.categoryId === category.id)
+            .sort((a, b) => a.order - b.order)
+            .map((section) => section.id),
         }))
         .filter((category) => category.sections.length > 0),
-    [visibleDocNav]
+    [docsDocument]
   )
+  const sectionTitleById = useMemo(() => {
+    const map = new Map<string, string>()
+    docsDocument.sections.forEach((section) => map.set(section.id, section.title))
+    return map
+  }, [docsDocument])
+
   const [activeCategory, setActiveCategory] = useState(() => {
     const sectionId =
       typeof window !== 'undefined' ? window.location.hash.slice(1) : ''
     return (
-      visibleCategories.find((category) =>
-        category.sections.includes(sectionId as never)
+      categories.find((category) =>
+        category.sections.includes(sectionId)
       )?.id ??
-      visibleCategories[0]?.id ??
-      docCategories[0].id
+      categories[0]?.id ??
+      ''
     )
   })
   const scrollToSection = (sectionId: string) => {
@@ -798,8 +329,8 @@ export function Docs(props: { previewDocuments?: DocsPreviewDocument[] } = {}) {
   }
 
   useEffect(() => {
-    const sections = visibleDocNav
-      .map(([id]) => document.querySelector<HTMLElement>(`#${id}`))
+    const sections = docsDocument.sections
+      .map((section) => document.querySelector<HTMLElement>(`#${section.id}`))
       .filter((section): section is HTMLElement => section !== null)
     if (sections.length === 0) return
 
@@ -810,8 +341,8 @@ export function Docs(props: { previewDocuments?: DocsPreviewDocument[] } = {}) {
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
         const sectionId = visible[0]?.target.id
         if (!sectionId) return
-        const category = visibleCategories.find((item) =>
-          item.sections.includes(sectionId as never)
+        const category = categories.find((item) =>
+          item.sections.includes(sectionId)
         )
         if (category) setActiveCategory(category.id)
       },
@@ -820,743 +351,115 @@ export function Docs(props: { previewDocuments?: DocsPreviewDocument[] } = {}) {
 
     sections.forEach((section) => observer.observe(section))
     return () => observer.disconnect()
-  }, [visibleCategories, visibleDocNav])
+  }, [categories, docsDocument.sections])
 
   return (
     <PublicLayout showMainContainer={false}>
-      <DocsConfigurationContext.Provider value={configuredOverrides}>
-        <div className='mx-auto max-w-7xl px-4 pt-24 pb-10 md:px-8 md:pt-28 md:pb-14'>
-          <header className='border-b pb-8'>
-            <p className='text-primary text-xs font-semibold tracking-[0.2em] uppercase'>
-              {t('API DOCUMENTATION')}
-            </p>
-            <h1 className='mt-3 text-3xl font-semibold tracking-tight md:text-4xl'>
-              {t('From first request to production')}
-            </h1>
-            <p className='text-muted-foreground mt-3 max-w-3xl text-sm leading-7 md:text-base'>
-              {t(
-                'Choose a documentation category for your task. Each section includes copyable requests, parameter notes, and troubleshooting steps.'
-              )}
-            </p>
-          </header>
+      <div className='mx-auto max-w-7xl px-4 pt-24 pb-10 md:px-8 md:pt-28 md:pb-14'>
+        <header className='border-b pb-8'>
+          <p className='text-primary text-xs font-semibold tracking-[0.2em] uppercase'>
+            {t('API DOCUMENTATION')}
+          </p>
+          <h1 className='mt-3 text-3xl font-semibold tracking-tight md:text-4xl'>
+            {t('From first request to production')}
+          </h1>
+          <p className='text-muted-foreground mt-3 max-w-3xl text-sm leading-7 md:text-base'>
+            {t(
+              'Choose a documentation category for your task. Each section includes copyable requests, parameter notes, and troubleshooting steps.'
+            )}
+          </p>
+        </header>
 
-          <div
-            className='bg-background/85 supports-[backdrop-filter]:bg-background/65 sticky top-16 z-30 mt-6 flex gap-1 overflow-x-auto rounded-xl border p-1 shadow-sm backdrop-blur-xl'
-            role='tablist'
-            aria-label={t('Documentation categories')}
-          >
-            {visibleCategories.map((category) => (
-              <button
-                key={category.id}
-                type='button'
-                role='tab'
-                aria-selected={activeCategory === category.id}
-                aria-controls='docs-section-nav'
-                onClick={() => {
-                  setActiveCategory(category.id)
-                  scrollToSection(category.sections[0])
-                }}
-                className={`shrink-0 rounded-lg px-3 py-2 text-sm transition-colors md:px-4 ${
-                  activeCategory === category.id
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {t(category.label)}
-              </button>
-            ))}
-          </div>
-
-          <div className='grid gap-8 pt-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-12'>
-            <aside
-              id='docs-section-nav'
-              className='lg:sticky lg:top-28 lg:h-fit'
-              aria-label={t('Section navigation')}
+        <div
+          className='bg-background/85 supports-[backdrop-filter]:bg-background/65 sticky top-16 z-30 mt-6 flex gap-1 overflow-x-auto rounded-xl border p-1 shadow-sm backdrop-blur-xl'
+          role='tablist'
+          aria-label={t('Documentation categories')}
+        >
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              type='button'
+              role='tab'
+              aria-selected={activeCategory === category.id}
+              aria-controls='docs-section-nav'
+              onClick={() => {
+                setActiveCategory(category.id)
+                scrollToSection(category.sections[0])
+              }}
+              className={`shrink-0 rounded-lg px-3 py-2 text-sm transition-colors md:px-4 ${
+                activeCategory === category.id
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
             >
-              <div className='glass-panel max-h-[calc(100vh-9rem)] overflow-y-auto rounded-2xl border p-4'>
-                <p className='text-muted-foreground mb-3 text-xs font-semibold tracking-[0.16em] uppercase'>
-                  {t('Documentation outline')}
-                </p>
-                <nav className='space-y-4' aria-label={t('Section navigation')}>
-                  {visibleCategories.map((category) => (
-                    <div key={category.id}>
-                      <button
-                        type='button'
-                        onClick={() => {
-                          setActiveCategory(category.id)
-                          scrollToSection(category.sections[0])
-                        }}
-                        className={`mb-1 px-3 text-xs font-semibold tracking-wide uppercase transition-colors ${
-                          activeCategory === category.id
-                            ? 'text-primary'
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        {t(category.label)}
-                      </button>
-                      <div className='space-y-0.5'>
-                        {visibleDocNav
-                          .filter(([id]) =>
-                            category.sections.includes(id as never)
-                          )
-                          .map(([id, label]) => (
-                            <a
-                              key={id}
-                              href={`#${id}`}
-                              onClick={(event) => {
-                                event.preventDefault()
-                                scrollToSection(id)
-                              }}
-                              className='text-muted-foreground hover:text-foreground hover:bg-muted/60 block rounded-lg px-3 py-1.5 text-sm transition-colors'
-                            >
-                              {label}
-                            </a>
-                          ))}
-                      </div>
-                    </div>
-                  ))}
-                </nav>
-              </div>
-            </aside>
-
-            <main className='min-w-0 space-y-8'>
-              {/* 1. Getting started */}
-              <Section
-                id='start'
-                eyebrow='GETTING STARTED'
-                title='五分钟完成首次调用'
-                description='普通用户推荐使用 CC Switch 一键配置；开发者可以直接复制接口示例。一个分组使用一个 Key 即可，多建 Key 不会增加并发。'
-              >
-                <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-                  <StepCard index={1} title='下载 CC Switch'>
-                    <p>
-                      按 Windows、macOS 或 Linux
-                      下载并安装，打开后保持后台运行。
-                    </p>
-                    <BlockLink href='#cc-switch'>前往下载</BlockLink>
-                  </StepCard>
-                  <StepCard index={2} title='创建 API Key'>
-                    <p>进入 API 密钥页面，选择要使用的模型分组并创建密钥。</p>
-                  </StepCard>
-                  <StepCard index={3} title='一键导入配置'>
-                    <p>
-                      在密钥右侧选择 CC Switch，勾选 Claude Code、Codex
-                      等目标工具。
-                    </p>
-                  </StepCard>
-                  <StepCard index={4} title='发送最小测试'>
-                    <p>
-                      文字先发一条短消息，视频先用 480p、4 秒验证密钥和参数。
-                    </p>
-                  </StepCard>
-                </div>
-              </Section>
-
-              {/* 2. Endpoints */}
-              <Section
-                id='endpoints'
-                eyebrow='ENDPOINTS'
-                title='线路与请求地址'
-                description='OpenAI 兼容客户端填写带 /v1 的地址；Claude Code 填根域名，不要在末尾增加 /v1。'
-              >
-                <div className='grid gap-4 md:grid-cols-3'>
-                  <div className='glass-panel rounded-xl border p-5'>
-                    <div className='flex items-center justify-between'>
-                      <h3 className='font-semibold'>主线路</h3>
-                      <span className='bg-primary/10 text-primary rounded px-2 py-0.5 text-xs'>
-                        默认推荐
-                      </span>
-                    </div>
-                    <p className='text-muted-foreground mt-2 text-sm'>
-                      回国加速，适合国内客户端和日常调用
-                    </p>
-                    <div className='mt-4 space-y-3'>
-                      <CopyRow
-                        label='OpenAI 兼容'
-                        value={`https://${SITE}/v1`}
-                      />
-                      <CopyRow label='Claude Code' value={`https://${SITE}`} />
-                    </div>
-                  </div>
-                  <div className='rounded-xl border p-5 md:col-span-2'>
-                    <h3 className='font-semibold'>线路说明</h3>
-                    <p className='text-muted-foreground mt-2 text-sm leading-6'>
-                      文档会根据当前浏览器地址自动生成主线路。若管理员配置了备用域名，请以控制台公告为准，避免使用已失效的旧线路。
-                    </p>
-                  </div>
-                </div>
-              </Section>
-
-              {/* 3. Authentication */}
-              <Section
-                id='api-key'
-                eyebrow='AUTHENTICATION'
-                title='创建并使用 API Key'
-                description='所有 API 请求都需要鉴权。密钥只展示给本人，不要放进前端代码、公开仓库或截图。'
-              >
-                <div className='grid gap-4 sm:grid-cols-2'>
-                  <StepCard index={1} title='进入 API 密钥'>
-                    <p>在控制台打开 API 密钥页面，点击创建密钥。</p>
-                  </StepCard>
-                  <StepCard index={2} title='选择分组'>
-                    <p>文字、Claude 与视频分组权限不同，按目标模型选择。</p>
-                  </StepCard>
-                  <StepCard index={3} title='保存并复制'>
-                    <p>
-                      复制完整 sk- 密钥，配置到客户端或 Authorization Header。
-                    </p>
-                  </StepCard>
-                  <StepCard index={4} title='不要重复创建'>
-                    <p>同一分组一个密钥即可；并发能力由分组和上游决定。</p>
-                  </StepCard>
-                </div>
-                <div className='mt-6'>
-                  <p className='mb-1 text-sm font-medium'>标准鉴权 Header</p>
-                  <CodeBlock code='Authorization: Bearer sk-你的API密钥' />
-                  <p className='text-muted-foreground mt-2 text-sm'>
-                    点击密钥右侧复制按钮获取完整 API Key
-                  </p>
-                </div>
-                <div className='mt-6 grid gap-4 md:grid-cols-2'>
-                  <TutorialFigure
-                    src='https://api.bblabu.ai/tutorial-assets/api-key-copy.jpg'
-                    alt={t('API key creation and copy example')}
-                    caption={t(
-                      'Create a key in the console and copy the complete sk- value. The full key is shown only once.'
-                    )}
-                  />
-                  <div className='bg-muted/30 rounded-xl border p-5'>
-                    <h3 className='font-semibold'>
-                      {t('Before you configure')}
-                    </h3>
-                    <ul className='text-muted-foreground mt-3 space-y-2 text-sm leading-6'>
-                      <li>
-                        {t(
-                          'Make sure the key group includes the model you need.'
-                        )}
-                      </li>
-                      <li>
-                        {t(
-                          'Never commit an API key to a Git repository or frontend code.'
-                        )}
-                      </li>
-                      <li>
-                        {t(
-                          'For the first request, use short text and a small output limit.'
-                        )}
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </Section>
-
-              {/* 4. CC Switch */}
-              <CCSwitchSection />
-
-              {/* 5. Claude Code */}
-              <Section
-                id='claude-code'
-                eyebrow='CLAUDE CODE'
-                title='Claude Code 安装与配置'
-                description='Claude Code 是 Anthropic 的命令行编程工具。先安装客户端，再使用 CC Switch 一键导入；也可以手动配置环境变量。'
-              >
-                <div className='grid gap-4 sm:grid-cols-3'>
-                  <CodeBlock
-                    code='curl -fsSL https://claude.ai/install.sh | bash'
-                    title='macOS / Linux'
-                  />
-                  <CodeBlock
-                    code='brew install --cask claude-code'
-                    title='macOS Homebrew'
-                  />
-                  <CodeBlock
-                    code='irm https://claude.ai/install.ps1 | iex'
-                    title='Windows PowerShell'
-                  />
-                </div>
-                <BlockLink
-                  href='https://docs.anthropic.com/en/docs/claude-code/overview'
-                  external
-                >
-                  Claude Code 官方文档
-                </BlockLink>
-                <p className='text-muted-foreground mt-3 text-sm'>
-                  查看最新安装要求、更新方式和系统支持情况。
-                </p>
-
-                <h3 className='mt-8 text-lg font-semibold'>
-                  推荐：使用 CC Switch 配置
-                </h3>
-                <p className='text-muted-foreground mt-2 text-sm leading-6'>
-                  安装完成后返回上方，一键导入密钥、主线路和模型。
-                </p>
-                <div className='mt-4 grid gap-4 sm:grid-cols-2'>
-                  <StepCard index={1} title='检查安装'>
-                    <CodeBlock code='claude --version' />
-                  </StepCard>
-                  <StepCard index={2} title='启动并验证'>
-                    <CodeBlock code='claude' />
-                    <p>输入一条测试消息，能正常回复即配置成功。</p>
-                  </StepCard>
-                </div>
-                <p className='text-muted-foreground mt-4 text-sm'>
-                  Windows 请在系统环境变量中添加相同变量；修改后重新打开终端。
-                </p>
-                <CodeBlock
-                  code={`# macOS / Linux
-export ANTHROPIC_BASE_URL="https://${SITE}"
-export ANTHROPIC_AUTH_TOKEN="sk-你的API密钥"
-
-# 启动 Claude Code
-claude`}
-                />
-                <p className='text-muted-foreground mt-3 text-sm font-medium'>
-                  Claude Code 的 Base URL 必须填写根域名 https://
-                  <code>{SITE}</code>
-                  ，不要添加/v1。
-                </p>
-              </Section>
-
-              {/* 6. Codex toolkit */}
-              <CodexToolsSection />
-
-              {/* 7. Codex CLI */}
-              <Section
-                id='codex-cli'
-                eyebrow='OPENAI CODEX'
-                title='Codex CLI 下载与接入'
-                description='Codex CLI 是 OpenAI 的命令行编程工具。需要 Node.js 和 npm；安装后建议通过 CC Switch 导入本站 OpenAI 分组配置。'
-              >
-                <BlockLink href='https://nodejs.org/en/download/' external>
-                  先安装 Node.js
-                </BlockLink>
-                <p className='text-muted-foreground mt-2 text-sm'>
-                  尚未安装 npm 的用户，先从 Node.js 官方下载 LTS 版本。
-                </p>
-                <BlockLink
-                  href='https://developers.openai.com/codex/cli/'
-                  external
-                >
-                  Codex CLI 官方文档
-                </BlockLink>
-                <p className='text-muted-foreground mt-2 text-sm'>
-                  查看 OpenAI 官方安装、更新和使用说明。
-                </p>
-                <h3 className='mt-8 text-lg font-semibold'>
-                  安装后导入本站配置
-                </h3>
-                <p className='text-muted-foreground mt-2 text-sm leading-6'>
-                  在 CC Switch 中勾选 Codex，OpenAI Base URL 使用 {SITE}/v1。
-                </p>
-                <div className='mt-4 grid gap-4 sm:grid-cols-2'>
-                  <CodeBlock
-                    code={`# 使用 npm 安装（Windows / macOS / Linux）
-npm install -g @openai/codex
-
-# macOS 也可以使用 Homebrew
-brew install --cask codex`}
-                  />
-                  <CodeBlock
-                    code={`# 检查并启动
-codex --version
-codex`}
-                  />
-                </div>
-              </Section>
-
-              {/* 8. GPT-5.6 Sol 1M context */}
-              <Section
-                id='codex-sol-context'
-                eyebrow='GPT-5.6 SOL'
-                title='Codex 原生支持 105 万上下文'
-                description='GPT-5.6 Sol 原生支持 105 万 token 上下文，现在直接把 Codex 上下文拉满。'
-              >
-                <p className='text-muted-foreground'>
-                  保存后重启 Codex，新会话直接起飞
-                </p>
-                <p className='mt-3 text-sm'>
-                  修改 ~/.codex/config.toml 后保存并重启 Codex，新会话即可使用
-                  105 万 token 上下文；临时测试可以用右侧命令直接启动。
-                </p>
-                <div className='mt-4 grid gap-4 lg:grid-cols-2'>
-                  <CodeBlock
-                    code={`# 打开 ~/.codex/config.toml，顶部加上这三行
-model = "gpt-5.6-sol"
-model_context_window = 1000000
-model_auto_compact_token_limit = 900000`}
-                  />
-                  <CodeBlock
-                    code={`# 临时测试用这条命令
-codex -m gpt-5.6-sol -c model_context_window=1000000 -c model_auto_compact_token_limit=900000`}
-                  />
-                </div>
-              </Section>
-
-              {/* 9. ChatGPT app */}
-              <Section
-                id='chatgpt'
-                eyebrow='CHATGPT APP'
-                title='ChatGPT 官方客户端'
-                description='需要使用 ChatGPT 网页版或官方桌面、手机客户端时，从官方入口下载，避免安装第三方仿冒软件。'
-              >
-                <div className='grid gap-4 sm:grid-cols-2'>
-                  <div className='glass-panel rounded-xl border p-5'>
-                    <h4 className='font-semibold'>ChatGPT 网页版</h4>
-                    <p className='text-muted-foreground mt-2 text-sm'>
-                      无需安装，浏览器打开后使用 OpenAI 账号登录。
-                    </p>
-                    <BlockLink href='https://chatgpt.com/' external>
-                      ChatGPT 网页版
-                    </BlockLink>
-                  </div>
-                  <div className='glass-panel rounded-xl border p-5'>
-                    <h4 className='font-semibold'>ChatGPT 官方下载页</h4>
-                    <p className='text-muted-foreground mt-2 text-sm'>
-                      提供 macOS、Windows、iOS 和 Android 官方客户端入口。
-                    </p>
-                    <BlockLink
-                      href='https://openai.com/chatgpt/download/'
-                      external
-                    >
-                      ChatGPT 官方下载页
-                    </BlockLink>
-                  </div>
-                </div>
-                <p className='text-muted-foreground mt-4 text-sm leading-6'>
-                  官方 ChatGPT 应用搭配 CC Switch 工具，在里面配置好本站的 Base
-                  URL 和 API Key 后即可正常使用本站 API。
-                </p>
-              </Section>
-
-              {/* 10. VS Code */}
-              <Section
-                id='vscode'
-                eyebrow='VS CODE'
-                title='VS Code 与 AI 扩展'
-                description='习惯在编辑器里使用 AI 的用户，可以先安装 VS Code，再安装 OpenAI Codex 或 Anthropic Claude Code 扩展。'
-              >
-                <div className='grid gap-4 sm:grid-cols-2'>
-                  <div className='glass-panel rounded-xl border p-5'>
-                    <h4 className='font-semibold'>下载 Visual Studio Code</h4>
-                    <p className='text-muted-foreground mt-2 text-sm'>
-                      官方页面会根据 Windows、macOS 或 Linux 提供对应安装包。
-                    </p>
-                    <BlockLink
-                      href='https://code.visualstudio.com/Download'
-                      external
-                    >
-                      下载 Visual Studio Code
-                    </BlockLink>
-                  </div>
-                  <div className='glass-panel rounded-xl border p-5'>
-                    <h4 className='font-semibold'>OpenAI Codex 扩展</h4>
-                    <p className='text-muted-foreground mt-2 text-sm'>
-                      在 VS Code 扩展市场查看并安装 OpenAI 官方扩展。
-                    </p>
-                    <BlockLink
-                      href='https://marketplace.visualstudio.com/items?itemName=OpenAI.chatgpt'
-                      external
-                    >
-                      OpenAI Codex 扩展
-                    </BlockLink>
-                  </div>
-                </div>
-                <div className='mt-4 grid gap-4 sm:grid-cols-2'>
-                  <div className='glass-panel rounded-xl border p-5'>
-                    <h4 className='font-semibold'>
-                      Anthropic Claude Code 扩展
-                    </h4>
-                    <p className='text-muted-foreground mt-2 text-sm'>
-                      在 VS Code 扩展市场查看并安装 Anthropic 官方扩展。
-                    </p>
-                    <BlockLink
-                      href='https://marketplace.visualstudio.com/items?itemName=Anthropic.claude-code'
-                      external
-                    >
-                      Anthropic Claude Code 扩展
-                    </BlockLink>
-                  </div>
-                  <CodeBlock
-                    code={`# OpenAI Codex 扩展
-code --install-extension OpenAI.chatgpt
-
-# Anthropic Claude Code 扩展
-code --install-extension Anthropic.claude-code`}
-                  />
-                </div>
-                <p className='text-muted-foreground mt-4 text-sm leading-6'>
-                  扩展安装完成后，先确认 CC Switch 已选中本站配置，再重启 VS
-                  Code 并发送一条短消息验证连接。
-                </p>
-              </Section>
-
-              {/* 11. Text models */}
-              <Section
-                id='text-api'
-                eyebrow='TEXT MODELS'
-                title='文字模型 API'
-                description='本站同时兼容 OpenAI Chat Completions、Responses API 与 Anthropic Messages。模型名称以模型广场和所选分组为准。'
-              >
-                <h3 className='text-lg font-semibold'>Chat Completions</h3>
-                <p className='text-muted-foreground mt-2 text-sm'>
-                  适合大多数 OpenAI 兼容客户端与现有 SDK。
-                </p>
-                <div className='mt-3'>
-                  <CodeBlock
-                    code={`curl https://${SITE}/v1/chat/completions \\
-  -H "Authorization: Bearer sk-你的API密钥" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "model": "gpt-5.6-sol",
-    "messages": [
-      {"role": "user", "content": "请用一句话介绍你自己"}
-    ],
-    "stream": true
-  }'`}
-                  />
-                </div>
-
-                <h3 className='mt-8 text-lg font-semibold'>Responses API</h3>
-                <p className='text-muted-foreground mt-2 text-sm'>
-                  适合 Codex、新版 OpenAI SDK 与长上下文调用。
-                </p>
-                <div className='mt-3'>
-                  <CodeBlock
-                    code={`curl https://${SITE}/v1/responses \\
-  -H "Authorization: Bearer sk-你的API密钥" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "model": "gpt-5.6-sol",
-    "input": "分析这段文本并给出三个要点",
-    "stream": true
-  }'`}
-                  />
-                </div>
-
-                <h3 className='mt-8 text-lg font-semibold'>
-                  Anthropic Messages
-                </h3>
-                <p className='text-muted-foreground mt-2 text-sm'>
-                  使用 Claude 分组密钥，客户端 Base URL 填根域名。
-                </p>
-                <div className='mt-3'>
-                  <CodeBlock
-                    code={`curl https://${SITE}/v1/messages \\
-  -H "x-api-key: sk-你的API密钥" \\
-  -H "anthropic-version: 2023-06-01" \\
-  -H "content-type: application/json" \\
-  -d '{
-    "model": "claude-opus-4-8",
-    "max_tokens": 1024,
-    "messages": [
-      {"role": "user", "content": "你好，请用中文回复"}
-    ]
-  }'`}
-                  />
-                </div>
-              </Section>
-
-              {/* 12. Video overview */}
-              <Section
-                id='video-overview'
-                eyebrow='VIDEO API'
-                title='创建视频任务'
-                description='视频生成为异步任务。提交成功会返回 task_id；创建接口返回后，使用查询接口轮询状态。'
-              >
-                <div className='rounded-xl border px-4 py-2'>
-                  <EndpointRow
-                    method='POST'
-                    path='/v1/videos'
-                    desc='创建任务'
-                  />
-                  <EndpointRow
-                    method='GET'
-                    path='/v1/videos/{task_id}'
-                    desc='查询状态'
-                  />
-                  <EndpointRow
-                    method='GET'
-                    path='/v1/videos/{task_id}/content'
-                    desc='播放或下载'
-                  />
-                </div>
-                <div className='mt-4'>
-                  <CodeBlock
-                    code={`curl https://${SITE}/v1/videos \\
-  -H "Authorization: Bearer sk-你的视频分组API密钥" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "model": "Seedance-2.0",
-    "prompt": "电影感产品特写，镜头缓慢环绕，光线自然",
-    "ratio": "16:9",
-    "duration": 5,
-    "resolution": "720p"
-  }'`}
-                  />
-                  <br />
-                  <CodeBlock
-                    code={`curl https://${SITE}/v1/videos \\
-  -H "Authorization: Bearer sk-你的Grok分组API密钥" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "model": "grok-video-1.5",
-    "prompt": "电影感城市夜景，镜头缓慢推进，光影自然",
-    "duration": 5,
-    "resolution": "1080p",
-    "aspect_ratio": "16:9",
-    "images": []
-  }'`}
-                  />
-                </div>
-                <p className='text-muted-foreground mt-4 text-sm leading-6'>
-                  Seedance 与 MiniMax 请求使用对应视频分组密钥；Grok
-                  视频请求使用 Grok 分组密钥。分组与模型不匹配时无法调用。
-                </p>
-              </Section>
-
-              {/* 13. Video models + params */}
-              <VideoModelsSection />
-
-              {/* 14. Reference assets */}
-              <Section
-                id='video-assets'
-                eyebrow='REFERENCE ASSETS'
-                title='图片、视频与音频素材'
-                description='参考素材必须是上游能够直接访问的公网 HTTPS URL。需要登录、临时 blob:、本地 file: 或带防盗链的地址无法使用。'
-              >
-                <div className='grid gap-4 sm:grid-cols-2'>
-                  <div className='glass-panel rounded-xl border p-5'>
-                    <h4 className='font-semibold'>首尾帧</h4>
-                    <p className='text-muted-foreground mt-2 text-sm'>
-                      使用 first_image，可选 last_image；ratio 固定传 Auto。
-                    </p>
-                  </div>
-                  <div className='glass-panel rounded-xl border p-5'>
-                    <h4 className='font-semibold'>全能参考</h4>
-                    <p className='text-muted-foreground mt-2 text-sm'>
-                      使用 referenceImages、referenceVideos、referenceAudios
-                      数组。
-                    </p>
-                  </div>
-                  <div className='glass-panel rounded-xl border p-5'>
-                    <h4 className='font-semibold'>素材可访问性</h4>
-                    <p className='text-muted-foreground mt-2 text-sm'>
-                      提交前在无登录浏览器中打开 URL，确认可以直接下载文件。
-                    </p>
-                  </div>
-                  <div className='glass-panel rounded-xl border p-5'>
-                    <h4 className='font-semibold'>素材计费</h4>
-                    <p className='text-muted-foreground mt-2 text-sm'>
-                      参考视频输入时长会参与最终计费，请预留足够额度。
-                    </p>
-                  </div>
-                </div>
-                <div className='mt-4'>
-                  <CodeBlock
-                    code={`curl https://${SITE}/v1/videos \\
-  -H "Authorization: Bearer sk-你的视频分组API密钥" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "model": "Seedance-2.5",
-    "prompt": "@图1 中的人物向镜头挥手，动作参考 @视频1",
-    "ratio": "16:9",
-    "duration": 6,
-    "resolution": "480p",
-    "referenceImages": ["https://example.com/reference.jpg"],
-    "referenceVideos": ["https://example.com/motion.mp4"]
-  }'`}
-                  />
-                </div>
-              </Section>
-
-              {/* 15. Task lifecycle */}
-              <Section
-                id='video-result'
-                eyebrow='TASK LIFECYCLE'
-                title='查询、播放与下载'
-                description='提交接口只负责创建任务。请保存 task_id，间隔 3-5 秒查询一次；完成后通过 content 接口获取真实 MP4。'
-              >
-                <CodeBlock
-                  code={`# 查询任务状态
-curl https://${SITE}/v1/videos/task_xxx \\
-  -H "Authorization: Bearer sk-你的视频分组API密钥"
-
-# 任务完成后下载视频
-curl -L https://${SITE}/v1/videos/task_xxx/content \\
-  -H "Authorization: Bearer sk-你的视频分组API密钥" \\
-  -o result.mp4`}
-                />
-                <div className='mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
-                  <div className='rounded-lg border p-3'>
-                    <p className='font-mono text-sm font-semibold'>queued</p>
-                    <p className='text-muted-foreground mt-1 text-sm'>
-                      任务已进入队列，继续等待
-                    </p>
-                  </div>
-                  <div className='rounded-lg border p-3'>
-                    <p className='font-mono text-sm font-semibold'>
-                      in_progress
-                    </p>
-                    <p className='text-muted-foreground mt-1 text-sm'>
-                      正在生成，保持轮询
-                    </p>
-                  </div>
-                  <div className='rounded-lg border p-3'>
-                    <p className='font-mono text-sm font-semibold'>completed</p>
-                    <p className='text-muted-foreground mt-1 text-sm'>
-                      生成完成，可以播放或下载
-                    </p>
-                  </div>
-                  <div className='rounded-lg border p-3'>
-                    <p className='font-mono text-sm font-semibold'>failed</p>
-                    <p className='text-muted-foreground mt-1 text-sm'>
-                      读取失败原因，修正后重新创建
-                    </p>
-                  </div>
-                </div>
-              </Section>
-
-              {/* 16. Troubleshooting */}
-              <Section
-                id='errors'
-                eyebrow='TROUBLESHOOTING'
-                title='常见错误排查'
-                description='先根据 HTTP 状态码定位问题。视频任务若已返回 task_id，不要重复提交创建请求。'
-              >
-                <div className='grid gap-4 sm:grid-cols-2'>
-                  <ErrorCard
-                    code='401'
-                    title='API Key 无效或分组不匹配'
-                    text='重新复制完整密钥，确认视频请求使用视频模型分组创建的 Key。'
-                  />
-                  <ErrorCard
-                    code='403'
-                    title='预扣费额度不足'
-                    text='视频任务会按所选模型、清晰度和计费方式预扣费。降低清晰度，或补充钱包/套餐额度后重试。'
-                  />
-                  <ErrorCard
-                    code='404'
-                    title='接口路径或模型名称错误'
-                    text='OpenAI 地址需要 /v1；视频模型名称区分大小写，请直接复制本文档名称。'
-                  />
-                  <ErrorCard
-                    code='422'
-                    title='请求参数不符合模型范围'
-                    text='检查 duration、resolution、ratio 与参考素材数量是否符合所选模型。'
-                  />
-                  <ErrorCard
-                    code='502/503/504'
-                    title='上游繁忙或任务暂时不可用'
-                    text='保留 task_id，稍后查询；创建失败且没有 task_id 时再重新提交，避免重复计费。'
-                  />
-                </div>
-              </Section>
-
-              <CustomDocsSection />
-            </main>
-          </div>
+              {t(category.label)}
+            </button>
+          ))}
         </div>
-      </DocsConfigurationContext.Provider>
+
+        <div className='grid gap-8 pt-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-12'>
+          <aside
+            id='docs-section-nav'
+            className='lg:sticky lg:top-28 lg:h-fit'
+            aria-label={t('Section navigation')}
+          >
+            <div className='glass-panel max-h-[calc(100vh-9rem)] overflow-y-auto rounded-2xl border p-4'>
+              <p className='text-muted-foreground mb-3 text-xs font-semibold tracking-[0.16em] uppercase'>
+                {t('Documentation outline')}
+              </p>
+              <nav className='space-y-4' aria-label={t('Section navigation')}>
+                {categories.map((category) => (
+                  <div key={category.id}>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        setActiveCategory(category.id)
+                        scrollToSection(category.sections[0])
+                      }}
+                      className={`mb-1 px-3 text-xs font-semibold tracking-wide uppercase transition-colors ${
+                        activeCategory === category.id
+                          ? 'text-primary'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t(category.label)}
+                    </button>
+                    <div className='space-y-0.5'>
+                      {category.sections.map((sectionId) => (
+                        <a
+                          key={sectionId}
+                          href={`#${sectionId}`}
+                          onClick={(event) => {
+                            event.preventDefault()
+                            scrollToSection(sectionId)
+                          }}
+                          className='text-muted-foreground hover:text-foreground hover:bg-muted/60 block rounded-lg px-3 py-1.5 text-sm transition-colors'
+                        >
+                          {sectionTitleById.get(sectionId) ?? sectionId}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </nav>
+            </div>
+          </aside>
+
+          <main className='min-w-0 space-y-8'>
+            {categories.map((category) => (
+              <div key={category.id} className='space-y-8'>
+                {category.sections.map((sectionId) => {
+                  const section = docsDocument.sections.find(
+                    (item) => item.id === sectionId
+                  )
+                  if (!section) return null
+                  return <DocSectionView key={sectionId} section={section} />
+                })}
+              </div>
+            ))}
+          </main>
+        </div>
+      </div>
     </PublicLayout>
   )
 }

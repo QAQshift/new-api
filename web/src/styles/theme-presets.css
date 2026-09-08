@@ -685,13 +685,23 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
 }
 /* Floating layers sit on top of the page, so they blur harder and tint
- * stronger to keep their content separated from whatever scrolls beneath. */
+ * stronger to keep their content separated from whatever scrolls beneath.
+ *
+ * Popups are centered by utility classes like
+ * `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`. The shared
+ * surface rule above applies `position: relative` for the glass hairline
+ * ::before to anchor against, but combined with `backdrop-filter` that
+ * turns the popup into its own containing block in some browsers and
+ * breaks the centered fixed positioning. Re-assert `position: fixed` here
+ * so the popup stays centered. `position: fixed` is still a valid
+ * containing block for the ::before ring. */
 [data-theme-preset='glass'] :is(
     [data-slot='popover-content'],
     [data-slot='dialog-content'],
     [data-slot='sheet-content'],
     [data-slot='dropdown-menu-content']
   ) {
+  position: fixed;
   background-color: var(--glass-tint-raised);
   --glass-blur: var(--glass-blur-raised);
 }

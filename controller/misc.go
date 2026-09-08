@@ -264,28 +264,48 @@ func GetHomePageContent(c *gin.Context) {
 	return
 }
 
-// GetDocsContent returns administrator overrides and extension pages.
-// The frontend merges this payload over its built-in document definition.
+// GetDocsContent returns the administrator-configured documentation. A v3
+// payload is authoritative and passed through as-is (the frontend filters
+// hidden sections); legacy payloads keep the old override semantics.
 func GetDocsContent(c *gin.Context) {
 	common.OptionMapRWMutex.RLock()
 	raw := common.OptionMap["console_setting.docs"]
 	common.OptionMapRWMutex.RUnlock()
 
-	docs := make([]map[string]any, 0)
-	version := 2
 	if raw != "" {
+		var v3 struct {
+			Version    int              `json:"version"`
+			Categories []map[string]any `json:"categories"`
+			Sections   []map[string]any `json:"sections"`
+		}
+		if err := common.UnmarshalJsonStr(raw, &v3); err == nil && len(v3.Categories) > 0 {
+			response := gin.H{
+				"success": true,
+				"message": "",
+				"data": gin.H{
+					"version":    3,
+					"categories": v3.Categories,
+					"sections":   v3.Sections,
+				},
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+
+		docs := make([]map[string]any, 0)
+		version := 2
 		var envelope struct {
 			Version  int `json:"version"`
 			Sections []struct {
-				ID        string `json:"id"`
-				SectionID string `json:"sectionId,omitempty"`
-				Eyebrow   string `json:"eyebrow,omitempty"`
-				Title     string `json:"title"`
-				Summary   string `json:"summary"`
-				Content   string `json:"content"`
+				ID        string           `json:"id"`
+				SectionID string           `json:"sectionId,omitempty"`
+				Eyebrow   string           `json:"eyebrow,omitempty"`
+				Title     string           `json:"title"`
+				Summary   string           `json:"summary"`
+				Content   string           `json:"content"`
 				Blocks    []map[string]any `json:"blocks,omitempty"`
-				Published bool `json:"published"`
-				Order     int    `json:"order"`
+				Published bool             `json:"published"`
+				Order     int              `json:"order"`
 			} `json:"sections"`
 		}
 		if err := common.UnmarshalJsonStr(raw, &envelope); err == nil && envelope.Sections != nil {
@@ -341,18 +361,28 @@ func GetDocsContent(c *gin.Context) {
 				}
 			}
 		}
+		sort.SliceStable(docs, func(i, j int) bool {
+			left, _ := docs[i]["order"].(int)
+			right, _ := docs[j]["order"].(int)
+			return left < right
+		})
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "",
+			"data": gin.H{
+				"version":  version,
+				"sections": docs,
+			},
+		})
+		return
 	}
-	sort.SliceStable(docs, func(i, j int) bool {
-		left, _ := docs[i]["order"].(int)
-		right, _ := docs[j]["order"].(int)
-		return left < right
-	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
 		"data": gin.H{
-			"version":  version,
-			"sections": docs,
+			"version":  2,
+			"sections": make([]map[string]any, 0),
 		},
 	})
 }
