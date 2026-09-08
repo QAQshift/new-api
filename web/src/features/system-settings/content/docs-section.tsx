@@ -26,7 +26,7 @@ import {
   Save,
   Trash2,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -472,6 +472,52 @@ export function DocsSection(props: DocsSectionProps) {
     setPreview(false)
   }
 
+  const previewUrl = (() => {
+    if (!editor.sectionId) return ''
+    let blocks: DocBlock[] = []
+    try {
+      const parsed: unknown = JSON.parse(blocksDraft || '[]')
+      if (Array.isArray(parsed)) blocks = parsed as DocBlock[]
+    } catch {
+      // The editor displays the JSON validation error when saving.
+    }
+    const draft = encodeURIComponent(
+      JSON.stringify({ ...editor, blocks, published: true })
+    )
+    return `/docs?previewDoc=${draft}#${editor.sectionId}`
+  })()
+
+  let previewView: ReactNode
+  if (editor.sectionId) {
+    previewView = (
+      <div className='max-h-[75vh] overflow-y-auto rounded-lg border'>
+        <iframe
+          title={t('Public documentation preview')}
+          src={previewUrl}
+          // The preview must retain same-origin access so its React app can
+          // load the public documentation configuration endpoint.
+          // eslint-disable-next-line react/iframe-missing-sandbox
+          sandbox='allow-forms allow-modals allow-popups allow-same-origin allow-scripts'
+          className='h-[75vh] w-full border-0'
+        />
+      </div>
+    )
+  } else {
+    previewView = (
+      <div className='bg-muted/20 min-h-80 rounded-lg border p-5'>
+        <h3 className='text-xl font-semibold'>
+          {editor.title || t('Untitled document')}
+        </h3>
+        {editor.summary && (
+          <p className='text-muted-foreground mt-2 text-sm'>{editor.summary}</p>
+        )}
+        <div className='mt-4'>
+          <Markdown>{editor.content || t('Nothing to preview yet')}</Markdown>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <SettingsSection title={t('Documentation management')}>
       <div className='space-y-5'>
@@ -514,6 +560,16 @@ export function DocsSection(props: DocsSectionProps) {
               </div>
             </div>
             <div className='flex shrink-0 gap-2'>
+              <Button
+                size='sm'
+                variant='outline'
+                onClick={() =>
+                  window.open('/docs', '_blank', 'noopener,noreferrer')
+                }
+              >
+                <Eye className='mr-2 size-4' />
+                {t('Open full public docs')}
+              </Button>
               <Button size='sm' variant='outline' onClick={copyDefaultMarkdown}>
                 {copiedDefault ? (
                   <Check className='mr-2 size-4' />
@@ -625,21 +681,7 @@ export function DocsSection(props: DocsSectionProps) {
                 </div>
               </div>
               {preview ? (
-                <div className='bg-muted/20 min-h-80 rounded-lg border p-5'>
-                  <h3 className='text-xl font-semibold'>
-                    {editor.title || t('Untitled document')}
-                  </h3>
-                  {editor.summary && (
-                    <p className='text-muted-foreground mt-2 text-sm'>
-                      {editor.summary}
-                    </p>
-                  )}
-                  <div className='mt-4'>
-                    <Markdown>
-                      {editor.content || t('Nothing to preview yet')}
-                    </Markdown>
-                  </div>
-                </div>
+                previewView
               ) : (
                 <div className='space-y-4'>
                   <label className='block space-y-1.5'>

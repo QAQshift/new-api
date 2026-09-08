@@ -43,6 +43,8 @@ type DocOverride = {
   order: number
 }
 
+export type DocsPreviewDocument = DocOverride
+
 type DocsConfiguration = {
   version: number
   sections: DocOverride[]
@@ -53,6 +55,33 @@ type DocsResponse = { data?: DocsConfiguration | DocOverride[] }
 function getConfiguredDocuments(data: DocsResponse['data']): DocOverride[] {
   if (Array.isArray(data)) return data
   return data?.sections ?? []
+}
+
+function getPreviewDocumentFromUrl(): DocOverride | null {
+  if (typeof window === 'undefined') return null
+  const encoded = new URLSearchParams(window.location.search).get('previewDoc')
+  if (!encoded) return null
+  try {
+    const parsed: unknown = JSON.parse(encoded)
+    if (!parsed || typeof parsed !== 'object') return null
+    const document = parsed as Partial<DocOverride>
+    if (typeof document.sectionId !== 'string' || !document.sectionId) {
+      return null
+    }
+    return {
+      id: 'preview-document',
+      sectionId: document.sectionId,
+      eyebrow: typeof document.eyebrow === 'string' ? document.eyebrow : '',
+      title: typeof document.title === 'string' ? document.title : '',
+      summary: typeof document.summary === 'string' ? document.summary : '',
+      content: typeof document.content === 'string' ? document.content : '',
+      blocks: Array.isArray(document.blocks) ? document.blocks : [],
+      published: true,
+      order: 0,
+    }
+  } catch {
+    return null
+  }
 }
 
 const DocsConfigurationContext = createContext<Record<string, DocOverride>>({})
@@ -381,12 +410,18 @@ const docCategories = defaultDocCategories
 function CustomDocsSection() {
   const { t } = useTranslation()
   const { data } = useQuery({
-    queryKey: ['public-docs-content'],
+    queryKey: ['public-docs-content', 'custom'],
     queryFn: async () => {
-      const response = await api.get<DocsResponse>('/api/docs/content')
-      return getConfiguredDocuments(response.data.data)
-        .filter((document) => !document.sectionId)
-        .sort((a, b) => a.order - b.order)
+      const previewDocument = getPreviewDocumentFromUrl()
+      try {
+        const response = await api.get<DocsResponse>('/api/docs/content')
+        const documents = getConfiguredDocuments(response.data.data)
+        return (previewDocument ? [...documents, previewDocument] : documents)
+          .filter((document) => !document.sectionId)
+          .sort((a, b) => a.order - b.order)
+      } catch {
+        return previewDocument ? [previewDocument] : []
+      }
     },
     staleTime: 60_000,
   })
@@ -927,24 +962,26 @@ function ErrorCard(props: { code: string; title: string; text: string }) {
   )
 }
 
-export function Docs() {
+export function Docs(props: { previewDocuments?: DocsPreviewDocument[] } = {}) {
   const { t } = useTranslation()
   const { data: configuredDocuments } = useQuery({
     queryKey: ['public-docs-content'],
     queryFn: async () => {
       const response = await api.get<DocsResponse>('/api/docs/content')
-      return getConfiguredDocuments(response.data.data)
+      const documents = getConfiguredDocuments(response.data.data)
+      const previewDocument = getPreviewDocumentFromUrl()
+      return previewDocument ? [...documents, previewDocument] : documents
     },
     staleTime: 60_000,
   })
   const configuredOverrides = useMemo(
     () =>
       Object.fromEntries(
-        (configuredDocuments ?? [])
+        [...(configuredDocuments ?? []), ...(props.previewDocuments ?? [])]
           .filter((document) => document.sectionId)
           .map((document) => [document.sectionId, document])
       ),
-    [configuredDocuments]
+    [configuredDocuments, props.previewDocuments]
   )
   const visibleDocNav = useMemo(
     () =>
