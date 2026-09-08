@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Edit3, Eye, FileText, Plus, Save, Trash2 } from 'lucide-react'
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -29,6 +29,7 @@ import {
   defaultDocSections,
   type DocBlock,
 } from '@/overrides/docs/default-document'
+import { DocBlockRenderer } from '@/overrides/docs/doc-blocks'
 
 import { SettingsSwitchField } from '../components/settings-form-layout'
 import { SettingsSection } from '../components/settings-section'
@@ -104,6 +105,51 @@ function parseDocuments(data: string): ManagedDocument[] {
   }
 }
 
+function PreviewBody(props: {
+  document: {
+    content: string
+    blocks: DocBlock[]
+    blocksError: boolean
+  }
+}) {
+  const { t } = useTranslation()
+  const { content, blocks, blocksError } = props.document
+
+  if (blocksError) {
+    return (
+      <div className='text-destructive rounded-xl border border-dashed p-6 text-center text-sm'>
+        {t('Structured blocks must be valid JSON')}
+      </div>
+    )
+  }
+  if (blocks.length > 0) {
+    return (
+      <div className='space-y-6'>
+        {blocks.map((block) => (
+          <DocBlockRenderer
+            key={`${block.type}-${JSON.stringify(block)}`}
+            block={block}
+          />
+        ))}
+      </div>
+    )
+  }
+  if (content.trim()) {
+    return (
+      <div>
+        <Markdown>{content}</Markdown>
+      </div>
+    )
+  }
+  return (
+    <div className='text-muted-foreground rounded-xl border border-dashed p-6 text-center text-sm'>
+      {t(
+        'Leave Markdown and blocks empty to keep the live built-in content.'
+      )}
+    </div>
+  )
+}
+
 export function DocsSection(props: DocsSectionProps) {
   const { t } = useTranslation()
   const updateOption = useUpdateOption()
@@ -115,6 +161,16 @@ export function DocsSection(props: DocsSectionProps) {
   const [preview, setPreview] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   const [blocksDraft, setBlocksDraft] = useState('[]')
+
+  const parsedBlocks = useMemo(() => {
+    try {
+      const parsed: unknown = JSON.parse(blocksDraft || '[]')
+      if (!Array.isArray(parsed)) throw new Error('blocks must be an array')
+      return { blocks: parsed as DocBlock[], blocksError: false }
+    } catch {
+      return { blocks: [], blocksError: true }
+    }
+  }, [blocksDraft])
 
   useEffect(() => {
     setDocuments(parseDocuments(props.data))
@@ -248,31 +304,30 @@ export function DocsSection(props: DocsSectionProps) {
     }
   }
 
-  const previewUrl = (() => {
-    if (!editor.sectionId) return ''
-    let blocks: DocBlock[] = []
-    try {
-      const parsed: unknown = JSON.parse(blocksDraft || '[]')
-      if (Array.isArray(parsed)) blocks = parsed as DocBlock[]
-    } catch {
-      // The editor displays the JSON validation error when saving.
-    }
-    const draft = encodeURIComponent(
-      JSON.stringify({ ...editor, blocks, published: true })
-    )
-    return `/docs?previewDoc=${draft}#${editor.sectionId}`
-  })()
-
   let previewView: ReactNode
   if (editor.sectionId) {
     previewView = (
       <div className='max-h-[75vh] overflow-y-auto rounded-lg border'>
-        <iframe
-          title={t('Public documentation preview')}
-          src={previewUrl}
-          sandbox='allow-scripts'
-          className='h-[75vh] w-full border-0'
-        />
+        <div className='px-5 py-6'>
+          <p className='text-primary text-xs font-semibold tracking-[0.2em] uppercase'>
+            {editor.eyebrow || ''}
+          </p>
+          <h2 className='mt-2 text-2xl font-semibold tracking-tight md:text-3xl'>
+            {editor.title || t('Untitled document')}
+          </h2>
+          {editor.summary && (
+            <p className='text-muted-foreground mt-3 max-w-3xl leading-7'>
+              {editor.summary}
+            </p>
+          )}
+          <PreviewBody
+            document={{
+              content: editor.content,
+              blocks: parsedBlocks.blocks,
+              blocksError: parsedBlocks.blocksError,
+            }}
+          />
+        </div>
       </div>
     )
   } else {
@@ -285,7 +340,13 @@ export function DocsSection(props: DocsSectionProps) {
           <p className='text-muted-foreground mt-2 text-sm'>{editor.summary}</p>
         )}
         <div className='mt-4'>
-          <Markdown>{editor.content || t('Nothing to preview yet')}</Markdown>
+          <PreviewBody
+            document={{
+              content: editor.content,
+              blocks: parsedBlocks.blocks,
+              blocksError: parsedBlocks.blocksError,
+            }}
+          />
         </div>
       </div>
     )

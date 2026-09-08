@@ -20,6 +20,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import i18next from 'i18next'
 import { toast } from 'sonner'
 
+import { publishDocsChanged } from '@/lib/docs-sync'
+
 import { updateSystemOption } from '../api'
 import type { UpdateOptionRequest } from '../types'
 
@@ -55,6 +57,15 @@ export function useUpdateOption() {
       if (data.success) {
         // Always refresh system-options
         queryClient.invalidateQueries({ queryKey: ['system-options'] })
+
+        // Documentation content is served to /docs; refresh it immediately so
+        // saved changes appear without waiting out the query cache.
+        if (variables.key === 'console_setting.docs') {
+          queryClient.invalidateQueries({
+            queryKey: ['public-docs-content'],
+          })
+          publishDocsChanged()
+        }
 
         // If updating frontend-display-related config, also refresh status
         if (STATUS_RELATED_KEYS.has(variables.key)) {
