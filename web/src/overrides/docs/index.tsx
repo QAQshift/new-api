@@ -967,10 +967,14 @@ export function Docs(props: { previewDocuments?: DocsPreviewDocument[] } = {}) {
   const { data: configuredDocuments } = useQuery({
     queryKey: ['public-docs-content'],
     queryFn: async () => {
-      const response = await api.get<DocsResponse>('/api/docs/content')
-      const documents = getConfiguredDocuments(response.data.data)
       const previewDocument = getPreviewDocumentFromUrl()
-      return previewDocument ? [...documents, previewDocument] : documents
+      try {
+        const response = await api.get<DocsResponse>('/api/docs/content')
+        const documents = getConfiguredDocuments(response.data.data)
+        return previewDocument ? [...documents, previewDocument] : documents
+      } catch {
+        return previewDocument ? [previewDocument] : []
+      }
     },
     staleTime: 60_000,
   })
