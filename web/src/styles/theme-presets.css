@@ -661,20 +661,32 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
  * One recipe applied by data-slot, so cards, popovers, dialogs, sheets,
  * menus, tables, the sidebar and the branded public panels all share a
  * single optical language. Components need no changes.
+ *
+ * NOTE: this rule is purely visual — it deliberately does NOT set
+ * `position`. Positioning lives in its own rule below so floating layers
+ * never inherit `position: relative`.
  */
 [data-theme-preset='glass'] :is(
     [data-slot='card'],
     [data-slot='popover-content'],
     [data-slot='dialog-content'],
     [data-slot='sheet-content'],
+    [data-slot='drawer-content'],
     [data-slot='dropdown-menu-content'],
+    [data-slot='select-content'],
+    [data-slot='combobox-content'],
+    [data-slot='hover-card-content'],
+    [data-slot='context-menu-content'],
+    [data-slot='alert-dialog-content'],
+    [data-slot='tooltip-content'],
+    [data-slot='navigation-menu-content'],
+    [data-slot='menubar-content'],
     [data-slot='table-container'],
     [data-slot='sidebar-inner'],
     [data-slot='sidebar'][data-mobile='true'],
     [data-slot='sidebar']:not([data-state]),
     .glass-panel
   ) {
-  position: relative;
   background-color: var(--glass-tint);
   background-image: var(--glass-sheen);
   box-shadow: inset 0 1px 0 var(--glass-edge-top),
@@ -684,24 +696,46 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
     saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
 }
-/* Floating layers sit on top of the page, so they blur harder and tint
- * stronger to keep their content separated from whatever scrolls beneath.
+/* `position: relative` is granted ONLY to static panels, where it anchors the
+ * ::before hairline ring defined further below.
  *
- * Popups are centered by utility classes like
- * `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`. The shared
- * surface rule above applies `position: relative` for the glass hairline
- * ::before to anchor against, but combined with `backdrop-filter` that
- * turns the popup into its own containing block in some browsers and
- * breaks the centered fixed positioning. Re-assert `position: fixed` here
- * so the popup stays centered. `position: fixed` is still a valid
- * containing block for the ::before ring. */
+ * Floating layers (dialog / drawer / popover / sheet / select / combobox /
+ * menu / tooltip …) must never receive it: they are positioned by utility
+ * classes like `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`
+ * or by Base UI inline styles, and `position: relative` combined with
+ * `backdrop-filter` makes them their own containing block in some browsers,
+ * which breaks their centered fixed positioning. They keep the `position`
+ * their own classes give them (usually `fixed`), which is still a valid
+ * containing block for the ::before ring — so the glass border survives.
+ *
+ * Deliberately an allow-list of static panels rather than a deny-list of
+ * floating layers, so newly added floating components are safe by default. */
+[data-theme-preset='glass'] :is(
+    [data-slot='card'],
+    [data-slot='table-container'],
+    [data-slot='sidebar-inner'],
+    [data-slot='sidebar']:not([data-state]),
+    .glass-panel
+  ) {
+  position: relative;
+}
+/* Floating layers sit on top of the page, so they blur harder and tint
+ * stronger to keep their content separated from whatever scrolls beneath. */
 [data-theme-preset='glass'] :is(
     [data-slot='popover-content'],
     [data-slot='dialog-content'],
     [data-slot='sheet-content'],
-    [data-slot='dropdown-menu-content']
+    [data-slot='drawer-content'],
+    [data-slot='dropdown-menu-content'],
+    [data-slot='select-content'],
+    [data-slot='combobox-content'],
+    [data-slot='hover-card-content'],
+    [data-slot='context-menu-content'],
+    [data-slot='alert-dialog-content'],
+    [data-slot='tooltip-content'],
+    [data-slot='navigation-menu-content'],
+    [data-slot='menubar-content']
   ) {
-  position: fixed;
   background-color: var(--glass-tint-raised);
   --glass-blur: var(--glass-blur-raised);
 }
@@ -807,7 +841,16 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
       [data-slot='popover-content'],
       [data-slot='dialog-content'],
       [data-slot='sheet-content'],
+      [data-slot='drawer-content'],
       [data-slot='dropdown-menu-content'],
+      [data-slot='select-content'],
+      [data-slot='combobox-content'],
+      [data-slot='hover-card-content'],
+      [data-slot='context-menu-content'],
+      [data-slot='alert-dialog-content'],
+      [data-slot='tooltip-content'],
+      [data-slot='navigation-menu-content'],
+      [data-slot='menubar-content'],
       [data-slot='table-container'],
       [data-slot='sidebar-inner'],
       [data-slot='sidebar'][data-mobile='true'],
