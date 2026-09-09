@@ -131,7 +131,7 @@ function LiveTerminalPanel() {
             {t('99.98% uptime')}
           </span>
         </div>
-        <div className='bg-muted/50 min-h-44 space-y-1 rounded-lg p-4 font-mono text-xs leading-6'>
+        <div className='bg-muted/50 h-72 space-y-1 overflow-hidden rounded-lg p-4 font-mono text-xs leading-6'>
           {REQUEST_LINES.slice(0, requestLines)}
           {showStreamLine && (
             <div className='pt-2 text-foreground'>
