@@ -188,9 +188,9 @@ export function BrandHome() {
     },
     {
       icon: ShieldCheck,
-      title: t('Production-grade availability'),
+      title: t('Production-grade reliability'),
       description: t(
-        'Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.'
+        'Multi-provider hot standby with automatic failover and 99.9%+ monthly availability.'
       ),
     },
     {
