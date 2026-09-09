@@ -187,6 +187,13 @@ export function BrandHome() {
       ),
     },
     {
+      icon: ShieldCheck,
+      title: t('Production-grade availability'),
+      description: t(
+        'Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.'
+      ),
+    },
+    {
       icon: Code2,
       title: t('Drop-in toolchain compatibility'),
       description: t(
@@ -332,7 +339,7 @@ export function BrandHome() {
           </div>
 
           <div className='mx-auto mt-14 max-w-6xl'>
-            <div className='grid gap-4 md:grid-cols-2'>
+            <div className='grid gap-4 md:grid-cols-3'>
               {heroPillars.map((pillar) => {
                 const Icon = pillar.icon
                 return (
