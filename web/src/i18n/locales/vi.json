@@ -1862,7 +1862,6 @@
     "Estimated quota cost": "Ước tính chi phí hạn mức",
     "Evaluate fields from the provider user info response. Conditions and nested groups use and/or logic.": "Đánh giá các trường trong phản hồi thông tin người dùng của nhà cung cấp. Điều kiện và nhóm lồng nhau sử dụng logic and/or.",
     "Every group name in the pricing table can be used in two places: on a user (the user group, assigned by admins) and on a token (the token group, chosen when creating the token). Same name pool, two different jobs.": "Mỗi tên nhóm trong bảng định giá có thể dùng ở hai nơi: trên người dùng (nhóm người dùng, do quản trị viên gán) và trên token (nhóm token, chọn khi tạo token). Cùng một bộ tên, hai vai trò khác nhau.",
-    "Any model, always online.": "Mọi mô hình, luôn trực tuyến.",
     "Every other device will lose access immediately. This device will remain signed in.": "Mọi thiết bị khác sẽ mất quyền truy cập ngay lập tức. Thiết bị này vẫn duy trì đăng nhập.",
     "Everything configured for this group, in one place.": "Toàn bộ cấu hình của nhóm này, tại một nơi.",
     "Everything you need": "Mọi thứ bạn cần",
@@ -3331,7 +3330,6 @@
     "One domain per line": "Một tên miền mỗi dòng",
     "One domain per line (only used when domain restriction is enabled)": "Mỗi dòng một tên miền (chỉ được sử dụng khi hạn chế tên miền được bật)",
     "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.": "Một endpoint cho model chat, ảnh và video. Tạo key, chọn model và triển khai tích hợp.",
-    "Stable, reliable gateway.": "Cổng API ổn định và đáng tin cậy.",
     "One integration for many models": "Một tích hợp cho nhiều mô hình",
     "One integration gives your application access to the configured model groups.": "Một lần tích hợp cho phép ứng dụng dùng các nhóm mô hình đã cấu hình.",
     "One IP or CIDR range per line": "Một IP hoặc dải CIDR mỗi dòng",
@@ -5676,6 +5674,15 @@
     "Move down": "Di chuyển xuống",
     "Remove block": "Xóa khối",
     "No content blocks. Use \"Reset to built-in\" to load the default content.": "Chưa có khối nội dung. Dùng \"Khôi phục nội dung gốc\" để tải nội dung mặc định.",
-    "Delete section": "Xóa mục"
+    "Delete section": "Xóa mục",
+    "Unified access layer, full model ecosystem, production-grade reliability.": "Tầng truy cập thống nhất, hệ sinh thái mô hình đầy đủ, độ tin cậy cấp sản xuất.",
+    "An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.": "Cổng API AI được thiết kế cho môi trường sản xuất: một API duy nhất phủ các dịch vụ mô hình lớn hàng đầu, với dự phòng nóng đa nhà cung cấp, tự động chuyển đổi khi lỗi và cam kết khả dụng hàng tháng không dưới 99,9%.",
+    "Every major model covered": "Phủ đủ các mô hình chính",
+    "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "Hỗ trợ Claude, Gemini, DeepSeek, Qwen và nhiều mô hình khác với xác thực, tính phí và đường gọi thống nhất — không cần tích hợp riêng từng nhà cung cấp.",
+    "Production-grade availability": "Khả dụng cấp sản xuất",
+    "Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.": "Dự phòng nóng đa nhà cung cấp, tự động chuyển đổi khi lỗi, khả dụng hàng tháng không dưới 99,9%, tương thích API lâu dài và nâng cấp phiên bản mượt mà.",
+    "Drop-in toolchain compatibility": "Tương thích chuỗi công cụ sẵn có",
+    "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "API tương thích chuẩn OpenAI, các SDK và công cụ CLI hiện có (bao gồm Claude Code, Codex, Gemini CLI) kết nối không cần sửa đổi.",
+    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "Yêu cầu đã được định tuyến qua cổng gateway thống nhất tới tuyến mô hình healthy nhất, đang trả về kết quả dạng streaming..."
   }
 }

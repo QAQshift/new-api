@@ -1862,7 +1862,6 @@
     "Estimated quota cost": "估算配额费用",
     "Evaluate fields from the provider user info response. Conditions and nested groups use and/or logic.": "根据提供商返回的用户信息字段执行策略判断。条件和嵌套分组支持 and/or 逻辑。",
     "Every group name in the pricing table can be used in two places: on a user (the user group, assigned by admins) and on a token (the token group, chosen when creating the token). Same name pool, two different jobs.": "定价表中的每个分组名可用在两个地方：用户身上（用户分组，由管理员分配）和令牌身上（令牌分组，创建令牌时选择）。同一批名字，两种不同职责。",
-    "Any model, always online.": "模型任选，始终在线。",
     "Every other device will lose access immediately. This device will remain signed in.": "其他所有设备将立即失去访问权限，当前设备将保持登录。",
     "Everything configured for this group, in one place.": "该分组的全部配置，一处看全。",
     "Everything you need": "你需要的一切",
@@ -3331,7 +3330,6 @@
     "One domain per line": "每行一个域名",
     "One domain per line (only used when domain restriction is enabled)": "每行一个域名 (仅在启用域名限制时使用)",
     "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.": "一个端点接入聊天、图像和视频模型。创建密钥、选择模型即可完成集成。",
-    "Stable, reliable gateway.": "稳定可靠的网关。",
     "One integration for many models": "一次接入，多模型使用",
     "One integration gives your application access to the configured model groups.": "一次接入即可使用已配置的模型分组。",
     "One IP or CIDR range per line": "每行一个 IP 或 CIDR 范围",
@@ -5676,6 +5674,15 @@
     "Move down": "下移",
     "Remove block": "删除内容块",
     "No content blocks. Use \"Reset to built-in\" to load the default content.": "暂无内容块。使用「恢复内置内容」载入默认内容。",
-    "Delete section": "删除章节"
+    "Delete section": "删除章节",
+    "Unified access layer, full model ecosystem, production-grade reliability.": "统一接入层 · 全模型生态 · 生产级长期可用",
+    "An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.": "AI API 网关为企业生产环境设计，单套接口覆盖主流大模型服务。长期运行场景下，提供多提供商热备容灾、自动故障切换、月度可用性不低于 99.9% 的持续服务保障。",
+    "Every major model covered": "主流模型全覆盖",
+    "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "支持 Claude、Gemini、DeepSeek、Qwen 等主流模型，统一鉴权、统一计费、统一调用链路，无需逐一对接。",
+    "Production-grade availability": "生产级长期可用",
+    "Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.": "多提供商热备容灾，单点故障自动切换，月度可用性不低于 99.9%，接口语义长期兼容，版本升级平滑演进。",
+    "Drop-in toolchain compatibility": "成熟工具链适配",
+    "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "兼容 OpenAI API 规范，现有 SDK 与 CLI 工具（含 Claude Code、Codex、Gemini CLI 等）零改造接入。",
+    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "请求已通过统一网关路由至最健康的模型线路，正在以流式方式返回结果..."
   }
 }

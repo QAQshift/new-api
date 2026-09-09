@@ -1862,7 +1862,6 @@
     "Estimated quota cost": "Estimated quota cost",
     "Evaluate fields from the provider user info response. Conditions and nested groups use and/or logic.": "Evaluate fields from the provider user info response. Conditions and nested groups use and/or logic.",
     "Every group name in the pricing table can be used in two places: on a user (the user group, assigned by admins) and on a token (the token group, chosen when creating the token). Same name pool, two different jobs.": "Every group name in the pricing table can be used in two places: on a user (the user group, assigned by admins) and on a token (the token group, chosen when creating the token). Same name pool, two different jobs.",
-    "Any model, always online.": "Any model, always online.",
     "Every other device will lose access immediately. This device will remain signed in.": "Every other device will lose access immediately. This device will remain signed in.",
     "Everything configured for this group, in one place.": "Everything configured for this group, in one place.",
     "Everything you need": "Everything you need",
@@ -3331,7 +3330,6 @@
     "One domain per line": "One domain per line",
     "One domain per line (only used when domain restriction is enabled)": "One domain per line (only used when domain restriction is enabled)",
     "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.": "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.",
-    "Stable, reliable gateway.": "Stable, reliable gateway.",
     "One integration for many models": "One integration for many models",
     "One integration gives your application access to the configured model groups.": "One integration gives your application access to the configured model groups.",
     "One IP or CIDR range per line": "One IP or CIDR range per line",
@@ -5676,6 +5674,15 @@
     "Move down": "Move down",
     "Remove block": "Remove block",
     "No content blocks. Use \"Reset to built-in\" to load the default content.": "No content blocks. Use \"Reset to built-in\" to load the default content.",
-    "Delete section": "Delete section"
+    "Delete section": "Delete section",
+    "Unified access layer, full model ecosystem, production-grade reliability.": "Unified access layer, full model ecosystem, production-grade reliability.",
+    "An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.": "An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.",
+    "Every major model covered": "Every major model covered",
+    "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.",
+    "Production-grade availability": "Production-grade availability",
+    "Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.": "Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.",
+    "Drop-in toolchain compatibility": "Drop-in toolchain compatibility",
+    "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.",
+    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "Request routed through the unified gateway to the healthiest model route. Streaming the response back."
   }
 }

@@ -1862,7 +1862,6 @@
     "Estimated quota cost": "Coût de quota estimé",
     "Evaluate fields from the provider user info response. Conditions and nested groups use and/or logic.": "Évalue les champs de la réponse d'informations utilisateur du fournisseur. Les conditions et groupes imbriqués utilisent la logique and/or.",
     "Every group name in the pricing table can be used in two places: on a user (the user group, assigned by admins) and on a token (the token group, chosen when creating the token). Same name pool, two different jobs.": "Chaque nom de groupe du tableau tarifaire peut être utilisé à deux endroits : sur un utilisateur (groupe d’utilisateurs, attribué par les admins) et sur un jeton (groupe de jetons, choisi à la création du jeton). Même ensemble de noms, deux rôles différents.",
-    "Any model, always online.": "Tous les modèles, toujours en ligne.",
     "Every other device will lose access immediately. This device will remain signed in.": "Tous les autres appareils perdront immédiatement l’accès. Cet appareil restera connecté.",
     "Everything configured for this group, in one place.": "Toute la configuration de ce groupe, au même endroit.",
     "Everything you need": "Tout ce dont vous avez besoin",
@@ -3331,7 +3330,6 @@
     "One domain per line": "Un domaine par ligne",
     "One domain per line (only used when domain restriction is enabled)": "Un domaine par ligne (utilisé uniquement lorsque la restriction de domaine est activée)",
     "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.": "Un endpoint pour les modèles de chat, d’image et de vidéo. Créez une clé, choisissez un modèle et intégrez.",
-    "Stable, reliable gateway.": "Passerelle stable et fiable.",
     "One integration for many models": "Une intégration pour de nombreux modèles",
     "One integration gives your application access to the configured model groups.": "Une seule intégration donne accès aux groupes de modèles configurés.",
     "One IP or CIDR range per line": "Une IP ou plage CIDR par ligne",
@@ -5676,6 +5674,15 @@
     "Move down": "Descendre",
     "Remove block": "Supprimer le bloc",
     "No content blocks. Use \"Reset to built-in\" to load the default content.": "Aucun bloc de contenu. Utilisez « Rétablir le contenu intégré » pour charger le contenu par défaut.",
-    "Delete section": "Supprimer la section"
+    "Delete section": "Supprimer la section",
+    "Unified access layer, full model ecosystem, production-grade reliability.": "Couche d’accès unifiée, écosystème de modèles complet, fiabilité de niveau production.",
+    "An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.": "Une passerelle API IA conçue pour la production : une seule API couvrant les principaux services de modèles, avec redondance active multi-fournisseurs, reprise automatique sur incident et une disponibilité mensuelle garantie d’au moins 99,9 %.",
+    "Every major model covered": "Tous les grands modèles couverts",
+    "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "Claude, Gemini, DeepSeek, Qwen et plus, avec authentification, facturation et chaîne d’appel unifiées — sans intégration propre à chaque fournisseur.",
+    "Production-grade availability": "Disponibilité de niveau production",
+    "Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.": "Redondance active multi-fournisseurs et reprise automatique sur incident, disponibilité mensuelle d’au moins 99,9 %, compatibilité API durable et mises à niveau en douceur.",
+    "Drop-in toolchain compatibility": "Compatibilité prête à l’emploi",
+    "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "API compatible OpenAI : les SDK et outils CLI existants (Claude Code, Codex, Gemini CLI, etc.) se connectent sans aucune modification.",
+    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "Requête routée via la passerelle unifiée vers la route de modèle la plus saine. Réponse en cours de diffusion en flux."
   }
 }

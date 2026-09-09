@@ -21,10 +21,10 @@ import {
   ArrowRight,
   Activity,
   Bot,
-  Check,
   Code2,
   Globe2,
   KeyRound,
+  Layers,
   Play,
   ShieldCheck,
   ServerCog,
@@ -32,6 +32,7 @@ import {
   WalletCards,
   type LucideIcon,
 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
@@ -39,11 +40,180 @@ import { Button } from '@/components/ui/button'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { useAuthStore } from '@/stores/auth-store'
 
-export function BrandHome() {
+const REQUEST_LINES = [
+  <div key='method'>
+    <span className='text-emerald-600 dark:text-emerald-400'>POST</span>{' '}
+    <span className='text-foreground'>/v1/chat/completions</span>
+  </div>,
+  <div key='auth' className='text-muted-foreground'>
+    authorization: Bearer sk-******
+  </div>,
+  <div key='model' className='text-muted-foreground pt-2'>
+    model: <span className='text-primary'>gpt-6-astra</span>
+  </div>,
+  <div key='stream' className='text-muted-foreground'>
+    stream: <span className='text-foreground'>true</span>
+  </div>,
+]
+
+/**
+ * Animated gateway terminal: replays a request, streams a reply character by
+ * character with a live token counter, then shows the final 200 stats and
+ * loops. Falls back to a static finished state under reduced motion.
+ */
+function LiveTerminalPanel() {
   const { t } = useTranslation()
   const { systemName } = useSystemConfig()
+  const prefersReducedMotion = useMemo(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    []
+  )
+  const [requestLines, setRequestLines] = useState(0)
+  const [phase, setPhase] = useState<'request' | 'stream' | 'done'>('request')
+  const [typedChars, setTypedChars] = useState(0)
+  const [tokens, setTokens] = useState(0)
+  const [latencyMs, setLatencyMs] = useState(842)
+  const streamText = t(
+    'Request routed through the unified gateway to the healthiest model route. Streaming the response back.'
+  )
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setRequestLines(REQUEST_LINES.length)
+      setTypedChars(streamText.length)
+      setTokens(1024)
+      setPhase('done')
+      return
+    }
+    if (phase !== 'request') return
+    if (requestLines < REQUEST_LINES.length) {
+      const timer = window.setTimeout(() => setRequestLines((n) => n + 1), 380)
+      return () => window.clearTimeout(timer)
+    }
+    const timer = window.setTimeout(() => setPhase('stream'), 300)
+    return () => window.clearTimeout(timer)
+  }, [phase, requestLines, prefersReducedMotion, streamText])
+
+  useEffect(() => {
+    if (phase !== 'stream' || prefersReducedMotion) return
+    if (typedChars < streamText.length) {
+      const timer = window.setTimeout(() => {
+        setTypedChars((n) => Math.min(n + 2, streamText.length))
+        setTokens((n) => n + 1 + Math.floor(Math.random() * 2))
+      }, 45)
+      return () => window.clearTimeout(timer)
+    }
+    setLatencyMs(620 + Math.floor(Math.random() * 500))
+    setPhase('done')
+  }, [phase, typedChars, prefersReducedMotion, streamText])
+
+  useEffect(() => {
+    if (phase !== 'done' || prefersReducedMotion) return
+    const timer = window.setTimeout(() => {
+      setRequestLines(0)
+      setTypedChars(0)
+      setTokens(0)
+      setPhase('request')
+    }, 3200)
+    return () => window.clearTimeout(timer)
+  }, [phase, prefersReducedMotion])
+
+  const showStreamLine = phase !== 'request' || typedChars > 0
+
+  return (
+    <div className='glass-panel shadow-primary/5 relative overflow-hidden rounded-2xl p-3 shadow-2xl'>
+      <div className='bg-background/70 rounded-xl border p-4'>
+        <div className='mb-4 flex items-center justify-between'>
+          <div className='flex items-center gap-2.5'>
+            <span className='flex gap-1.5'>
+              <span className='size-2.5 rounded-full bg-red-400/70' />
+              <span className='size-2.5 rounded-full bg-amber-400/70' />
+              <span className='size-2.5 rounded-full bg-emerald-400/80' />
+            </span>
+            <span className='text-muted-foreground font-mono text-xs'>
+              {t('Live gateway')}
+            </span>
+            <span className='relative flex size-2' aria-hidden='true'>
+              <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75' />
+              <span className='relative inline-flex size-2 rounded-full bg-emerald-500' />
+            </span>
+          </div>
+          <span className='text-muted-foreground text-xs'>
+            {t('99.98% uptime')}
+          </span>
+        </div>
+        <div className='bg-muted/50 min-h-44 space-y-1 rounded-lg p-4 font-mono text-xs leading-6'>
+          {REQUEST_LINES.slice(0, requestLines)}
+          {showStreamLine && (
+            <div className='pt-2 text-foreground'>
+              {streamText.slice(0, typedChars)}
+              {phase !== 'done' && (
+                <span className='text-primary ml-0.5 inline-block animate-pulse'>
+                  ▍
+                </span>
+              )}
+            </div>
+          )}
+          {phase === 'done' && (
+            <div className='pt-2'>
+              <span className='text-emerald-600 dark:text-emerald-400'>
+                200
+              </span>{' '}
+              <span className='text-muted-foreground'>
+                · {latencyMs}ms · {tokens} tokens
+              </span>
+            </div>
+          )}
+        </div>
+        <div className='mt-4 flex items-center justify-between text-xs'>
+          <span className='text-muted-foreground'>{t('Base URL')}</span>
+          <code className='text-foreground'>/v1</code>
+        </div>
+      </div>
+      <div className='text-muted-foreground flex items-center justify-between px-2 pt-3 text-xs'>
+        <span>{systemName}</span>
+        <span className='flex items-center gap-1'>
+          <Play className='size-3 fill-current' /> {t('Ready to deploy')}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+export function BrandHome() {
+  const { t } = useTranslation()
   const { auth } = useAuthStore()
   const isAuthenticated = Boolean(auth.user)
+
+  const heroPillars: {
+    icon: LucideIcon
+    title: string
+    description: string
+  }[] = [
+    {
+      icon: Layers,
+      title: t('Every major model covered'),
+      description: t(
+        'Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.'
+      ),
+    },
+    {
+      icon: ShieldCheck,
+      title: t('Production-grade availability'),
+      description: t(
+        'Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.'
+      ),
+    },
+    {
+      icon: Code2,
+      title: t('Drop-in toolchain compatibility'),
+      description: t(
+        'OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.'
+      ),
+    },
+  ]
 
   const navLinks = [
     { title: t('Home'), href: '/' },
@@ -128,7 +298,7 @@ export function BrandHome() {
   return (
     <PublicLayout showMainContainer={false} navLinks={navLinks}>
       <main>
-        <section className='relative overflow-hidden border-b px-6 pt-28 pb-20 md:px-10 md:pt-40 md:pb-28'>
+        <section className='relative overflow-hidden border-b px-6 pt-28 pb-20 md:px-10 md:pt-36 md:pb-24'>
           <div
             className='pointer-events-none absolute inset-0 -z-10'
             style={{
@@ -141,16 +311,14 @@ export function BrandHome() {
               <div className='text-primary mb-6 flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase'>
                 <Sparkles className='size-4' /> {t('AI API gateway')}
               </div>
-              <h1 className='max-w-3xl text-5xl leading-[1.14] font-bold tracking-tight text-balance md:text-6xl lg:text-7xl lg:leading-[1.08]'>
-                {t('Stable, reliable gateway.')}{' '}
-                <br className='hidden lg:block' />
-                <span className='from-primary to-chart-3 bg-gradient-to-r bg-clip-text lg:whitespace-nowrap text-transparent'>
-                  {t('Any model, always online.')}
-                </span>
+              <h1 className='max-w-3xl text-4xl leading-[1.18] font-bold tracking-tight text-balance md:text-5xl'>
+                {t(
+                  'Unified access layer, full model ecosystem, production-grade reliability.'
+                )}
               </h1>
               <p className='text-muted-foreground mt-7 max-w-xl text-lg leading-relaxed'>
                 {t(
-                  'Connect your applications to leading AI models through one reliable, observable, OpenAI-compatible API.'
+                  'An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.'
                 )}
               </p>
               <div className='mt-9 flex flex-wrap gap-3'>
@@ -173,73 +341,34 @@ export function BrandHome() {
                   {t('Read documentation')}
                 </Button>
               </div>
-              <div className='text-muted-foreground mt-8 flex flex-wrap gap-x-4 gap-y-2 text-sm sm:gap-x-5'>
-                {[
-                  t('OpenAI compatible'),
-                  t('Usage visibility'),
-                  t('Built for production'),
-                ].map((item) => (
-                  <span key={item} className='flex items-center gap-2'>
-                    <Check className='text-primary size-4' />
-                    {item}
-                  </span>
-                ))}
-              </div>
             </div>
 
-            <div className='glass-panel shadow-primary/5 relative overflow-hidden rounded-2xl p-3 shadow-2xl'>
-              <div className='bg-background/70 rounded-xl border p-4'>
-                <div className='mb-4 flex items-center justify-between'>
-                  <div className='flex items-center gap-2.5'>
-                    <span className='flex gap-1.5'>
-                      <span className='size-2.5 rounded-full bg-red-400/70' />
-                      <span className='size-2.5 rounded-full bg-amber-400/70' />
-                      <span className='size-2.5 rounded-full bg-emerald-400/80' />
-                    </span>
-                    <span className='text-muted-foreground font-mono text-xs'>
-                      {t('Live gateway')}
-                    </span>
-                  </div>
-                  <span className='text-muted-foreground text-xs'>
-                    {t('99.98% uptime')}
-                  </span>
-                </div>
-                <div className='bg-muted/50 space-y-1 rounded-lg p-4 font-mono text-xs leading-6'>
-                  <div>
-                    <span className='text-emerald-600 dark:text-emerald-400'>
-                      POST
-                    </span>{' '}
-                    <span className='text-foreground'>/v1/chat/completions</span>
-                  </div>
-                  <div className='text-muted-foreground'>
-                    authorization: Bearer sk-******
-                  </div>
-                  <div className='text-muted-foreground pt-2'>
-                    model: <span className='text-primary'>gpt-6-astra</span>
-                  </div>
-                  <div className='text-muted-foreground'>
-                    stream: <span className='text-foreground'>true</span>
-                  </div>
-                  <div className='pt-2'>
-                    <span className='text-emerald-600 dark:text-emerald-400'>
-                      200
-                    </span>{' '}
-                    <span className='text-muted-foreground'>
-                      · 842ms · 1,024 tokens
-                    </span>
-                  </div>
-                </div>
-                <div className='mt-4 flex items-center justify-between text-xs'>
-                  <span className='text-muted-foreground'>{t('Base URL')}</span>
-                  <code className='text-foreground'>/v1</code>
-                </div>
-              </div>
-              <div className='text-muted-foreground flex items-center justify-between px-2 pt-3 text-xs'>
-                <span>{systemName}</span>
-                <span className='flex items-center gap-1'>
-                  <Play className='size-3 fill-current' /> {t('Ready to deploy')}
-                </span>
-              </div>
+            <LiveTerminalPanel />
+          </div>
+
+          <div className='mx-auto mt-14 max-w-6xl'>
+            <div className='grid gap-4 md:grid-cols-3'>
+              {heroPillars.map((pillar) => {
+                const Icon = pillar.icon
+                return (
+                  <article
+                    key={pillar.title}
+                    className='glass-panel border-border/70 bg-card rounded-2xl border p-6'
+                  >
+                    <div className='flex items-center gap-3'>
+                      <span className='bg-primary/10 text-primary flex size-9 items-center justify-center rounded-lg'>
+                        <Icon className='size-5' />
+                      </span>
+                      <h2 className='text-base font-semibold'>
+                        {pillar.title}
+                      </h2>
+                    </div>
+                    <p className='text-muted-foreground mt-4 text-sm leading-relaxed'>
+                      {pillar.description}
+                    </p>
+                  </article>
+                )
+              })}
             </div>
           </div>
         </section>

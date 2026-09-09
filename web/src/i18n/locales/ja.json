@@ -1862,7 +1862,6 @@
     "Estimated quota cost": "想定クォートコスト",
     "Evaluate fields from the provider user info response. Conditions and nested groups use and/or logic.": "プロバイダーのユーザー情報レスポンスのフィールドを評価します。条件とネストしたグループでは and/or ロジックを使用します。",
     "Every group name in the pricing table can be used in two places: on a user (the user group, assigned by admins) and on a token (the token group, chosen when creating the token). Same name pool, two different jobs.": "料金表の各グループ名は2つの場所で使えます。ユーザー側（ユーザーグループ、管理者が割り当て）とトークン側（トークングループ、トークン作成時に選択）です。同じ名前プールで、役割は2つです。",
-    "Any model, always online.": "どのモデルも、常にオンライン。",
     "Every other device will lose access immediately. This device will remain signed in.": "他のすべてのデバイスは直ちにアクセスできなくなります。このデバイスはログイン状態を維持します。",
     "Everything configured for this group, in one place.": "このグループのすべての設定を一か所で確認できます。",
     "Everything you need": "必要なものをすべて",
@@ -3331,7 +3330,6 @@
     "One domain per line": "1行に1つのドメイン",
     "One domain per line (only used when domain restriction is enabled)": "1行に1つのドメイン (ドメイン制限が有効な場合のみ使用されます)",
     "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.": "チャット・画像・動画モデルを 1 つのエンドポイントで利用。キーとモデルを選んで統合できます。",
-    "Stable, reliable gateway.": "安定した信頼できるゲートウェイ。",
     "One integration for many models": "多くのモデルを 1 つの統合で実現",
     "One integration gives your application access to the configured model groups.": "1 回の統合で設定済みモデルグループを利用できます。",
     "One IP or CIDR range per line": "1行に1つのIPまたはCIDR範囲",
@@ -5676,6 +5674,15 @@
     "Move down": "下へ移動",
     "Remove block": "ブロックを削除",
     "No content blocks. Use \"Reset to built-in\" to load the default content.": "コンテンツブロックがありません。「内蔵内容に戻す」で既定内容を読み込めます。",
-    "Delete section": "セクションを削除"
+    "Delete section": "セクションを削除",
+    "Unified access layer, full model ecosystem, production-grade reliability.": "統一アクセス層、全モデル対応、本番級の長期安定性",
+    "An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.": "企業の本番環境のために設計された AI API ゲートウェイ。単一の API で主要大規模モデルサービスをカバーし、複数プロバイダーのホットスタンバイ、自動フェイルオーバー、月間稼働率 99.9% 以上の継続的なサービス保証を提供します。",
+    "Every major model covered": "主要モデルをフルカバー",
+    "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "Claude、Gemini、DeepSeek、Qwen などの主要モデルに対応。認証・課金・呼び出し経路を統一し、個別対応は不要です。",
+    "Production-grade availability": "本番級の長期可用性",
+    "Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.": "複数プロバイダーのホットスタンバイと自動フェイルオーバーにより、月間稼働率 99.9% 以上を実現。API 互換性は長期にわたり維持され、バージョンアップも平滑に進みます。",
+    "Drop-in toolchain compatibility": "成熟したツールチェーン対応",
+    "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "OpenAI API 規範に準拠し、既存の SDK や CLI ツール（Claude Code、Codex、Gemini CLI など）に修正なしでそのまま接続できます。",
+    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "リクエストは統合ゲートウェイ経由で最も健全なモデル経路にルーティングされ、レスポンスをストリーミング中です..."
   }
 }
