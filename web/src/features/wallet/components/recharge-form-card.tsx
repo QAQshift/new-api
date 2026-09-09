@@ -34,11 +34,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { formatNumber } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 import {
-  formatCurrency,
+  formatCurrencyFromUSD,
+  formatLocalCurrencyAmount,
+  getCurrencyLabel,
+} from '@/lib/currency'
+
+import {
   getDiscountPercent,
   getPaymentIcon,
   getMinTopupAmount,
@@ -113,6 +117,7 @@ export function RechargeFormCard({
   enableWaffoPancakeTopup,
 }: RechargeFormCardProps) {
   const { t } = useTranslation()
+  const creditUnit = getCurrencyLabel()
   const [localAmount, setLocalAmount] = useState(topupAmount.toString())
 
   useEffect(() => {
@@ -233,7 +238,6 @@ export function RechargeFormCard({
                         topupInfo?.discount?.[preset.value] ||
                         1.0
                       const {
-                        displayValue,
                         actualPrice,
                         savedAmount,
                         hasDiscount,
@@ -257,7 +261,7 @@ export function RechargeFormCard({
                         >
                           <div className='flex w-full items-center justify-between'>
                             <div className='text-base font-semibold sm:text-lg'>
-                              {formatNumber(displayValue)}
+                              {formatCurrencyFromUSD(preset.value)}
                             </div>
                             {hasDiscount && (
                               <div className='text-xs font-medium text-green-600'>
@@ -269,14 +273,14 @@ export function RechargeFormCard({
                           </div>
                           <div className='text-muted-foreground mt-1.5 w-full text-xs sm:mt-2'>
                             {t('Pay {{amount}}', {
-                              amount: formatCurrency(actualPrice),
+                              amount: formatLocalCurrencyAmount(actualPrice),
                             })}
                             {hasDiscount && savedAmount > 0 && (
                               <span className='text-green-600'>
                                 {' '}
                                 •{' '}
                                 {t('Save {{amount}}', {
-                                  amount: formatCurrency(savedAmount),
+                                  amount: formatLocalCurrencyAmount(savedAmount),
                                 })}
                               </span>
                             )}
@@ -295,27 +299,46 @@ export function RechargeFormCard({
                 >
                   {t('Custom Amount')}
                 </Label>
-                <div className='grid grid-cols-[minmax(0,1fr)_minmax(110px,0.55fr)] gap-2 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center'>
-                  <Input
-                    id='topup-amount'
-                    type='number'
-                    value={localAmount}
-                    onChange={(e) => handleAmountChange(e.target.value)}
-                    min={minTopup}
-                    placeholder={`Minimum ${minTopup}`}
-                    className='h-9 text-base sm:h-10 sm:text-lg'
-                  />
-                  <div className='bg-muted/30 flex min-h-9 items-center justify-between gap-2 rounded-md border px-3 lg:min-w-52'>
-                    <span className='text-muted-foreground truncate text-xs'>
-                      {t('Amount to pay:')}
+                <div className='grid grid-cols-1 gap-2 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-stretch'>
+                  <div className='relative'>
+                    <Input
+                      id='topup-amount'
+                      type='number'
+                      value={localAmount}
+                      onChange={(e) => handleAmountChange(e.target.value)}
+                      min={minTopup}
+                      placeholder={`Minimum ${minTopup}`}
+                      className='h-9 pr-12 text-base sm:h-10 sm:text-lg'
+                    />
+                    <span className='text-muted-foreground pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium'>
+                      {creditUnit}
                     </span>
-                    {calculating ? (
-                      <Skeleton className='h-5 w-16' />
-                    ) : (
-                      <span className='text-sm font-semibold'>
-                        {formatCurrency(paymentAmount)}
+                  </div>
+                  <div className='bg-muted/30 flex min-h-9 flex-col justify-center gap-1.5 rounded-md border px-3 py-2 lg:min-w-60'>
+                    <div className='flex items-center justify-between gap-2'>
+                      <span className='text-muted-foreground truncate text-xs'>
+                        {t('Topup Amount')}
                       </span>
-                    )}
+                      {calculating ? (
+                        <Skeleton className='h-5 w-16' />
+                      ) : (
+                        <span className='text-sm font-semibold'>
+                          {formatCurrencyFromUSD(topupAmount)}
+                        </span>
+                      )}
+                    </div>
+                    <div className='flex items-center justify-between gap-2'>
+                      <span className='text-muted-foreground truncate text-xs'>
+                        {t('Amount to pay:')}
+                      </span>
+                      {calculating ? (
+                        <Skeleton className='h-5 w-16' />
+                      ) : (
+                        <span className='text-sm font-semibold'>
+                          {formatLocalCurrencyAmount(paymentAmount)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
