@@ -1311,6 +1311,8 @@
     "Custom": "Personnalisé",
     "Custom (seconds)": "Personnalisé (secondes)",
     "Custom Amount": "Montant personnalisé",
+    "Enable custom top-up amount": "Enable custom top-up amount",
+    "Allow users to enter any recharge amount. When disabled, users can only pick from the preset amounts above.": "Allow users to enter any recharge amount. When disabled, users can only pick from the preset amounts above.",
     "Custom API base URL. For official channels, New API has built-in addresses. Only fill this for third-party proxy sites or special endpoints. Do not add /v1 or trailing slash.": "URL de base API personnalisée. Pour les canaux officiels, New API dispose d'adresses intégrées. Ne remplissez ceci que pour les sites proxy tiers ou les points de terminaison spéciaux. N'ajoutez pas /v1 ou de barre oblique finale.",
     "Custom API base URL. Leave empty to use provider default.": "URL de base API personnalisée. Laissez vide pour utiliser la valeur par défaut du fournisseur.",
     "Custom Currency": "Devise personnalisée",
@@ -5675,7 +5677,6 @@
     "Remove block": "Supprimer le bloc",
     "No content blocks. Use \"Reset to built-in\" to load the default content.": "Aucun bloc de contenu. Utilisez « Rétablir le contenu intégré » pour charger le contenu par défaut.",
     "Delete section": "Supprimer la section",
-    "Unified access layer, full model ecosystem, production-grade reliability.": "Couche d’accès unifiée, écosystème de modèles complet, fiabilité de niveau production.",
     "An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.": "Une passerelle API IA conçue pour la production : une seule API couvrant les principaux services de modèles, avec redondance active multi-fournisseurs, reprise automatique sur incident et une disponibilité mensuelle garantie d’au moins 99,9 %.",
     "Every major model covered": "Tous les grands modèles couverts",
     "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "Claude, Gemini, DeepSeek, Qwen et plus, avec authentification, facturation et chaîne d’appel unifiées — sans intégration propre à chaque fournisseur.",
@@ -5683,6 +5684,8 @@
     "Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.": "Redondance active multi-fournisseurs et reprise automatique sur incident, disponibilité mensuelle d’au moins 99,9 %, compatibilité API durable et mises à niveau en douceur.",
     "Drop-in toolchain compatibility": "Compatibilité prête à l’emploi",
     "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "API compatible OpenAI : les SDK et outils CLI existants (Claude Code, Codex, Gemini CLI, etc.) se connectent sans aucune modification.",
-    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "Requête routée via la passerelle unifiée vers la route de modèle la plus saine. Réponse en cours de diffusion en flux."
+    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "Requête routée via la passerelle unifiée vers la route de modèle la plus saine. Réponse en cours de diffusion en flux.",
+    "Unified access layer, full model ecosystem.": "Couche d’accès unifiée, écosystème de modèles complet.",
+    "Production-grade reliability.": "Fiabilité de niveau production."
   }
 }

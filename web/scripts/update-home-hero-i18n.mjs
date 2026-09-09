@@ -22,7 +22,7 @@ const translations = {
       'AI API 网关为企业生产环境设计，单套接口覆盖主流大模型服务。长期运行场景下，提供多提供商热备容灾、自动故障切换、月度可用性不低于 99.9% 的持续服务保障。',
     'Every major model covered': '主流模型全覆盖',
     'Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.':
-      '支持 Claude、Gemini、DeepSeek、Qwen 等主流模型，统一鉴权、统一计费、统一调用链路，无需逐一对接。',
+      '支持 Claude、Gemini、GPT等主流模型，统一鉴权、统一计费、统一调用链路，无需逐一对接。',
     'Production-grade availability': '生产级长期可用',
     'Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.':
       '多提供商热备容灾，单点故障自动切换，月度可用性不低于 99.9%，接口语义长期兼容，版本升级平滑演进。',
@@ -37,7 +37,7 @@ const translations = {
       'AI API 閘道為企業生產環境設計，單套介面覆蓋主流大模型服務。長期執行場景下，提供多提供商熱備容災、自動故障切換、月度可用性不低於 99.9% 的持續服務保障。',
     'Every major model covered': '主流模型全覆蓋',
     'Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.':
-      '支援 Claude、Gemini、DeepSeek、Qwen 等主流模型，統一鑑權、統一計費、統一呼叫鏈路，無需逐一對接。',
+      '支援 Claude、Gemini、GPT等主流模型，統一鑑權、統一計費、統一呼叫鏈路，無需逐一對接。',
     'Production-grade availability': '生產級長期可用',
     'Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.':
       '多提供商熱備容災，單點故障自動切換，月度可用性不低於 99.9%，介面語義長期相容，版本升級平滑演進。',
@@ -52,7 +52,7 @@ const translations = {
       '企業の本番環境のために設計された AI API ゲートウェイ。単一の API で主要大規模モデルサービスをカバーし、複数プロバイダーのホットスタンバイ、自動フェイルオーバー、月間稼働率 99.9% 以上の継続的なサービス保証を提供します。',
     'Every major model covered': '主要モデルをフルカバー',
     'Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.':
-      'Claude、Gemini、DeepSeek、Qwen などの主要モデルに対応。認証・課金・呼び出し経路を統一し、個別対応は不要です。',
+      'Claude、Gemini、GPTなどの主要モデルに対応。認証・課金・呼び出し経路を統一し、個別対応は不要です。',
     'Production-grade availability': '本番級の長期可用性',
     'Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.':
       '複数プロバイダーのホットスタンバイと自動フェイルオーバーにより、月間稼働率 99.9% 以上を実現。API 互換性は長期にわたり維持され、バージョンアップも平滑に進みます。',

@@ -156,6 +156,8 @@ export interface TopupInfo {
   payment_compliance_confirmed?: boolean
   /** Current compliance terms version */
   payment_compliance_terms_version?: string
+  /** Whether the user-visible custom amount input is enabled */
+  enable_custom_topup?: boolean
 }
 
 /**

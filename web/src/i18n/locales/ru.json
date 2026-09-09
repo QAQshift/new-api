@@ -1311,6 +1311,8 @@
     "Custom": "Пользовательский",
     "Custom (seconds)": "Пользовательский (секунды)",
     "Custom Amount": "Пользовательская сумма",
+    "Enable custom top-up amount": "Enable custom top-up amount",
+    "Allow users to enter any recharge amount. When disabled, users can only pick from the preset amounts above.": "Allow users to enter any recharge amount. When disabled, users can only pick from the preset amounts above.",
     "Custom API base URL. For official channels, New API has built-in addresses. Only fill this for third-party proxy sites or special endpoints. Do not add /v1 or trailing slash.": "Пользовательский базовый URL API. Для официальных каналов New API имеет встроенные адреса. Заполняйте это поле только для сторонних прокси-сайтов или специальных конечных точек. Не добавляйте /v1 или завершающий слэш.",
     "Custom API base URL. Leave empty to use provider default.": "Пользовательский базовый URL API. Оставьте пустым для использования значения по умолчанию провайдера.",
     "Custom Currency": "Пользовательская валюта",
@@ -5675,7 +5677,6 @@
     "Remove block": "Удалить блок",
     "No content blocks. Use \"Reset to built-in\" to load the default content.": "Нет блоков содержимого. Используйте «Вернуть встроенное содержимое», чтобы загрузить содержимое по умолчанию.",
     "Delete section": "Удалить раздел",
-    "Unified access layer, full model ecosystem, production-grade reliability.": "Единый уровень доступа, вся экосистема моделей, производственная надёжность.",
     "An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.": "AI API-шлюз, созданный для production-сред: один API для ведущих сервисов больших моделей с горячим резервированием провайдеров, автоматическим переключением при сбоях и гарантией доступности не ниже 99,9% в месяц.",
     "Every major model covered": "Полное покрытие основных моделей",
     "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "Claude, Gemini, DeepSeek, Qwen и другие — с единой аутентификацией, единым биллингом и единым путём вызова, без отдельной интеграции с каждым провайдером.",
@@ -5683,6 +5684,8 @@
     "Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.": "Горячее резервирование провайдеров и автоматическое переключение при сбоях, доступность не ниже 99,9% в месяц, долгосрочная совместимость API и плавное обновление версий.",
     "Drop-in toolchain compatibility": "Совместимость с готовыми инструментами",
     "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "API совместим с OpenAI: существующие SDK и CLI-инструменты (включая Claude Code, Codex, Gemini CLI) подключаются без изменений кода.",
-    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "Запрос направлен через единый шлюз на самый исправный маршрут модели. Ответ передаётся потоком."
+    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "Запрос направлен через единый шлюз на самый исправный маршрут модели. Ответ передаётся потоком.",
+    "Unified access layer, full model ecosystem.": "Единый уровень доступа, вся экосистема моделей.",
+    "Production-grade reliability.": "Производственная надёжность."
   }
 }

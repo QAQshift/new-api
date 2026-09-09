@@ -142,13 +142,26 @@ export function Wallet(props: WalletProps) {
     if (topupInfo && !topupAmountInitializedRef.current) {
       topupAmountInitializedRef.current = true
       const minTopup = getMinTopupAmount(topupInfo)
-      setTopupAmount(minTopup)
+
+      // When the custom amount input is hidden, fall back to the first
+      // preset so the page has a meaningful selection on initial load.
+      const initialAmount =
+        topupInfo.enable_custom_topup === false && presetAmounts.length > 0
+          ? presetAmounts[0].value
+          : minTopup
+      setTopupAmount(initialAmount)
+      if (
+        topupInfo.enable_custom_topup === false &&
+        presetAmounts.length > 0
+      ) {
+        setSelectedPreset(presetAmounts[0].value)
+      }
 
       // Calculate initial payment amount with default payment type
       const defaultPaymentType = getDefaultPaymentType(topupInfo)
-      calculatePaymentAmount(minTopup, defaultPaymentType)
+      calculatePaymentAmount(initialAmount, defaultPaymentType)
     }
-  }, [topupInfo, calculatePaymentAmount])
+  }, [topupInfo, presetAmounts, calculatePaymentAmount])
 
   // Get current payment type (selected or default)
   const getCurrentPaymentType = useCallback(() => {

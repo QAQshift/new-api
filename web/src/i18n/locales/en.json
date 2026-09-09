@@ -1311,6 +1311,8 @@
     "Custom": "Custom",
     "Custom (seconds)": "Custom (seconds)",
     "Custom Amount": "Custom Amount",
+    "Enable custom top-up amount": "Enable custom top-up amount",
+    "Allow users to enter any recharge amount. When disabled, users can only pick from the preset amounts above.": "Allow users to enter any recharge amount. When disabled, users can only pick from the preset amounts above.",
     "Custom API base URL. For official channels, New API has built-in addresses. Only fill this for third-party proxy sites or special endpoints. Do not add /v1 or trailing slash.": "Custom API base URL. For official channels, New API has built-in addresses. Only fill this for third-party proxy sites or special endpoints. Do not add /v1 or trailing slash.",
     "Custom API base URL. Leave empty to use provider default.": "Custom API base URL. Leave empty to use provider default.",
     "Custom Currency": "Custom Currency",
@@ -5675,7 +5677,6 @@
     "Remove block": "Remove block",
     "No content blocks. Use \"Reset to built-in\" to load the default content.": "No content blocks. Use \"Reset to built-in\" to load the default content.",
     "Delete section": "Delete section",
-    "Unified access layer, full model ecosystem, production-grade reliability.": "Unified access layer, full model ecosystem, production-grade reliability.",
     "An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.": "An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.",
     "Every major model covered": "Every major model covered",
     "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.",
@@ -5683,6 +5684,8 @@
     "Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.": "Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.",
     "Drop-in toolchain compatibility": "Drop-in toolchain compatibility",
     "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.",
-    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "Request routed through the unified gateway to the healthiest model route. Streaming the response back."
+    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "Request routed through the unified gateway to the healthiest model route. Streaming the response back.",
+    "Unified access layer, full model ecosystem.": "Unified access layer, full model ecosystem.",
+    "Production-grade reliability.": "Production-grade reliability."
   }
 }

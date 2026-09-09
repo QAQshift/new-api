@@ -141,6 +141,7 @@ export function RechargeFormCard({
     enableWaffoTopup ||
     enableWaffoPancakeTopup
   const hasAnyTopup = hasConfigurableTopup || enableCreemTopup
+  const customAmountEditable = topupInfo?.enable_custom_topup !== false
   const hasStandardPaymentMethods =
     Array.isArray(topupInfo?.pay_methods) && topupInfo.pay_methods.length > 0
   const hasWaffoPaymentMethods =
@@ -308,7 +309,8 @@ export function RechargeFormCard({
                       onChange={(e) => handleAmountChange(e.target.value)}
                       min={minTopup}
                       placeholder={`Minimum ${minTopup}`}
-                      className='h-9 pr-12 text-base sm:h-10 sm:text-lg'
+                      disabled={!customAmountEditable}
+                      className='h-9 pr-12 text-base sm:h-10 sm:text-lg disabled:cursor-not-allowed'
                     />
                     <span className='text-muted-foreground pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium'>
                       {creditUnit}

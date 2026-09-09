@@ -1311,6 +1311,8 @@
     "Custom": "自定义",
     "Custom (seconds)": "自定义(秒)",
     "Custom Amount": "自定义金额",
+    "Enable custom top-up amount": "启用自定义充值金额",
+    "Allow users to enter any recharge amount. When disabled, users can only pick from the preset amounts above.": "允许用户输入任意充值金额。关闭后，用户只能从上方预设金额中选择。",
     "Custom API base URL. For official channels, New API has built-in addresses. Only fill this for third-party proxy sites or special endpoints. Do not add /v1 or trailing slash.": "自定义 API 基础 URL。对于官方渠道，New API 具有内置地址。仅针对第三方代理站点或特殊端点填写此项。请勿添加 /v1 或尾部斜杠。",
     "Custom API base URL. Leave empty to use provider default.": "自定义 API 基础 URL。留空以使用提供商默认值。",
     "Custom Currency": "自定义货币",
@@ -5675,14 +5677,15 @@
     "Remove block": "删除内容块",
     "No content blocks. Use \"Reset to built-in\" to load the default content.": "暂无内容块。使用「恢复内置内容」载入默认内容。",
     "Delete section": "删除章节",
-    "Unified access layer, full model ecosystem, production-grade reliability.": "统一接入层 · 全模型生态 · 生产级长期可用",
     "An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.": "AI API 网关为企业生产环境设计，单套接口覆盖主流大模型服务。长期运行场景下，提供多提供商热备容灾、自动故障切换、月度可用性不低于 99.9% 的持续服务保障。",
     "Every major model covered": "主流模型全覆盖",
-    "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "支持 Claude、Gemini、DeepSeek、Qwen 等主流模型，统一鉴权、统一计费、统一调用链路，无需逐一对接。",
+    "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "支持 Claude、Gemini、GPT等主流模型，统一鉴权、统一计费、统一调用链路，无需逐一对接。",
     "Production-grade availability": "生产级长期可用",
     "Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.": "多提供商热备容灾，单点故障自动切换，月度可用性不低于 99.9%，接口语义长期兼容，版本升级平滑演进。",
     "Drop-in toolchain compatibility": "成熟工具链适配",
     "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "兼容 OpenAI API 规范，现有 SDK 与 CLI 工具（含 Claude Code、Codex、Gemini CLI 等）零改造接入。",
-    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "请求已通过统一网关路由至最健康的模型线路，正在以流式方式返回结果..."
+    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "请求已通过统一网关路由至最健康的模型线路，正在以流式方式返回结果...",
+    "Unified access layer, full model ecosystem.": "统一接入层 · 全模型生态",
+    "Production-grade reliability.": "生产级长期可用"
   }
 }

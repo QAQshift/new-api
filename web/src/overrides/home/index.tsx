@@ -32,7 +32,7 @@ import {
   WalletCards,
   type LucideIcon,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
@@ -59,17 +59,11 @@ const REQUEST_LINES = [
 /**
  * Animated gateway terminal: replays a request, streams a reply character by
  * character with a live token counter, then shows the final 200 stats and
- * loops. Falls back to a static finished state under reduced motion.
+ * loops forever.
  */
 function LiveTerminalPanel() {
   const { t } = useTranslation()
   const { systemName } = useSystemConfig()
-  const prefersReducedMotion = useMemo(
-    () =>
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    []
-  )
   const [requestLines, setRequestLines] = useState(0)
   const [phase, setPhase] = useState<'request' | 'stream' | 'done'>('request')
   const [typedChars, setTypedChars] = useState(0)
@@ -80,13 +74,6 @@ function LiveTerminalPanel() {
   )
 
   useEffect(() => {
-    if (prefersReducedMotion) {
-      setRequestLines(REQUEST_LINES.length)
-      setTypedChars(streamText.length)
-      setTokens(1024)
-      setPhase('done')
-      return
-    }
     if (phase !== 'request') return
     if (requestLines < REQUEST_LINES.length) {
       const timer = window.setTimeout(() => setRequestLines((n) => n + 1), 380)
@@ -94,10 +81,10 @@ function LiveTerminalPanel() {
     }
     const timer = window.setTimeout(() => setPhase('stream'), 300)
     return () => window.clearTimeout(timer)
-  }, [phase, requestLines, prefersReducedMotion, streamText])
+  }, [phase, requestLines])
 
   useEffect(() => {
-    if (phase !== 'stream' || prefersReducedMotion) return
+    if (phase !== 'stream') return
     if (typedChars < streamText.length) {
       const timer = window.setTimeout(() => {
         setTypedChars((n) => Math.min(n + 2, streamText.length))
@@ -107,10 +94,10 @@ function LiveTerminalPanel() {
     }
     setLatencyMs(620 + Math.floor(Math.random() * 500))
     setPhase('done')
-  }, [phase, typedChars, prefersReducedMotion, streamText])
+  }, [phase, typedChars, streamText])
 
   useEffect(() => {
-    if (phase !== 'done' || prefersReducedMotion) return
+    if (phase !== 'done') return
     const timer = window.setTimeout(() => {
       setRequestLines(0)
       setTypedChars(0)
@@ -118,7 +105,7 @@ function LiveTerminalPanel() {
       setPhase('request')
     }, 3200)
     return () => window.clearTimeout(timer)
-  }, [phase, prefersReducedMotion])
+  }, [phase])
 
   const showStreamLine = phase !== 'request' || typedChars > 0
 
@@ -224,7 +211,7 @@ export function BrandHome() {
 
   const models = [
     {
-      name: 'GPT-5.6',
+      name: 'GPT',
       detail: t(
         'Excels at agentic coding, terminal automation, toolchain orchestration, high-frequency development, and multi-step workflows.'
       ),
@@ -299,24 +286,29 @@ export function BrandHome() {
     <PublicLayout showMainContainer={false} navLinks={navLinks}>
       <main>
         <section className='relative overflow-hidden border-b px-6 pt-28 pb-20 md:px-10 md:pt-36 md:pb-24'>
+          {/* Aurora orbs: give the frosted panels colour to refract. Faint
+           * decoration on the default preset; visibly blurred through the
+           * glass panels once the glass preset is active. */}
           <div
-            className='pointer-events-none absolute inset-0 -z-10'
-            style={{
-              backgroundImage:
-                'radial-gradient(42rem 26rem at 16% 4%, color-mix(in oklch, var(--primary) 13%, transparent), transparent 64%), radial-gradient(32rem 22rem at 84% 8%, color-mix(in oklch, var(--chart-3) 12%, transparent), transparent 62%)',
-            }}
-          />
+            aria-hidden
+            className='pointer-events-none absolute inset-0 -z-10 overflow-hidden'
+          >
+            <div className='bg-chart-1/30 absolute -top-40 -left-32 size-[34rem] rounded-full blur-3xl' />
+            <div className='bg-chart-3/25 absolute -top-16 right-[-8rem] size-[30rem] rounded-full blur-3xl' />
+            <div className='bg-chart-2/20 absolute top-[26rem] left-1/2 size-[26rem] -translate-x-1/2 rounded-full blur-3xl' />
+          </div>
           <div className='mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]'>
             <div>
               <div className='text-primary mb-6 flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase'>
                 <Sparkles className='size-4' /> {t('AI API gateway')}
               </div>
               <h1 className='max-w-3xl text-4xl leading-[1.18] font-bold tracking-tight text-balance md:text-5xl'>
-                {t(
-                  'Unified access layer, full model ecosystem, production-grade reliability.'
-                )}
+                {t('Unified access layer, full model ecosystem.')}{' '}
+                <span className='from-primary to-chart-3 bg-gradient-to-r bg-clip-text text-transparent'>
+                  {t('Production-grade reliability.')}
+                </span>
               </h1>
-              <p className='text-muted-foreground mt-7 max-w-xl text-lg leading-relaxed'>
+              <p className='text-muted-foreground mt-7 max-w-xl text-base leading-relaxed'>
                 {t(
                   'An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.'
                 )}
@@ -363,7 +355,7 @@ export function BrandHome() {
                         {pillar.title}
                       </h2>
                     </div>
-                    <p className='text-muted-foreground mt-4 text-sm leading-relaxed'>
+                    <p className='text-muted-foreground mt-4 text-xs leading-relaxed'>
                       {pillar.description}
                     </p>
                   </article>

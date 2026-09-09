@@ -1311,6 +1311,8 @@
     "Custom": "カスタム",
     "Custom (seconds)": "カスタム（秒）",
     "Custom Amount": "カスタム金額",
+    "Enable custom top-up amount": "Enable custom top-up amount",
+    "Allow users to enter any recharge amount. When disabled, users can only pick from the preset amounts above.": "Allow users to enter any recharge amount. When disabled, users can only pick from the preset amounts above.",
     "Custom API base URL. For official channels, New API has built-in addresses. Only fill this for third-party proxy sites or special endpoints. Do not add /v1 or trailing slash.": "カスタムAPIベースURL。公式チャネルの場合、New APIには組み込みのアドレスがあります。これは、サードパーティのプロキシサイトまたは特別なエンドポイントに対してのみ入力してください。/v1 や末尾のスラッシュを追加しないでください。",
     "Custom API base URL. Leave empty to use provider default.": "カスタム API ベース URL。プロバイダのデフォルトを使用する場合は空にしてください。",
     "Custom Currency": "カスタム通貨",
@@ -5675,14 +5677,15 @@
     "Remove block": "ブロックを削除",
     "No content blocks. Use \"Reset to built-in\" to load the default content.": "コンテンツブロックがありません。「内蔵内容に戻す」で既定内容を読み込めます。",
     "Delete section": "セクションを削除",
-    "Unified access layer, full model ecosystem, production-grade reliability.": "統一アクセス層、全モデル対応、本番級の長期安定性",
     "An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.": "企業の本番環境のために設計された AI API ゲートウェイ。単一の API で主要大規模モデルサービスをカバーし、複数プロバイダーのホットスタンバイ、自動フェイルオーバー、月間稼働率 99.9% 以上の継続的なサービス保証を提供します。",
     "Every major model covered": "主要モデルをフルカバー",
-    "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "Claude、Gemini、DeepSeek、Qwen などの主要モデルに対応。認証・課金・呼び出し経路を統一し、個別対応は不要です。",
+    "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "Claude、Gemini、GPTなどの主要モデルに対応。認証・課金・呼び出し経路を統一し、個別対応は不要です。",
     "Production-grade availability": "本番級の長期可用性",
     "Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.": "複数プロバイダーのホットスタンバイと自動フェイルオーバーにより、月間稼働率 99.9% 以上を実現。API 互換性は長期にわたり維持され、バージョンアップも平滑に進みます。",
     "Drop-in toolchain compatibility": "成熟したツールチェーン対応",
     "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "OpenAI API 規範に準拠し、既存の SDK や CLI ツール（Claude Code、Codex、Gemini CLI など）に修正なしでそのまま接続できます。",
-    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "リクエストは統合ゲートウェイ経由で最も健全なモデル経路にルーティングされ、レスポンスをストリーミング中です..."
+    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "リクエストは統合ゲートウェイ経由で最も健全なモデル経路にルーティングされ、レスポンスをストリーミング中です...",
+    "Unified access layer, full model ecosystem.": "統一アクセス層 · 全モデルエコシステム",
+    "Production-grade reliability.": "本番級の長期安定性"
   }
 }

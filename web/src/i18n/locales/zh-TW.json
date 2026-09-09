@@ -1311,6 +1311,8 @@
     "Custom": "自訂",
     "Custom (seconds)": "自訂(秒)",
     "Custom Amount": "自訂金額",
+    "Enable custom top-up amount": "Enable custom top-up amount",
+    "Allow users to enter any recharge amount. When disabled, users can only pick from the preset amounts above.": "Allow users to enter any recharge amount. When disabled, users can only pick from the preset amounts above.",
     "Custom API base URL. For official channels, New API has built-in addresses. Only fill this for third-party proxy sites or special endpoints. Do not add /v1 or trailing slash.": "自訂 API 基礎 URL。對於官方渠道，New API 具有內置地址。僅針對第三方代理站點或特殊端點填寫此項。請勿添加 /v1 或尾部斜線。",
     "Custom API base URL. Leave empty to use provider default.": "自訂 API 基礎 URL。留空以使用供應商預設值。",
     "Custom Currency": "自訂貨幣",
@@ -5675,14 +5677,15 @@
     "Remove block": "刪除內容區塊",
     "No content blocks. Use \"Reset to built-in\" to load the default content.": "暫無內容區塊。使用「還原內建內容」載入預設內容。",
     "Delete section": "刪除章節",
-    "Unified access layer, full model ecosystem, production-grade reliability.": "統一接入層 · 全模型生態 · 生產級長期可用",
     "An AI API gateway built for production: one API across leading model services, with multi-provider hot standby, automatic failover, and monthly availability of 99.9% or higher.": "AI API 閘道為企業生產環境設計，單套介面覆蓋主流大模型服務。長期執行場景下，提供多提供商熱備容災、自動故障切換、月度可用性不低於 99.9% 的持續服務保障。",
     "Every major model covered": "主流模型全覆蓋",
-    "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "支援 Claude、Gemini、DeepSeek、Qwen 等主流模型，統一鑑權、統一計費、統一呼叫鏈路，無需逐一對接。",
+    "Claude, Gemini, DeepSeek, Qwen and more, behind unified auth, unified billing, and one call path — no per-provider integration.": "支援 Claude、Gemini、GPT等主流模型，統一鑑權、統一計費、統一呼叫鏈路，無需逐一對接。",
     "Production-grade availability": "生產級長期可用",
     "Multi-provider hot standby with automatic failover, monthly availability of 99.9% or higher, long-term API compatibility, and smooth version upgrades.": "多提供商熱備容災，單點故障自動切換，月度可用性不低於 99.9%，介面語義長期相容，版本升級平滑演進。",
     "Drop-in toolchain compatibility": "成熟工具鏈適配",
     "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "相容 OpenAI API 規範，現有 SDK 與 CLI 工具（含 Claude Code、Codex、Gemini CLI 等）零改造接入。",
-    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "請求已透過統一閘道路由至最健康的模型線路，正在以串流方式回傳結果..."
+    "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "請求已透過統一閘道路由至最健康的模型線路，正在以串流方式回傳結果...",
+    "Unified access layer, full model ecosystem.": "統一接入層 · 全模型生態",
+    "Production-grade reliability.": "生產級長期可用"
   }
 }
