@@ -306,6 +306,11 @@ func migrateDB() error {
 	if err := migrateTokenModelLimitsToText(); err != nil {
 		return err
 	}
+	// Migrate options.value column from varchar to text so large values
+	// (e.g. base64 background images) can be saved without truncation.
+	if err := migrateOptionValueToText(); err != nil {
+		return err
+	}
 
 	err := DB.AutoMigrate(
 		&Channel{},
@@ -660,6 +665,62 @@ func migrateTokenModelLimitsToText() error {
 		if err := DB.Raw(`SELECT COLUMN_TYPE FROM information_schema.columns
 				WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?`,
 			tableName, columnName).Scan(&columnType).Error; err != nil {
+			common.SysLog(fmt.Sprintf("Warning: failed to query metadata for %s.%s: %v", tableName, columnName, err))
+		} else if strings.ToLower(columnType) == "text" {
+			return nil
+		}
+		alterSQL = fmt.Sprintf("ALTER TABLE %s MODIFY COLUMN %s text", tableName, columnName)
+	} else {
+		return nil
+	}
+
+	if alterSQL != "" {
+		if err := DB.Exec(alterSQL).Error; err != nil {
+			return fmt.Errorf("failed to migrate %s.%s to text: %w", tableName, columnName, err)
+		}
+		common.SysLog(fmt.Sprintf("Successfully migrated %s.%s to text", tableName, columnName))
+	}
+	return nil
+}
+
+// migrateOptionValueToText widens options.value to TEXT so we can persist
+// large payloads such as base64-encoded background images (≈2.7 MB for a
+// 2 MB image). On MySQL the AutoMigrate-generated column is VARCHAR(255)
+// by default, which truncates / rejects those updates and stalls the
+// request until the client times out.
+func migrateOptionValueToText() error {
+	// SQLite uses type affinity — TEXT and VARCHAR are interchangeable, no migration needed.
+	if common.UsingMainDatabase(common.DatabaseTypeSQLite) {
+		return nil
+	}
+
+	tableName := "options"
+	columnName := "value"
+
+	if !DB.Migrator().HasTable(tableName) {
+		return nil
+	}
+
+	if !DB.Migrator().HasColumn(&Option{}, columnName) {
+		return nil
+	}
+
+	var alterSQL string
+	if common.UsingMainDatabase(common.DatabaseTypePostgreSQL) {
+		var dataType string
+		if err := DB.Raw(`SELECT data_type FROM information_schema.columns
+			WHERE table_schema = current_schema() AND table_name = ? AND column_name = ?`,
+			tableName, columnName).Scan(&dataType).Error; err != nil {
+			common.SysLog(fmt.Sprintf("Warning: failed to query metadata for %s.%s: %v", tableName, columnName, err))
+		} else if dataType == "text" {
+			return nil
+		}
+		alterSQL = fmt.Sprintf(`ALTER TABLE %s ALTER COLUMN %s TYPE text`, tableName, columnName)
+	} else if common.UsingMainDatabase(common.DatabaseTypeMySQL) {
+		var columnType string
+		if err := DB.Raw(`SELECT COLUMN_TYPE FROM information_schema.columns
+				WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?`,
+				tableName, columnName).Scan(&columnType).Error; err != nil {
 			common.SysLog(fmt.Sprintf("Warning: failed to query metadata for %s.%s: %v", tableName, columnName, err))
 		} else if strings.ToLower(columnType) == "text" {
 			return nil

@@ -39,7 +39,7 @@ import { cn } from '@/lib/utils'
 
 import {
   formatCurrency,
-  getDiscountLabel,
+  getDiscountPercent,
   getPaymentIcon,
   getMinTopupAmount,
   calculatePresetPricing,
@@ -261,16 +261,23 @@ export function RechargeFormCard({
                             </div>
                             {hasDiscount && (
                               <div className='text-xs font-medium text-green-600'>
-                                {getDiscountLabel(discount)}
+                                {t('{{percent}}% OFF', {
+                                  percent: getDiscountPercent(discount),
+                                })}
                               </div>
                             )}
                           </div>
                           <div className='text-muted-foreground mt-1.5 w-full text-xs sm:mt-2'>
-                            Pay {formatCurrency(actualPrice)}
+                            {t('Pay {{amount}}', {
+                              amount: formatCurrency(actualPrice),
+                            })}
                             {hasDiscount && savedAmount > 0 && (
                               <span className='text-green-600'>
                                 {' '}
-                                • Save {formatCurrency(savedAmount)}
+                                •{' '}
+                                {t('Save {{amount}}', {
+                                  amount: formatCurrency(savedAmount),
+                                })}
                               </span>
                             )}
                           </div>

@@ -62,14 +62,19 @@ export function formatCurrency(amount: number | string): string {
 }
 
 /**
- * Get discount label for display (e.g., "20% OFF")
+ * Get the integer percentage of the discount (e.g., 20 for "20% off").
+ * Returns 0 when the discount is below the default rate threshold and
+ * therefore not worth surfacing.
+ *
+ * Intentionally returns a number only — formatting (locale, "%", "OFF" / "折"
+ * / "off" etc.) is the caller's responsibility so this helper stays free of
+ * any i18n dependency.
  */
-export function getDiscountLabel(discount: number): string {
+export function getDiscountPercent(discount: number): number {
   if (discount >= DEFAULT_DISCOUNT_RATE) {
-    return ''
+    return 0
   }
-  const off = Math.round((1 - discount) * 100)
-  return `${off}% OFF`
+  return Math.round((1 - discount) * 100)
 }
 
 /**

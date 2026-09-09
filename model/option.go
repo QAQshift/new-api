@@ -16,8 +16,18 @@ import (
 )
 
 type Option struct {
-	Key   string `json:"key" gorm:"primaryKey"`
-	Value string `json:"value"`
+	// Key is the option name. Left at GORM's default mapping (text on
+	// PostgreSQL, varchar(255) on MySQL) on purpose: narrowing it to
+	// varchar(255) would make AutoMigrate issue an ALTER COLUMN TYPE on
+	// existing PostgreSQL installs for no functional gain.
+	Key string `json:"key" gorm:"primaryKey"`
+	// Value is arbitrary JSON-serialisable text. Fresh AutoMigrate runs build
+	// this as TEXT (CLOB on MySQL, text on PostgreSQL, TEXT on SQLite) so we
+	// can store large values such as base64-encoded background images
+	// (≈2.7 MB for a 2 MB image), which previously failed on MySQL because
+	// GORM defaulted `string` → VARCHAR(255). Existing installations are
+	// migrated by migrateOptionValueToText() on startup.
+	Value string `json:"value" gorm:"type:text"`
 }
 
 func AllOption() ([]*Option, error) {
