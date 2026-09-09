@@ -142,10 +142,10 @@ export function BrandHome() {
                 <Sparkles className='size-4' /> {t('AI API gateway')}
               </div>
               <h1 className='max-w-3xl text-5xl leading-[1.14] font-bold tracking-tight text-balance md:text-6xl lg:text-7xl lg:leading-[1.08]'>
-                {t('One gateway.')}{' '}
+                {t('Stable, reliable gateway.')}{' '}
                 <br className='hidden lg:block' />
-                <span className='from-primary to-chart-3 bg-gradient-to-r bg-clip-text whitespace-nowrap text-transparent'>
-                  {t('Every model.')}
+                <span className='from-primary to-chart-3 bg-gradient-to-r bg-clip-text lg:whitespace-nowrap text-transparent'>
+                  {t('Any model, always online.')}
                 </span>
               </h1>
               <p className='text-muted-foreground mt-7 max-w-xl text-lg leading-relaxed'>
