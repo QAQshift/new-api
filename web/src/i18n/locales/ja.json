@@ -443,6 +443,7 @@
     "App": "アプリ",
     "App rankings shown here are simulated for preview purposes and will be replaced with live usage data once the backend integration is complete.": "ここに表示されているアプリランキングはプレビュー用のシミュレーションデータです。バックエンド連携の完了後、実データに置き換えられます。",
     "Append": "末尾に追加",
+    "Append /v1": "/v1 を付ける",
     "Append mode: New keys will be added to the end of the existing key list": "追記モード: 新しいキーは既存のキー一覧の末尾に追加されます",
     "Append Template": "テンプレートを追加",
     "Append to channel": "チャネルに追加",
@@ -3329,6 +3330,7 @@
     "One API": "1つのAPI",
     "One API key per project": "プロジェクトごとに 1 つの API キー",
     "One API, your choice of models.": "1 つの API でモデルを自由に選択。",
+    "One base URL for every model.": "すべてのモデルを 1 つのベース URL で。",
     "One domain per line": "1行に1つのドメイン",
     "One domain per line (only used when domain restriction is enabled)": "1行に1つのドメイン (ドメイン制限が有効な場合のみ使用されます)",
     "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.": "チャット・画像・動画モデルを 1 つのエンドポイントで利用。キーとモデルを選んで統合できます。",
@@ -3394,6 +3396,7 @@
     "OpenAI Responses to Gemini Generate Content": "OpenAI Responses から Gemini Generate Content",
     "OpenAI Responses to OpenAI Chat": "OpenAI Responses から OpenAI Chat",
     "OpenAI-compatible base URL": "OpenAI 互換ベース URL",
+    "OpenAI-compatible clients append /v1. Anthropic clients use the root domain.": "OpenAI 互換クライアントは /v1 を付けて入力し、Anthropic クライアントはルートドメインをそのまま使用します。",
     "OpenAI-compatible request": "OpenAI互換リクエスト",
     "OpenAI-compatible SDKs and CLI tools work with minimal changes.": "OpenAI互換の SDK と CLI ツールを最小限の変更で利用できます。",
     "OpenAI, Anthropic, etc.": "OpenAI、Anthropicなど",
@@ -5320,6 +5323,7 @@
     "Use the full-width table to scan prices, then select a row to edit it here.": "表で価格を確認し、行を選択してここで編集します。",
     "Use the group set on the token. If the token has no group, use the user group. The auto group tries the auto assignment order from top to bottom.": "トークンに設定されたグループを使います。トークンにグループがなければユーザーグループを使います。auto グループは自動割り当て順を上から順に試します。",
     "Use the pricing group table to manage the ratio and whether the group appears in the token creation dropdown.": "料金グループ表で倍率と、トークン作成ドロップダウンに表示するかどうかを管理します。",
+    "Use the root domain": "ルートドメインを使用",
     "Use the same OpenAI-compatible format you already know. Keys and usage are managed from the console.": "使い慣れた OpenAI 互換形式を利用し、キーと使用量をコンソールで管理。",
     "Use the URL below as the base endpoint. Every request must include a bearer token.": "以下の URL をベースエンドポイントとして、各リクエストに bearer token を含めます。",
     "Use this callback URL pattern when registering a custom OAuth provider.": "カスタム OAuth プロバイダーを登録するときは、このコールバック URL 形式を使用します。",
@@ -5686,6 +5690,15 @@
     "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "OpenAI API 規範に準拠し、既存の SDK や CLI ツール（Claude Code、Codex、Gemini CLI など）に修正なしでそのまま接続できます。",
     "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "リクエストは統合ゲートウェイ経由で最も健全なモデル経路にルーティングされ、レスポンスをストリーミング中です...",
     "Unified access layer, full model ecosystem.": "統一アクセス層 · 全モデルエコシステム",
-    "Production-grade reliability.": "本番級の長期安定性"
+    "Production-grade reliability.": "本番級の長期安定性",
+    "About page content": "アバウトページの内容",
+    "About page settings saved": "アバウトページの設定を保存しました",
+    "Failed to save about page settings": "アバウトページの設定を保存できませんでした",
+    "Clear and use built-in page": "クリアして内蔵ページを使用",
+    "Open public page": "公開ページを開く",
+    "Hide preview": "プレビューを閉じる",
+    "QR code is temporarily unavailable": "QR コードを一時的に読み込めません",
+    "Design the About page with the same blocks as the documentation. Use QR code blocks for WeChat or QQ contact codes, and contact cards for copyable support handles.": "ドキュメントと同じブロックでアバウトページを設計できます。QR コードブロックで WeChat や QQ の連絡先を、コンタクトカードでコピー可能なサポート窓口を配置できます。",
+    "No content blocks yet. Add cards, contact info, or WeChat / QQ QR codes.": "まだブロックがありません。カード、連絡先、WeChat / QQ の QR コードを追加できます。"
   }
 }

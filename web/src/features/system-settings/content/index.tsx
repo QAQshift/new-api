@@ -30,6 +30,7 @@ const defaultContentSettings: ContentSettings = {
   'console_setting.faq': '[]',
   'console_setting.uptime_kuma_groups': '[]',
   'console_setting.docs': '[]',
+  'console_setting.about_document': '',
   'console_setting.api_info_enabled': true,
   'console_setting.announcements_enabled': true,
   'console_setting.faq_enabled': true,

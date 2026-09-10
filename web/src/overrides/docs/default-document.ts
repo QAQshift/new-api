@@ -37,6 +37,15 @@ export type DocBlock =
   | { type: 'table'; columns: string[]; rows: string[][] }
   | { type: 'steps'; items: { title: string; content: string }[] }
   | { type: 'copy'; items: DocCopyItem[] }
+  | {
+      type: 'qr'
+      src: string
+      title?: string
+      alt?: string
+      caption?: string
+      description?: string
+      link?: DocLink
+    }
   | { type: 'callout'; code?: string; title: string; text: string }
   | {
       type: 'card'

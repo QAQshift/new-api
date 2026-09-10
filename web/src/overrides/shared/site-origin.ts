@@ -16,14 +16,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-export type AboutResponse = {
-  success: boolean
-  message: string
-  data?: string
-}
 
-export type AboutDocumentResponse = {
-  success: boolean
-  message: string
-  data?: unknown
+/**
+ * The relay listens on a fixed path set, so the public address of every
+ * deployment is simply the origin the visitor is already browsing. Deriving it
+ * from the browser keeps published endpoints correct for custom domains and
+ * mirrors without any server-side setting.
+ */
+export function resolveSiteOrigin(): string {
+  if (typeof window === 'undefined') return ''
+  return window.location.origin
 }

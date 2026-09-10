@@ -408,8 +408,9 @@ For commercial licensing, please contact support@quantumnous.com
  * Administrator-controlled glassmorphism preset.
  *
  * Two deliberate finishes share one recipe:
- *   - light: quiet luxury — near-neutral cool canvas, hairline edges, thin
- *     layered shadows and generous whitespace. No coloured bloom.
+ *   - light: soft frosted glass — a translucent white tint over a faint
+ *     blue/cyan/violet bloom, hairline edges and layered shadows, so the
+ *     blur is actually readable against the light canvas.
  *   - dark:  Apple-style deep glass — blue/violet/cyan ambient light, a
  *     brighter card than the canvas, coloured edge reflections and grain.
  *
@@ -425,9 +426,9 @@ For commercial licensing, please contact support@quantumnous.com
   --background: oklch(0.968 0.004 265);
   --foreground: oklch(0.21 0.014 268);
 
-  --card: oklch(1 0 0 / 72%);
+  --card: oklch(1 0 0 / 58%);
   --card-foreground: var(--foreground);
-  --popover: oklch(1 0 0 / 88%);
+  --popover: oklch(1 0 0 / 80%);
   --popover-foreground: var(--foreground);
 
   --primary: oklch(0.56 0.26 264);
@@ -478,31 +479,32 @@ For commercial licensing, please contact support@quantumnous.com
   --radius: 1rem;
 
   /* ── Recipe ─────────────────────────────────────────────────────── */
-  --glass-tint: oklch(1 0 0 / 70%);
-  --glass-tint-raised: oklch(1 0 0 / 88%);
+  --glass-tint: oklch(1 0 0 / 55%);
+  --glass-tint-raised: oklch(1 0 0 / 80%);
   --glass-blur: 20px;
   --glass-blur-raised: 28px;
-  --glass-saturate: 125%;
+  --glass-saturate: 145%;
 
-  --glass-edge-top: oklch(1 0 0 / 85%);
-  --glass-edge-mid: oklch(0.55 0.02 268 / 12%);
-  --glass-edge-bottom: oklch(0.25 0.02 268 / 14%);
+  --glass-edge-top: oklch(1 0 0 / 90%);
+  --glass-edge-mid: oklch(0.55 0.02 268 / 14%);
+  --glass-edge-bottom: oklch(0.25 0.02 268 / 22%);
   --glass-sheen: linear-gradient(
     158deg,
-    oklch(1 0 0 / 55%) 0%,
+    oklch(1 0 0 / 60%) 0%,
     oklch(1 0 0 / 0%) 44%
   );
 
-  --glass-shadow-ambient: 0 1px 2px oklch(0.28 0.02 268 / 4%);
-  --glass-shadow-key: 0 8px 24px oklch(0.28 0.02 268 / 6%);
-  --glass-shadow-key-hover: 0 14px 34px oklch(0.28 0.02 268 / 10%);
+  --glass-shadow-ambient: 0 1px 2px oklch(0.28 0.02 268 / 6%);
+  --glass-shadow-key: 0 10px 28px oklch(0.28 0.02 268 / 10%);
+  --glass-shadow-key-hover: 0 16px 38px oklch(0.28 0.02 268 / 15%);
 
-  /* Ambient light the glass has something to refract. Kept almost neutral
-   * in light mode — colour here would cheapen the finish. */
-  --glass-glow-1: oklch(1 0 0 / 75%);
-  --glass-glow-2: oklch(0.94 0.014 264 / 55%);
-  --glass-glow-3: oklch(0.955 0.01 200 / 45%);
-  --glass-glow-opacity: 0.6;
+  /* Ambient light the glass has something to refract. A restrained
+   * blue/cyan/violet bloom so the frosted blur reads against a light
+   * canvas instead of flattening into plain white cards. */
+  --glass-glow-1: oklch(1 0 0 / 78%);
+  --glass-glow-2: oklch(0.87 0.055 264 / 62%);
+  --glass-glow-3: oklch(0.9 0.05 200 / 52%);
+  --glass-glow-opacity: 0.85;
   --glass-noise-opacity: 0.024;
   --glass-glow-layers: radial-gradient(
       58rem 38rem at 14% -12%,

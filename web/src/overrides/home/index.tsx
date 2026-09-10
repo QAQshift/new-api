@@ -38,6 +38,8 @@ import { useTranslation } from 'react-i18next'
 import { PublicLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
 import { useSystemConfig } from '@/hooks/use-system-config'
+import { ApiEndpointBanner } from '@/overrides/shared/api-endpoint-banner'
+import { resolveSiteOrigin } from '@/overrides/shared/site-origin'
 import { useAuthStore } from '@/stores/auth-store'
 
 const REQUEST_LINES = [
@@ -293,9 +295,9 @@ export function BrandHome() {
             aria-hidden
             className='pointer-events-none absolute inset-0 -z-10 overflow-hidden'
           >
-            <div className='bg-chart-1/30 absolute -top-40 -left-32 size-[34rem] rounded-full blur-3xl' />
-            <div className='bg-chart-3/25 absolute -top-16 right-[-8rem] size-[30rem] rounded-full blur-3xl' />
-            <div className='bg-chart-2/20 absolute top-[26rem] left-1/2 size-[26rem] -translate-x-1/2 rounded-full blur-3xl' />
+            <div className='bg-chart-1/45 dark:bg-chart-1/30 absolute -top-40 -left-32 size-[34rem] rounded-full blur-3xl' />
+            <div className='bg-chart-3/40 dark:bg-chart-3/25 absolute -top-16 right-[-8rem] size-[30rem] rounded-full blur-3xl' />
+            <div className='bg-chart-2/30 dark:bg-chart-2/20 absolute top-[26rem] left-1/2 size-[26rem] -translate-x-1/2 rounded-full blur-3xl' />
           </div>
           <div className='mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]'>
             <div>
@@ -380,6 +382,18 @@ export function BrandHome() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className='border-b px-6 py-14 md:px-10 md:py-16'>
+          <div className='mx-auto max-w-6xl'>
+            <p className='text-primary text-xs font-semibold tracking-[0.2em] uppercase'>
+              {t('Endpoints')}
+            </p>
+            <h2 className='mt-4 text-3xl font-bold tracking-tight md:text-4xl'>
+              {t('One base URL for every model.')}
+            </h2>
+            <ApiEndpointBanner className='mt-8' showHeading={false} />
           </div>
         </section>
 
@@ -478,8 +492,8 @@ export function BrandHome() {
               <p className='text-muted-foreground text-xs'>
                 {t('Recommended base URL')}
               </p>
-              <code className='mt-3 block text-sm'>
-                https://your-domain.example/v1
+              <code className='mt-3 block truncate text-sm'>
+                {resolveSiteOrigin()}/v1
               </code>
               <div className='bg-border/60 my-5 h-px' />
               <p className='text-muted-foreground text-xs'>

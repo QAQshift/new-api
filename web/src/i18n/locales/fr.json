@@ -443,6 +443,7 @@
     "App": "Application",
     "App rankings shown here are simulated for preview purposes and will be replaced with live usage data once the backend integration is complete.": "Les classements d'applications présentés ici sont simulés à des fins de prévisualisation et seront remplacés par des données réelles une fois l'intégration du backend terminée.",
     "Append": "Ajouter à la fin",
+    "Append /v1": "Ajoutez /v1",
     "Append mode: New keys will be added to the end of the existing key list": "Mode d'ajout : Les nouvelles clés seront ajoutées à la fin de la liste de clés existante",
     "Append Template": "Ajouter le modèle",
     "Append to channel": "Ajouter au canal",
@@ -3329,6 +3330,7 @@
     "One API": "One API",
     "One API key per project": "Une clé API par projet",
     "One API, your choice of models.": "Une API, votre choix de modèles.",
+    "One base URL for every model.": "Une seule URL de base pour tous les modèles.",
     "One domain per line": "Un domaine par ligne",
     "One domain per line (only used when domain restriction is enabled)": "Un domaine par ligne (utilisé uniquement lorsque la restriction de domaine est activée)",
     "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.": "Un endpoint pour les modèles de chat, d’image et de vidéo. Créez une clé, choisissez un modèle et intégrez.",
@@ -3394,6 +3396,7 @@
     "OpenAI Responses to Gemini Generate Content": "OpenAI Responses vers Gemini Generate Content",
     "OpenAI Responses to OpenAI Chat": "OpenAI Responses vers OpenAI Chat",
     "OpenAI-compatible base URL": "URL de base compatible OpenAI",
+    "OpenAI-compatible clients append /v1. Anthropic clients use the root domain.": "Les clients compatibles OpenAI ajoutent /v1 ; les clients Anthropic utilisent le domaine racine.",
     "OpenAI-compatible request": "Requête compatible OpenAI",
     "OpenAI-compatible SDKs and CLI tools work with minimal changes.": "Les SDK et outils CLI compatibles OpenAI fonctionnent avec peu de modifications.",
     "OpenAI, Anthropic, etc.": "OpenAI, Anthropic, etc.",
@@ -5320,6 +5323,7 @@
     "Use the full-width table to scan prices, then select a row to edit it here.": "Parcourez les prix dans le tableau, puis sélectionnez une ligne pour la modifier ici.",
     "Use the group set on the token. If the token has no group, use the user group. The auto group tries the auto assignment order from top to bottom.": "Utilisez le groupe défini sur le jeton. S’il n’en a pas, utilisez le groupe de l’utilisateur. Le groupe auto essaie l’ordre d’affectation automatique de haut en bas.",
     "Use the pricing group table to manage the ratio and whether the group appears in the token creation dropdown.": "Utilisez le tableau des groupes tarifaires pour gérer le ratio et l’apparition du groupe dans la liste de création de jeton.",
+    "Use the root domain": "Utilisez le domaine racine",
     "Use the same OpenAI-compatible format you already know. Keys and usage are managed from the console.": "Utilisez le format compatible OpenAI que vous connaissez ; clés et utilisation se gèrent dans la console.",
     "Use the URL below as the base endpoint. Every request must include a bearer token.": "Utilisez l’URL ci-dessous comme endpoint de base ; chaque requête doit inclure un bearer token.",
     "Use this callback URL pattern when registering a custom OAuth provider.": "Utilisez ce modèle d'URL de rappel lors de l'enregistrement d'un fournisseur OAuth personnalisé.",
@@ -5686,6 +5690,15 @@
     "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "API compatible OpenAI : les SDK et outils CLI existants (Claude Code, Codex, Gemini CLI, etc.) se connectent sans aucune modification.",
     "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "Requête routée via la passerelle unifiée vers la route de modèle la plus saine. Réponse en cours de diffusion en flux.",
     "Unified access layer, full model ecosystem.": "Couche d’accès unifiée, écosystème de modèles complet.",
-    "Production-grade reliability.": "Fiabilité de niveau production."
+    "Production-grade reliability.": "Fiabilité de niveau production.",
+    "About page content": "Contenu de la page À propos",
+    "About page settings saved": "Paramètres de la page À propos enregistrés",
+    "Failed to save about page settings": "Échec de l’enregistrement des paramètres de la page À propos",
+    "Clear and use built-in page": "Effacer et utiliser la page intégrée",
+    "Open public page": "Ouvrir la page publique",
+    "Hide preview": "Masquer l’aperçu",
+    "QR code is temporarily unavailable": "Le QR code est temporairement indisponible",
+    "Design the About page with the same blocks as the documentation. Use QR code blocks for WeChat or QQ contact codes, and contact cards for copyable support handles.": "Concevez la page À propos avec les mêmes blocs que la documentation. Utilisez les blocs QR pour WeChat ou QQ et les cartes de contact pour les canaux copiables.",
+    "No content blocks yet. Add cards, contact info, or WeChat / QQ QR codes.": "Aucun bloc pour le moment. Ajoutez des cartes, des contacts ou des QR codes WeChat / QQ."
   }
 }

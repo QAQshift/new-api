@@ -224,6 +224,28 @@ func GetAbout(c *gin.Context) {
 	return
 }
 
+// GetAboutDocument returns the administrator-configured structured About page.
+// A null payload tells the frontend to fall back to the legacy About content
+// or the built-in page.
+func GetAboutDocument(c *gin.Context) {
+	common.OptionMapRWMutex.RLock()
+	raw := common.OptionMap["console_setting.about_document"]
+	common.OptionMapRWMutex.RUnlock()
+
+	var document any
+	if strings.TrimSpace(raw) != "" {
+		if err := common.UnmarshalJsonStr(raw, &document); err != nil {
+			document = nil
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data":    document,
+	})
+	return
+}
+
 func GetUserAgreement(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,

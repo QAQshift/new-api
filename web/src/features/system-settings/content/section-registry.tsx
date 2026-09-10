@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import type { ContentSettings } from '../types'
 import { createSectionRegistry } from '../utils/section-registry'
+import { AboutSection } from './about-section'
 import { AnnouncementsSection } from './announcements-section'
 import { ApiInfoSection } from './api-info-section'
 import { ChatSettingsSection } from './chat-settings-section'
@@ -89,6 +90,13 @@ const CONTENT_SECTIONS = [
     titleKey: 'Documentation management',
     build: (settings: ContentSettings) => (
       <DocsSection data={settings['console_setting.docs']} />
+    ),
+  },
+  {
+    id: 'about',
+    titleKey: 'About page content',
+    build: (settings: ContentSettings) => (
+      <AboutSection data={settings['console_setting.about_document']} />
     ),
   },
   {

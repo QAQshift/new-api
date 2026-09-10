@@ -182,6 +182,7 @@ export type ContentSettings = {
   'console_setting.faq_enabled': boolean
   'console_setting.uptime_kuma_enabled': boolean
   'console_setting.docs': string
+  'console_setting.about_document': string
   DataExportEnabled: boolean
   DataExportDefaultTime: string
   DataExportInterval: number

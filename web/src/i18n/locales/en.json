@@ -443,6 +443,7 @@
     "App": "App",
     "App rankings shown here are simulated for preview purposes and will be replaced with live usage data once the backend integration is complete.": "App rankings shown here are simulated for preview purposes and will be replaced with live usage data once the backend integration is complete.",
     "Append": "Append",
+    "Append /v1": "Append /v1",
     "Append mode: New keys will be added to the end of the existing key list": "Append mode: New keys will be added to the end of the existing key list",
     "Append Template": "Append Template",
     "Append to channel": "Append to channel",
@@ -3329,6 +3330,7 @@
     "One API": "One API",
     "One API key per project": "One API key per project",
     "One API, your choice of models.": "One API, your choice of models.",
+    "One base URL for every model.": "One base URL for every model.",
     "One domain per line": "One domain per line",
     "One domain per line (only used when domain restriction is enabled)": "One domain per line (only used when domain restriction is enabled)",
     "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.": "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.",
@@ -3394,6 +3396,7 @@
     "OpenAI Responses to Gemini Generate Content": "OpenAI Responses to Gemini Generate Content",
     "OpenAI Responses to OpenAI Chat": "OpenAI Responses to OpenAI Chat",
     "OpenAI-compatible base URL": "OpenAI-compatible base URL",
+    "OpenAI-compatible clients append /v1. Anthropic clients use the root domain.": "OpenAI-compatible clients append /v1. Anthropic clients use the root domain.",
     "OpenAI-compatible request": "OpenAI-compatible request",
     "OpenAI-compatible SDKs and CLI tools work with minimal changes.": "OpenAI-compatible SDKs and CLI tools work with minimal changes.",
     "OpenAI, Anthropic, etc.": "OpenAI, Anthropic, etc.",
@@ -5320,6 +5323,7 @@
     "Use the full-width table to scan prices, then select a row to edit it here.": "Use the full-width table to scan prices, then select a row to edit it here.",
     "Use the group set on the token. If the token has no group, use the user group. The auto group tries the auto assignment order from top to bottom.": "Use the group set on the token. If the token has no group, use the user group. The auto group tries the auto assignment order from top to bottom.",
     "Use the pricing group table to manage the ratio and whether the group appears in the token creation dropdown.": "Use the pricing group table to manage the ratio and whether the group appears in the token creation dropdown.",
+    "Use the root domain": "Use the root domain",
     "Use the same OpenAI-compatible format you already know. Keys and usage are managed from the console.": "Use the same OpenAI-compatible format you already know. Keys and usage are managed from the console.",
     "Use the URL below as the base endpoint. Every request must include a bearer token.": "Use the URL below as the base endpoint. Every request must include a bearer token.",
     "Use this callback URL pattern when registering a custom OAuth provider.": "Use this callback URL pattern when registering a custom OAuth provider.",
@@ -5686,6 +5690,15 @@
     "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.",
     "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "Request routed through the unified gateway to the healthiest model route. Streaming the response back.",
     "Unified access layer, full model ecosystem.": "Unified access layer, full model ecosystem.",
-    "Production-grade reliability.": "Production-grade reliability."
+    "Production-grade reliability.": "Production-grade reliability.",
+    "About page content": "About page content",
+    "About page settings saved": "About page settings saved",
+    "Failed to save about page settings": "Failed to save about page settings",
+    "Clear and use built-in page": "Clear and use built-in page",
+    "Open public page": "Open public page",
+    "Hide preview": "Hide preview",
+    "QR code is temporarily unavailable": "QR code is temporarily unavailable",
+    "Design the About page with the same blocks as the documentation. Use QR code blocks for WeChat or QQ contact codes, and contact cards for copyable support handles.": "Design the About page with the same blocks as the documentation. Use QR code blocks for WeChat or QQ contact codes, and contact cards for copyable support handles.",
+    "No content blocks yet. Add cards, contact info, or WeChat / QQ QR codes.": "No content blocks yet. Add cards, contact info, or WeChat / QQ QR codes."
   }
 }

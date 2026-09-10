@@ -18,9 +18,14 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { api } from '@/lib/api'
 
-import type { AboutResponse } from './types'
+import type { AboutDocumentResponse, AboutResponse } from './types'
 
 export async function getAboutContent() {
   const res = await api.get<AboutResponse>('/api/about')
+  return res.data
+}
+
+export async function getAboutDocument() {
+  const res = await api.get<AboutDocumentResponse>('/api/about/content')
   return res.data
 }

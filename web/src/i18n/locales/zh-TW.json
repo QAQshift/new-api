@@ -443,6 +443,7 @@
     "App": "套用程式",
     "App rankings shown here are simulated for preview purposes and will be replaced with live usage data once the backend integration is complete.": "此處展示的套用排行僅為預覽用模擬數據，待後端對接完成後將替換為真實數據。",
     "Append": "追加",
+    "Append /v1": "需要 /v1",
     "Append mode: New keys will be added to the end of the existing key list": "追加模式：新鍵將添加到現有鍵清單的最後",
     "Append Template": "追加模板",
     "Append to channel": "追加到渠道",
@@ -3329,6 +3330,7 @@
     "One API": "One API",
     "One API key per project": "One API key per project",
     "One API, your choice of models.": "一個 API，自由選擇模型。",
+    "One base URL for every model.": "一個位址，接入所有模型。",
     "One domain per line": "每行一個域名",
     "One domain per line (only used when domain restriction is enabled)": "每行一個域名 (僅在啟用域名限制時使用)",
     "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.": "一個端點接入聊天、圖像與影片模型。建立金鑰、選擇模型即可完成整合。",
@@ -3394,6 +3396,7 @@
     "OpenAI Responses to Gemini Generate Content": "OpenAI Responses 轉 Gemini Generate Content",
     "OpenAI Responses to OpenAI Chat": "OpenAI Responses 到 OpenAI Chat",
     "OpenAI-compatible base URL": "相容 OpenAI 的基礎 URL",
+    "OpenAI-compatible clients append /v1. Anthropic clients use the root domain.": "OpenAI 相容客戶端填寫帶 /v1 的位址，Anthropic 客戶端直接使用根網域。",
     "OpenAI-compatible request": "OpenAI-compatible request",
     "OpenAI-compatible SDKs and CLI tools work with minimal changes.": "相容 OpenAI 協定的 SDK 與 CLI 工具，少量修改即可使用。",
     "OpenAI, Anthropic, etc.": "OpenAI、Anthropic 等",
@@ -5320,6 +5323,7 @@
     "Use the full-width table to scan prices, then select a row to edit it here.": "先在表格中快速瀏覽價格，然後選擇一行在這裡編輯。",
     "Use the group set on the token. If the token has no group, use the user group. The auto group tries the auto assignment order from top to bottom.": "使用令牌上設定的分組；令牌未設定分組時，使用用戶分組。auto 分組會按自動分組順序從上到下嘗試。",
     "Use the pricing group table to manage the ratio and whether the group appears in the token creation dropdown.": "使用定價分組表管理倍率，以及該分組是否出現在建立令牌的下拉框中。",
+    "Use the root domain": "使用根網域",
     "Use the same OpenAI-compatible format you already know. Keys and usage are managed from the console.": "繼續使用熟悉的 OpenAI 相容格式，金鑰與用量在主控台管理。",
     "Use the URL below as the base endpoint. Every request must include a bearer token.": "使用以下 URL 作為基礎端點，每個請求都必須包含 bearer token。",
     "Use this callback URL pattern when registering a custom OAuth provider.": "註冊自訂 OAuth 提供商時使用此回呼 URL 格式。",
@@ -5686,6 +5690,15 @@
     "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "相容 OpenAI API 規範，現有 SDK 與 CLI 工具（含 Claude Code、Codex、Gemini CLI 等）零改造接入。",
     "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "請求已透過統一閘道路由至最健康的模型線路，正在以串流方式回傳結果...",
     "Unified access layer, full model ecosystem.": "統一接入層 · 全模型生態",
-    "Production-grade reliability.": "生產級長期可用"
+    "Production-grade reliability.": "生產級長期可用",
+    "About page content": "關於頁內容",
+    "About page settings saved": "關於頁設定已儲存",
+    "Failed to save about page settings": "關於頁設定儲存失敗",
+    "Clear and use built-in page": "清空並改用內建頁面",
+    "Open public page": "開啟公開頁面",
+    "Hide preview": "隱藏預覽",
+    "QR code is temporarily unavailable": "QR 碼暫時無法載入",
+    "Design the About page with the same blocks as the documentation. Use QR code blocks for WeChat or QQ contact codes, and contact cards for copyable support handles.": "使用與文件頁相同的內容區塊來設計關於頁。用 QR 碼區塊放置微信或 QQ 聯絡方式，用聯絡卡片放置可複製的客服帳號。",
+    "No content blocks yet. Add cards, contact info, or WeChat / QQ QR codes.": "還沒有內容區塊。可以新增卡片、聯絡方式，或微信 / QQ QR 碼。"
   }
 }

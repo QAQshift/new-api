@@ -443,6 +443,7 @@
     "App": "Приложение",
     "App rankings shown here are simulated for preview purposes and will be replaced with live usage data once the backend integration is complete.": "Показанный рейтинг приложений сгенерирован для предпросмотра и будет заменён реальными данными после интеграции бэкенда.",
     "Append": "Добавить в конец",
+    "Append /v1": "Добавьте /v1",
     "Append mode: New keys will be added to the end of the existing key list": "Режим добавления: Новые ключи будут добавлены в конец существующего списка ключей",
     "Append Template": "Добавить шаблон",
     "Append to channel": "Добавить в канал",
@@ -3329,6 +3330,7 @@
     "One API": "Один API",
     "One API key per project": "Один ключ API для каждого проекта",
     "One API, your choice of models.": "Один API и любые модели.",
+    "One base URL for every model.": "Один базовый URL для всех моделей.",
     "One domain per line": "Один домен на строку",
     "One domain per line (only used when domain restriction is enabled)": "Один домен на строку (используется только при включении ограничения домена)",
     "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.": "Один эндпоинт для чата, изображений и видео. Создайте ключ, выберите модель и подключите интеграцию.",
@@ -3394,6 +3396,7 @@
     "OpenAI Responses to Gemini Generate Content": "OpenAI Responses в Gemini Generate Content",
     "OpenAI Responses to OpenAI Chat": "OpenAI Responses в OpenAI Chat",
     "OpenAI-compatible base URL": "Базовый URL, совместимый с OpenAI",
+    "OpenAI-compatible clients append /v1. Anthropic clients use the root domain.": "Клиенты, совместимые с OpenAI, добавляют /v1; клиенты Anthropic используют корневой домен.",
     "OpenAI-compatible request": "OpenAI-совместимый запрос",
     "OpenAI-compatible SDKs and CLI tools work with minimal changes.": "Совместимые с OpenAI SDK и CLI-инструменты работают с минимальными изменениями.",
     "OpenAI, Anthropic, etc.": "OpenAI, Anthropic и т.д.",
@@ -5320,6 +5323,7 @@
     "Use the full-width table to scan prices, then select a row to edit it here.": "Просмотрите цены в таблице, затем выберите строку для редактирования здесь.",
     "Use the group set on the token. If the token has no group, use the user group. The auto group tries the auto assignment order from top to bottom.": "Используется группа токена. Если у токена нет группы — группа пользователя. Группа auto перебирает порядок автоназначения сверху вниз.",
     "Use the pricing group table to manage the ratio and whether the group appears in the token creation dropdown.": "Используйте таблицу групп тарификации, чтобы управлять коэффициентом и отображением группы в списке создания токена.",
+    "Use the root domain": "Используйте корневой домен",
     "Use the same OpenAI-compatible format you already know. Keys and usage are managed from the console.": "Используйте знакомый формат OpenAI, а ключи и использование управляйте в консоли.",
     "Use the URL below as the base endpoint. Every request must include a bearer token.": "Используйте URL ниже как базовый эндпоинт; каждый запрос должен содержать bearer-токен.",
     "Use this callback URL pattern when registering a custom OAuth provider.": "Используйте этот формат URL обратного вызова при регистрации пользовательского провайдера OAuth.",
@@ -5686,6 +5690,15 @@
     "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "API совместим с OpenAI: существующие SDK и CLI-инструменты (включая Claude Code, Codex, Gemini CLI) подключаются без изменений кода.",
     "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "Запрос направлен через единый шлюз на самый исправный маршрут модели. Ответ передаётся потоком.",
     "Unified access layer, full model ecosystem.": "Единый уровень доступа, вся экосистема моделей.",
-    "Production-grade reliability.": "Производственная надёжность."
+    "Production-grade reliability.": "Производственная надёжность.",
+    "About page content": "Содержимое страницы «О нас»",
+    "About page settings saved": "Настройки страницы «О нас» сохранены",
+    "Failed to save about page settings": "Не удалось сохранить настройки страницы «О нас»",
+    "Clear and use built-in page": "Очистить и использовать встроенную страницу",
+    "Open public page": "Открыть публичную страницу",
+    "Hide preview": "Скрыть предпросмотр",
+    "QR code is temporarily unavailable": "QR-код временно недоступен",
+    "Design the About page with the same blocks as the documentation. Use QR code blocks for WeChat or QQ contact codes, and contact cards for copyable support handles.": "Оформите страницу «О нас» теми же блоками, что и документацию. Блоки QR-кода подходят для WeChat и QQ, карточки — для копируемых контактов поддержки.",
+    "No content blocks yet. Add cards, contact info, or WeChat / QQ QR codes.": "Блоков пока нет. Добавьте карточки, контакты или QR-коды WeChat / QQ."
   }
 }

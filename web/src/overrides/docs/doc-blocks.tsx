@@ -338,9 +338,11 @@ function DownloadsPanel(props: {
         {block.items.map((item) => (
           <div
             key={`${item.name}-${item.desc}`}
-            className='rounded-lg border p-4'
+            className='min-w-0 overflow-hidden rounded-lg border p-4'
           >
-            <p className='text-sm font-medium'>{resolveText(item.desc)}</p>
+            <p className='text-sm font-medium break-words'>
+              {resolveText(item.desc)}
+            </p>
             <p className='text-muted-foreground mt-1 font-mono text-xs break-all'>
               {resolveText(item.name)}
             </p>
@@ -356,6 +358,56 @@ function DownloadsPanel(props: {
         <p className='text-muted-foreground mt-4 text-xs leading-6'>
           {resolveText(block.note)}
         </p>
+      )}
+    </div>
+  )
+}
+
+/**
+ * QR / contact card. The image sits on a white plate with padding so the
+ * mandatory quiet zone is preserved and the code stays scannable in both
+ * light and dark themes.
+ */
+function QrCard(props: { block: Extract<DocBlock, { type: 'qr' }> }) {
+  const { t } = useTranslation()
+  const block = props.block
+  const [failed, setFailed] = useState(false)
+  return (
+    <div className='glass-panel h-full rounded-xl border p-5 text-center'>
+      {block.title && (
+        <h4 className='font-semibold'>{resolveText(block.title)}</h4>
+      )}
+      <div className='mx-auto mt-4 flex size-44 items-center justify-center rounded-xl border bg-white p-2'>
+        {failed ? (
+          <span className='text-muted-foreground text-xs'>
+            {t('QR code is temporarily unavailable')}
+          </span>
+        ) : (
+          <img
+            src={resolveText(block.src)}
+            alt={resolveText(block.alt ?? block.title ?? 'QR code')}
+            loading='lazy'
+            onError={() => setFailed(true)}
+            className='size-full object-contain'
+          />
+        )}
+      </div>
+      {block.description && (
+        <p className='text-muted-foreground mt-3 text-sm leading-6'>
+          {resolveText(block.description)}
+        </p>
+      )}
+      {block.caption && (
+        <p className='text-muted-foreground mt-1 text-xs'>
+          {resolveText(block.caption)}
+        </p>
+      )}
+      {block.link && (
+        <div className='mt-3'>
+          <BlockLink href={block.link.href} external={block.link.external}>
+            {resolveText(block.link.label ?? block.link.href)}
+          </BlockLink>
+        </div>
       )}
     </div>
   )
@@ -441,6 +493,8 @@ function renderSingleBlock(block: DocBlock, index: number): ReactNode {
       )
     case 'copy':
       return <CopyGrid key={index} items={block.items} />
+    case 'qr':
+      return <QrCard key={index} block={block} />
     case 'callout':
       return <CalloutCard key={index} block={block} />
     case 'card':
@@ -453,7 +507,7 @@ function renderSingleBlock(block: DocBlock, index: number): ReactNode {
 }
 
 /** Block types that flow into a shared responsive grid when consecutive. */
-const GRID_TYPES = new Set(['card', 'callout'])
+const GRID_TYPES = new Set(['card', 'callout', 'qr'])
 
 export function DocBlocksView(props: { blocks: DocBlock[] }) {
   const groups: { grid: boolean; items: DocBlock[] }[] = []

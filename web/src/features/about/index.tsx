@@ -23,23 +23,30 @@ import { PublicLayout } from '@/components/layout'
 import { RichContent } from '@/components/rich-content'
 import { Skeleton } from '@/components/ui/skeleton'
 import { isHttpUrl, isLikelyHtml } from '@/lib/content-format'
+import { parseAboutDocument } from '@/overrides/about/parse-about'
+import { StructuredAboutPage } from '@/overrides/about/structured-about'
 import { SupportPage } from '@/overrides/support'
 
-import { getAboutContent } from './api'
+import { getAboutContent, getAboutDocument } from './api'
 
 export function About() {
   const { t } = useTranslation()
+  const structured = useQuery({
+    queryKey: ['about-document'],
+    queryFn: getAboutDocument,
+  })
   const { data, isLoading } = useQuery({
     queryKey: ['about-content'],
     queryFn: getAboutContent,
   })
 
+  const aboutDocument = parseAboutDocument(structured.data?.data)
   const rawContent = data?.data?.trim() ?? ''
   const hasContent = rawContent.length > 0
   const isUrl = hasContent && isHttpUrl(rawContent)
   const contentIsHtml = hasContent && isLikelyHtml(rawContent)
 
-  if (isLoading) {
+  if (structured.isLoading || isLoading) {
     return (
       <PublicLayout>
         <div className='mx-auto flex max-w-4xl flex-col gap-4 py-12'>
@@ -48,6 +55,15 @@ export function About() {
           <Skeleton className='h-4 w-[90%]' />
           <Skeleton className='h-4 w-[80%]' />
         </div>
+      </PublicLayout>
+    )
+  }
+
+  // Precedence: structured document > legacy markdown/HTML/URL > built-in page.
+  if (aboutDocument) {
+    return (
+      <PublicLayout showMainContainer={false}>
+        <StructuredAboutPage document={aboutDocument} />
       </PublicLayout>
     )
   }

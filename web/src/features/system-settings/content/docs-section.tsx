@@ -17,13 +17,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import {
-  ArrowDown,
-  ArrowUp,
   Eye,
   FileText,
   FolderPlus,
   Layers,
-  Plus,
   RotateCcw,
   Save,
   SquarePlus,
@@ -35,11 +32,8 @@ import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 
-import {
-  DocBlocksView,
-} from '@/overrides/docs/doc-blocks'
+import { DocBlocksView } from '@/overrides/docs/doc-blocks'
 import {
   type DocBlock,
   type DocCategory,
@@ -52,26 +46,14 @@ import {
 import { SettingsSwitchField } from '../components/settings-form-layout'
 import { SettingsSection } from '../components/settings-section'
 import { useUpdateOption } from '../hooks/use-update-option'
+import { DocBlockListEditor } from './doc-block-editor'
 
 type DocsSectionProps = {
   data: string
 }
 
-const BLOCK_TYPE_LABELS: Record<DocBlock['type'], string> = {
-  markdown: 'Markdown',
-  code: 'Code',
-  image: 'Image',
-  endpoint: 'Endpoint',
-  table: 'Table',
-  steps: 'Steps',
-  copy: 'Copy row',
-  callout: 'Callout',
-  card: 'Card',
-  downloads: 'Downloads',
-}
-
 function clone<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T
+  return structuredClone(value)
 }
 
 type StoredDocRecord = {
@@ -170,9 +152,8 @@ function parseStoredDocument(data: string): DocsDocument {
           trimmedCategory && knownCategoryIds.has(trimmedCategory)
             ? trimmedCategory
             : (docCategories[0]?.id ?? 'custom')
-        const blocks = asDocBlockArray(value.blocks)
         const fromContent = contentToBlocks(value.content)
-        const resolvedBlocks: DocBlock[] = fromContent ?? blocks
+        const resolvedBlocks: DocBlock[] = fromContent ?? asDocBlockArray(value.blocks)
         const resolvedTitle =
           typeof value.title === 'string' && value.title.trim()
             ? (value.title as string)
@@ -180,9 +161,11 @@ function parseStoredDocument(data: string): DocsDocument {
         return {
           id,
           categoryId,
-          eyebrow: typeof value.eyebrow === 'string' ? (value.eyebrow as string) : '',
+          eyebrow:
+            typeof value.eyebrow === 'string' ? (value.eyebrow as string) : '',
           title: resolvedTitle,
-          summary: typeof value.summary === 'string' ? (value.summary as string) : '',
+          summary:
+            typeof value.summary === 'string' ? (value.summary as string) : '',
           published: value.published !== false,
           order:
             typeof value.order === 'number' && value.order >= 0
@@ -215,6 +198,7 @@ function parseStoredDocument(data: string): DocsDocument {
     const override = overrides.get(section.id)
     if (!override) return section
     const fromContent = contentToBlocks(override.content)
+    const overrideBlocks = asDocBlockArray(override.blocks)
     return {
       ...section,
       eyebrow:
@@ -235,9 +219,7 @@ function parseStoredDocument(data: string): DocsDocument {
           ? override.order
           : section.order,
       blocks:
-        asDocBlockArray(override.blocks).length > 0
-          ? asDocBlockArray(override.blocks)
-          : (fromContent ?? section.blocks),
+        overrideBlocks.length > 0 ? overrideBlocks : (fromContent ?? section.blocks),
     }
   })
   const hasCustomCategory = base.categories.some(
@@ -264,9 +246,11 @@ function parseStoredDocument(data: string): DocsDocument {
     sections.push({
       id,
       categoryId: 'custom',
-      eyebrow: typeof value.eyebrow === 'string' ? (value.eyebrow as string) : '',
+      eyebrow:
+        typeof value.eyebrow === 'string' ? (value.eyebrow as string) : '',
       title,
-      summary: typeof value.summary === 'string' ? (value.summary as string) : '',
+      summary:
+        typeof value.summary === 'string' ? (value.summary as string) : '',
       published: value.published !== false,
       order:
         typeof value.order === 'number' && value.order >= 0
@@ -278,518 +262,6 @@ function parseStoredDocument(data: string): DocsDocument {
   return { version: 3, categories: mergedCategories, sections }
 }
 
-function createEmptyBlock(type: DocBlock['type']): DocBlock {
-  switch (type) {
-    case 'markdown':
-      return { type: 'markdown', content: '' }
-    case 'code':
-      return { type: 'code', content: '', title: '' }
-    case 'image':
-      return { type: 'image', src: '', alt: '', caption: '' }
-    case 'endpoint':
-      return { type: 'endpoint', method: 'GET', path: '', description: '' }
-    case 'table':
-      return { type: 'table', columns: ['列 A', '列 B'], rows: [['', '']] }
-    case 'steps':
-      return { type: 'steps', items: [{ title: '', content: '' }] }
-    case 'copy':
-      return { type: 'copy', items: [{ label: '', value: '' }] }
-    case 'callout':
-      return { type: 'callout', code: '', title: '', text: '' }
-    case 'card':
-      return { type: 'card', title: '', text: '', mono: false }
-    case 'downloads':
-      return { type: 'downloads', title: '', items: [{ name: '', desc: '' }] }
-    default:
-      return { type: 'markdown', content: '' }
-  }
-}
-
-type PairItem = { label: string; value: string }
-
-function PairEditor(props: {
-  items: PairItem[]
-  labels: [string, string]
-  onChange: (items: PairItem[]) => void
-}) {
-  const { t } = useTranslation()
-  return (
-    <div className='space-y-2'>
-      {props.items.map((item, index) => (
-        <div key={index} className='flex items-center gap-2'>
-          <Input
-            value={item.label}
-            placeholder={props.labels[0]}
-            onChange={(event) => {
-              const next = [...props.items]
-              next[index] = { ...item, label: event.target.value }
-              props.onChange(next)
-            }}
-            className='w-40'
-          />
-          <Input
-            value={item.value}
-            placeholder={props.labels[1]}
-            onChange={(event) => {
-              const next = [...props.items]
-              next[index] = { ...item, value: event.target.value }
-              props.onChange(next)
-            }}
-            className='flex-1'
-          />
-          <Button
-            size='icon-sm'
-            variant='ghost'
-            aria-label={t('Remove item')}
-            onClick={() =>
-              props.onChange(
-                props.items.filter((_, itemIndex) => itemIndex !== index)
-              )
-            }
-          >
-            <Trash2 className='text-destructive size-4' />
-          </Button>
-        </div>
-      ))}
-      <Button
-        size='sm'
-        variant='outline'
-        onClick={() => props.onChange([...props.items, { label: '', value: '' }])}
-      >
-        <Plus className='mr-1 size-3.5' />
-        {t('Add item')}
-      </Button>
-    </div>
-  )
-}
-
-function BlockEditor(props: {
-  block: DocBlock
-  onChange: (block: DocBlock) => void
-}) {
-  const { t } = useTranslation()
-  const block = props.block
-
-  if (block.type === 'markdown') {
-    return (
-      <Textarea
-        value={block.content}
-        onChange={(event) =>
-          props.onChange({ type: 'markdown', content: event.target.value })
-        }
-        className='min-h-32 font-mono text-sm'
-      />
-    )
-  }
-  if (block.type === 'code') {
-    return (
-      <div className='space-y-2'>
-        <Input
-          value={block.title ?? ''}
-          placeholder={t('Code title (optional)')}
-          onChange={(event) =>
-            props.onChange({ ...block, title: event.target.value })
-          }
-        />
-        <Textarea
-          value={block.content}
-          onChange={(event) =>
-            props.onChange({ ...block, content: event.target.value })
-          }
-          className='min-h-32 font-mono text-sm'
-        />
-      </div>
-    )
-  }
-  if (block.type === 'image') {
-    return (
-      <div className='space-y-2'>
-        <Input
-          value={block.src}
-          placeholder='https://... image URL'
-          onChange={(event) =>
-            props.onChange({ ...block, src: event.target.value })
-          }
-        />
-        <Input
-          value={block.alt}
-          placeholder={t('Alt text')}
-          onChange={(event) =>
-            props.onChange({ ...block, alt: event.target.value })
-          }
-        />
-        <Input
-          value={block.caption ?? ''}
-          placeholder={t('Caption (optional)')}
-          onChange={(event) =>
-            props.onChange({ ...block, caption: event.target.value })
-          }
-        />
-      </div>
-    )
-  }
-  if (block.type === 'endpoint') {
-    return (
-      <div className='grid gap-2 sm:grid-cols-[6rem_minmax(0,1fr)_minmax(0,1.4fr)]'>
-        <select
-          value={block.method}
-          onChange={(event) =>
-            props.onChange({
-              ...block,
-              method: event.target.value as 'GET' | 'POST',
-            })
-          }
-          className='bg-background w-full rounded-md border px-3 py-2 text-sm'
-        >
-          <option value='GET'>GET</option>
-          <option value='POST'>POST</option>
-        </select>
-        <Input
-          value={block.path}
-          placeholder='/v1/...'
-          onChange={(event) =>
-            props.onChange({ ...block, path: event.target.value })
-          }
-        />
-        <Input
-          value={block.description}
-          placeholder={t('Description')}
-          onChange={(event) =>
-            props.onChange({ ...block, description: event.target.value })
-          }
-        />
-      </div>
-    )
-  }
-  if (block.type === 'table') {
-    return (
-      <div className='space-y-2'>
-        <label className='block space-y-1'>
-          <span className='text-muted-foreground text-xs'>
-            {t('Columns (one per line)')}
-          </span>
-          <Textarea
-            value={block.columns.join('\n')}
-            onChange={(event) =>
-              props.onChange({
-                ...block,
-                columns: event.target.value.split('\n'),
-              })
-            }
-            className='min-h-16 font-mono text-xs'
-          />
-        </label>
-        <label className='block space-y-1'>
-          <span className='text-muted-foreground text-xs'>
-            {t('Rows (one row per line, cells separated by |)')}
-          </span>
-          <Textarea
-            value={block.rows.map((row) => row.join(' | ')).join('\n')}
-            onChange={(event) =>
-              props.onChange({
-                ...block,
-                rows: event.target.value
-                  .split('\n')
-                  .map((line) => line.split('|').map((cell) => cell.trim())),
-              })
-            }
-            className='min-h-32 font-mono text-xs'
-          />
-        </label>
-      </div>
-    )
-  }
-  if (block.type === 'steps') {
-    return (
-      <div className='space-y-3'>
-        {block.items.map((item, index) => (
-          <div key={index} className='space-y-2 rounded-lg border p-3'>
-            <div className='flex items-center gap-2'>
-              <span className='text-muted-foreground text-xs'>{index + 1}</span>
-              <Input
-                value={item.title}
-                placeholder={t('Step title')}
-                onChange={(event) => {
-                  const items = [...block.items]
-                  items[index] = { ...item, title: event.target.value }
-                  props.onChange({ ...block, items })
-                }}
-                className='flex-1'
-              />
-              <Button
-                size='icon-sm'
-                variant='ghost'
-                aria-label={t('Remove item')}
-                onClick={() =>
-                  props.onChange({
-                    ...block,
-                    items: block.items.filter(
-                      (_, itemIndex) => itemIndex !== index
-                    ),
-                  })
-                }
-              >
-                <Trash2 className='text-destructive size-4' />
-              </Button>
-            </div>
-            <Textarea
-              value={item.content}
-              placeholder={t('Step content (Markdown supported)')}
-              onChange={(event) => {
-                const items = [...block.items]
-                items[index] = { ...item, content: event.target.value }
-                props.onChange({ ...block, items })
-              }}
-              className='min-h-20 font-mono text-xs'
-            />
-          </div>
-        ))}
-        <Button
-          size='sm'
-          variant='outline'
-          onClick={() =>
-            props.onChange({
-              ...block,
-              items: [...block.items, { title: '', content: '' }],
-            })
-          }
-        >
-          <Plus className='mr-1 size-3.5' />
-          {t('Add step')}
-        </Button>
-      </div>
-    )
-  }
-  if (block.type === 'copy') {
-    return (
-      <PairEditor
-        items={block.items}
-        labels={[t('Label'), t('Value ({{SITE}} = current host)')]}
-        onChange={(items) => props.onChange({ ...block, items })}
-      />
-    )
-  }
-  if (block.type === 'callout') {
-    return (
-      <div className='space-y-2'>
-        <div className='grid gap-2 sm:grid-cols-2'>
-          <Input
-            value={block.code ?? ''}
-            placeholder={t('Badge (e.g. 401, optional)')}
-            onChange={(event) =>
-              props.onChange({ ...block, code: event.target.value })
-            }
-          />
-          <Input
-            value={block.title}
-            placeholder={t('Title')}
-            onChange={(event) =>
-              props.onChange({ ...block, title: event.target.value })
-            }
-          />
-        </div>
-        <Textarea
-          value={block.text}
-          onChange={(event) =>
-            props.onChange({ ...block, text: event.target.value })
-          }
-          className='min-h-20'
-        />
-      </div>
-    )
-  }
-  if (block.type === 'card') {
-    return (
-      <div className='space-y-2'>
-        <div className='grid gap-2 sm:grid-cols-3'>
-          <Input
-            value={block.title}
-            placeholder={t('Title')}
-            onChange={(event) =>
-              props.onChange({ ...block, title: event.target.value })
-            }
-          />
-          <Input
-            value={block.subtitle ?? ''}
-            placeholder={t('Subtitle (optional)')}
-            onChange={(event) =>
-              props.onChange({ ...block, subtitle: event.target.value })
-            }
-          />
-          <Input
-            value={block.badge ?? ''}
-            placeholder={t('Badge (optional)')}
-            onChange={(event) =>
-              props.onChange({ ...block, badge: event.target.value })
-            }
-          />
-        </div>
-        <Textarea
-          value={block.text ?? ''}
-          placeholder={t('Card text (Markdown supported)')}
-          onChange={(event) =>
-            props.onChange({ ...block, text: event.target.value })
-          }
-          className='min-h-16'
-        />
-        {block.rows && block.rows.length > 0 && (
-          <div className='space-y-1'>
-            <span className='text-muted-foreground text-xs'>
-              {t('Key-value rows')}
-            </span>
-            <PairEditor
-              items={block.rows}
-              labels={[t('Label'), t('Value')]}
-              onChange={(items) => props.onChange({ ...block, rows: items })}
-            />
-          </div>
-        )}
-        {block.copies && block.copies.length > 0 && (
-          <div className='space-y-1'>
-            <span className='text-muted-foreground text-xs'>
-              {t('Copyable values')}
-            </span>
-            <PairEditor
-              items={block.copies}
-              labels={[t('Label'), t('Value ({{SITE}} = current host)')]}
-              onChange={(items) => props.onChange({ ...block, copies: items })}
-            />
-          </div>
-        )}
-        <div className='grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]'>
-          <Input
-            value={block.link?.href ?? ''}
-            placeholder={t('Link URL (optional)')}
-            onChange={(event) =>
-              props.onChange({
-                ...block,
-                link: {
-                  href: event.target.value,
-                  label: block.link?.label ?? '',
-                  external: block.link?.external ?? true,
-                },
-              })
-            }
-          />
-          <Input
-            value={block.link?.label ?? ''}
-            placeholder={t('Link label (optional)')}
-            onChange={(event) =>
-              props.onChange({
-                ...block,
-                link: {
-                  href: block.link?.href ?? '',
-                  label: event.target.value,
-                  external: block.link?.external ?? true,
-                },
-              })
-            }
-          />
-          <label className='text-muted-foreground flex items-center gap-2 text-sm'>
-            <input
-              type='checkbox'
-              checked={block.mono ?? false}
-              onChange={(event) =>
-                props.onChange({ ...block, mono: event.target.checked })
-              }
-            />
-            {t('Monospace title')}
-          </label>
-        </div>
-      </div>
-    )
-  }
-  if (block.type === 'downloads') {
-    return (
-      <div className='space-y-2'>
-        <Input
-          value={block.title}
-          placeholder={t('Downloads title')}
-          onChange={(event) =>
-            props.onChange({ ...block, title: event.target.value })
-          }
-        />
-        <Input
-          value={block.description ?? ''}
-          placeholder={t('Description')}
-          onChange={(event) =>
-            props.onChange({ ...block, description: event.target.value })
-          }
-        />
-        <Input
-          value={block.href ?? ''}
-          placeholder='https://... releases URL'
-          onChange={(event) =>
-            props.onChange({ ...block, href: event.target.value })
-          }
-        />
-        {block.items.map((item, index) => (
-          <div key={index} className='flex items-center gap-2'>
-            <Input
-              value={item.name}
-              placeholder='file-name.exe'
-              onChange={(event) => {
-                const items = [...block.items]
-                items[index] = { ...item, name: event.target.value }
-                props.onChange({ ...block, items })
-              }}
-              className='flex-1'
-            />
-            <Input
-              value={item.desc}
-              placeholder={t('File description')}
-              onChange={(event) => {
-                const items = [...block.items]
-                items[index] = { ...item, desc: event.target.value }
-                props.onChange({ ...block, items })
-              }}
-              className='flex-1'
-            />
-            <Button
-              size='icon-sm'
-              variant='ghost'
-              aria-label={t('Remove item')}
-              onClick={() =>
-                props.onChange({
-                  ...block,
-                  items: block.items.filter(
-                    (_, itemIndex) => itemIndex !== index
-                  ),
-                })
-              }
-            >
-              <Trash2 className='text-destructive size-4' />
-            </Button>
-          </div>
-        ))}
-        <div className='flex gap-2'>
-          <Button
-            size='sm'
-            variant='outline'
-            onClick={() =>
-              props.onChange({
-                ...block,
-                items: [...block.items, { name: '', desc: '' }],
-              })
-            }
-          >
-            <Plus className='mr-1 size-3.5' />
-            {t('Add file')}
-          </Button>
-        </div>
-        <Input
-          value={block.note ?? ''}
-          placeholder={t('Footnote (optional)')}
-          onChange={(event) =>
-            props.onChange({ ...block, note: event.target.value })
-          }
-        />
-      </div>
-    )
-  }
-  return null
-}
-
 export function DocsSection(props: DocsSectionProps) {
   const { t } = useTranslation()
   const updateOption = useUpdateOption()
@@ -799,7 +271,6 @@ export function DocsSection(props: DocsSectionProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [preview, setPreview] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
-  const [newBlockType, setNewBlockType] = useState<DocBlock['type']>('markdown')
 
   useEffect(() => {
     setDocument(parseStoredDocument(props.data))
@@ -835,43 +306,6 @@ export function DocsSection(props: DocsSectionProps) {
       ),
     }))
     markChanged()
-  }
-
-  const patchBlocks = (sectionId: string, blocks: DocBlock[]) => {
-    patchSection(sectionId, { blocks })
-  }
-
-  const patchBlock = (sectionId: string, index: number, block: DocBlock) => {
-    const section = document.sections.find((item) => item.id === sectionId)
-    if (!section) return
-    const blocks = [...section.blocks]
-    blocks[index] = block
-    patchBlocks(sectionId, blocks)
-  }
-
-  const moveBlock = (sectionId: string, index: number, delta: number) => {
-    const section = document.sections.find((item) => item.id === sectionId)
-    if (!section) return
-    const target = index + delta
-    if (target < 0 || target >= section.blocks.length) return
-    const blocks = [...section.blocks]
-    ;[blocks[index], blocks[target]] = [blocks[target], blocks[index]]
-    patchBlocks(sectionId, blocks)
-  }
-
-  const removeBlock = (sectionId: string, index: number) => {
-    const section = document.sections.find((item) => item.id === sectionId)
-    if (!section) return
-    patchBlocks(
-      sectionId,
-      section.blocks.filter((_, blockIndex) => blockIndex !== index)
-    )
-  }
-
-  const addBlock = (sectionId: string) => {
-    const section = document.sections.find((item) => item.id === sectionId)
-    if (!section) return
-    patchBlocks(sectionId, [...section.blocks, createEmptyBlock(newBlockType)])
   }
 
   const addSection = (categoryId: string) => {
@@ -989,11 +423,26 @@ export function DocsSection(props: DocsSectionProps) {
             )}
           </p>
           <div className='flex gap-2'>
+            <Button
+              size='sm'
+              variant='outline'
+              onClick={() =>
+                window.open('/docs', '_blank', 'noopener,noreferrer')
+              }
+            >
+              <Eye className='mr-2 size-4' />
+              {t('Open full public docs')}
+            </Button>
             <Button size='sm' variant='outline' onClick={addCategory}>
               <FolderPlus className='mr-2 size-4' />
               {t('Add group')}
             </Button>
-            <Button size='sm' variant='outline' onClick={saveAll} disabled={!hasChanges || updateOption.isPending}>
+            <Button
+              size='sm'
+              variant='outline'
+              onClick={saveAll}
+              disabled={!hasChanges || updateOption.isPending}
+            >
               <Save className='mr-2 size-4' />
               {updateOption.isPending ? t('Saving...') : t('Save Settings')}
             </Button>
@@ -1262,101 +711,15 @@ export function DocsSection(props: DocsSectionProps) {
                       </div>
                     </div>
 
-                    <div className='space-y-3'>
-                      <div className='flex items-center justify-between'>
-                        <span className='text-sm font-medium'>
-                          {t('Content blocks')}
-                        </span>
-                        <div className='flex gap-2'>
-                          <select
-                            value={newBlockType}
-                            onChange={(event) =>
-                              setNewBlockType(
-                                event.target.value as DocBlock['type']
-                              )
-                            }
-                            className='bg-background rounded-md border px-2 py-1.5 text-sm'
-                          >
-                            {Object.entries(BLOCK_TYPE_LABELS).map(
-                              ([type, label]) => (
-                                <option key={type} value={type}>
-                                  {t(label)}
-                                </option>
-                              )
-                            )}
-                          </select>
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            onClick={() => addBlock(selectedSection.id)}
-                          >
-                            <Plus className='mr-1 size-3.5' />
-                            {t('Add block')}
-                          </Button>
-                        </div>
-                      </div>
-                      {selectedSection.blocks.map((block, index) => (
-                        <div
-                          key={`${block.type}-${index}`}
-                          className='space-y-2 rounded-lg border p-3'
-                        >
-                          <div className='flex items-center justify-between gap-2'>
-                            <span className='text-muted-foreground font-mono text-xs'>
-                              #{index + 1} {t(BLOCK_TYPE_LABELS[block.type])}
-                            </span>
-                            <div className='flex items-center gap-1'>
-                              <Button
-                                size='icon-sm'
-                                variant='ghost'
-                                aria-label={t('Move up')}
-                                disabled={index === 0}
-                                onClick={() =>
-                                  moveBlock(selectedSection.id, index, -1)
-                                }
-                              >
-                                <ArrowUp className='size-4' />
-                              </Button>
-                              <Button
-                                size='icon-sm'
-                                variant='ghost'
-                                aria-label={t('Move down')}
-                                disabled={
-                                  index === selectedSection.blocks.length - 1
-                                }
-                                onClick={() =>
-                                  moveBlock(selectedSection.id, index, 1)
-                                }
-                              >
-                                <ArrowDown className='size-4' />
-                              </Button>
-                              <Button
-                                size='icon-sm'
-                                variant='ghost'
-                                aria-label={t('Remove block')}
-                                onClick={() =>
-                                  removeBlock(selectedSection.id, index)
-                                }
-                              >
-                                <Trash2 className='text-destructive size-4' />
-                              </Button>
-                            </div>
-                          </div>
-                          <BlockEditor
-                            block={block}
-                            onChange={(next) =>
-                              patchBlock(selectedSection.id, index, next)
-                            }
-                          />
-                        </div>
-                      ))}
-                      {selectedSection.blocks.length === 0 && (
-                        <p className='text-muted-foreground rounded-lg border border-dashed p-4 text-center text-xs'>
-                          {t(
-                            'No content blocks. Use "Reset to built-in" to load the default content.'
-                          )}
-                        </p>
+                    <DocBlockListEditor
+                      blocks={selectedSection.blocks}
+                      onChange={(blocks) =>
+                        patchSection(selectedSection.id, { blocks })
+                      }
+                      emptyHint={t(
+                        'No content blocks. Use "Reset to built-in" to load the default content.'
                       )}
-                    </div>
+                    />
 
                     <div className='flex justify-between gap-2 border-t pt-4'>
                       <Button
@@ -1366,9 +729,16 @@ export function DocsSection(props: DocsSectionProps) {
                         <Trash2 className='mr-2 size-4' />
                         {t('Delete section')}
                       </Button>
-                      <Button size='sm' variant='outline' onClick={saveAll} disabled={!hasChanges || updateOption.isPending}>
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        onClick={saveAll}
+                        disabled={!hasChanges || updateOption.isPending}
+                      >
                         <Save className='mr-2 size-4' />
-                        {updateOption.isPending ? t('Saving...') : t('Save Settings')}
+                        {updateOption.isPending
+                          ? t('Saving...')
+                          : t('Save Settings')}
                       </Button>
                     </div>
                   </div>

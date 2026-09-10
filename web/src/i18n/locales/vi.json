@@ -443,6 +443,7 @@
     "App": "Ứng dụng",
     "App rankings shown here are simulated for preview purposes and will be replaced with live usage data once the backend integration is complete.": "Bảng xếp hạng ứng dụng hiển thị tại đây là dữ liệu mô phỏng để xem trước và sẽ được thay thế bằng dữ liệu thực sau khi tích hợp backend.",
     "Append": "Thêm vào cuối",
+    "Append /v1": "Thêm /v1",
     "Append mode: New keys will be added to the end of the existing key list": "Chế độ nối: Các khóa mới sẽ được thêm vào cuối danh sách khóa hiện có",
     "Append Template": "Thêm mẫu",
     "Append to channel": "Nối vào kênh",
@@ -3329,6 +3330,7 @@
     "One API": "Một API",
     "One API key per project": "Một khóa API cho mỗi dự án",
     "One API, your choice of models.": "Một API, tự do chọn model.",
+    "One base URL for every model.": "Một URL cơ sở cho mọi mô hình.",
     "One domain per line": "Một tên miền mỗi dòng",
     "One domain per line (only used when domain restriction is enabled)": "Mỗi dòng một tên miền (chỉ được sử dụng khi hạn chế tên miền được bật)",
     "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.": "Một endpoint cho model chat, ảnh và video. Tạo key, chọn model và triển khai tích hợp.",
@@ -3394,6 +3396,7 @@
     "OpenAI Responses to Gemini Generate Content": "OpenAI Responses sang Gemini Generate Content",
     "OpenAI Responses to OpenAI Chat": "OpenAI Responses sang OpenAI Chat",
     "OpenAI-compatible base URL": "Base URL tương thích OpenAI",
+    "OpenAI-compatible clients append /v1. Anthropic clients use the root domain.": "Máy khách tương thích OpenAI thêm /v1; máy khách Anthropic dùng tên miền gốc.",
     "OpenAI-compatible request": "Yêu cầu tương thích với OpenAI",
     "OpenAI-compatible SDKs and CLI tools work with minimal changes.": "SDK và công cụ CLI tương thích OpenAI hoạt động với rất ít thay đổi.",
     "OpenAI, Anthropic, etc.": "OpenAI, Anthropic, v.v.",
@@ -5320,6 +5323,7 @@
     "Use the full-width table to scan prices, then select a row to edit it here.": "Duyệt giá trong bảng, rồi chọn một hàng để chỉnh sửa tại đây.",
     "Use the group set on the token. If the token has no group, use the user group. The auto group tries the auto assignment order from top to bottom.": "Dùng nhóm đặt trên token. Nếu token không có nhóm, dùng nhóm người dùng. Nhóm auto thử theo thứ tự gán tự động từ trên xuống dưới.",
     "Use the pricing group table to manage the ratio and whether the group appears in the token creation dropdown.": "Dùng bảng nhóm định giá để quản lý tỷ lệ và việc nhóm có xuất hiện trong danh sách tạo token hay không.",
+    "Use the root domain": "Dùng tên miền gốc",
     "Use the same OpenAI-compatible format you already know. Keys and usage are managed from the console.": "Dùng định dạng tương thích OpenAI quen thuộc; quản lý key và usage trong console.",
     "Use the URL below as the base endpoint. Every request must include a bearer token.": "Dùng URL dưới đây làm endpoint cơ sở; mọi request phải có bearer token.",
     "Use this callback URL pattern when registering a custom OAuth provider.": "Dùng mẫu URL callback này khi đăng ký nhà cung cấp OAuth tùy chỉnh.",
@@ -5686,6 +5690,15 @@
     "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "API tương thích chuẩn OpenAI, các SDK và công cụ CLI hiện có (bao gồm Claude Code, Codex, Gemini CLI) kết nối không cần sửa đổi.",
     "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "Yêu cầu đã được định tuyến qua cổng gateway thống nhất tới tuyến mô hình healthy nhất, đang trả về kết quả dạng streaming...",
     "Unified access layer, full model ecosystem.": "Tầng truy cập thống nhất, hệ sinh thái mô hình đầy đủ.",
-    "Production-grade reliability.": "Độ tin cậy cấp sản xuất."
+    "Production-grade reliability.": "Độ tin cậy cấp sản xuất.",
+    "About page content": "Nội dung trang giới thiệu",
+    "About page settings saved": "Đã lưu cài đặt trang giới thiệu",
+    "Failed to save about page settings": "Lưu cài đặt trang giới thiệu thất bại",
+    "Clear and use built-in page": "Xóa và dùng trang mặc định",
+    "Open public page": "Mở trang công khai",
+    "Hide preview": "Ẩn xem trước",
+    "QR code is temporarily unavailable": "Mã QR tạm thời không khả dụng",
+    "Design the About page with the same blocks as the documentation. Use QR code blocks for WeChat or QQ contact codes, and contact cards for copyable support handles.": "Thiết kế trang giới thiệu bằng cùng các khối như trang tài liệu. Dùng khối mã QR cho WeChat hoặc QQ và thẻ liên hệ cho các kênh hỗ trợ có thể sao chép.",
+    "No content blocks yet. Add cards, contact info, or WeChat / QQ QR codes.": "Chưa có khối nội dung. Hãy thêm thẻ, thông tin liên hệ hoặc mã QR WeChat / QQ."
   }
 }

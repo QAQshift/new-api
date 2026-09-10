@@ -191,6 +191,41 @@ func validateDocBlocks(blocks []map[string]any) error {
 	return nil
 }
 
+type managedAboutDocument struct {
+	Version int              `json:"version"`
+	Eyebrow string           `json:"eyebrow"`
+	Title   string           `json:"title"`
+	Summary string           `json:"summary"`
+	Blocks  []map[string]any `json:"blocks"`
+}
+
+// validateAboutDocument accepts an empty value, which clears the structured
+// About page and lets the frontend fall back to the legacy About content or
+// the built-in page.
+func validateAboutDocument(value string) error {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" || trimmed == "null" {
+		return nil
+	}
+	var document managedAboutDocument
+	if err := common.UnmarshalJsonStr(trimmed, &document); err != nil {
+		return fmt.Errorf("关于页配置必须是有效的 JSON 对象")
+	}
+	if len([]rune(document.Eyebrow)) > 100 {
+		return fmt.Errorf("关于页标签不能超过 100 个字符")
+	}
+	if len([]rune(document.Title)) > maxDocTitleLength {
+		return fmt.Errorf("关于页标题不能超过 %d 个字符", maxDocTitleLength)
+	}
+	if len([]rune(document.Summary)) > maxDocSummaryLength {
+		return fmt.Errorf("关于页摘要不能超过 %d 个字符", maxDocSummaryLength)
+	}
+	if len(document.Blocks) > 100 {
+		return fmt.Errorf("关于页不能超过 100 个内容块")
+	}
+	return validateDocBlocks(document.Blocks)
+}
+
 func validateManagedDocs(value string) error {
 	if strings.TrimSpace(value) == "" || strings.TrimSpace(value) == "null" {
 		return fmt.Errorf("文档配置必须是有效的 JSON 数组")
@@ -602,6 +637,15 @@ func UpdateOption(c *gin.Context) {
 		}
 	case "console_setting.docs":
 		err = validateManagedDocs(option.Value.(string))
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+	case "console_setting.about_document":
+		err = validateAboutDocument(option.Value.(string))
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"success": false,

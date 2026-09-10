@@ -67,6 +67,12 @@ export function useUpdateOption() {
           publishDocsChanged()
         }
 
+        // The About page renders the structured document when it is set.
+        if (variables.key === 'console_setting.about_document') {
+          queryClient.invalidateQueries({ queryKey: ['about-document'] })
+          publishDocsChanged()
+        }
+
         // If updating frontend-display-related config, also refresh status
         if (STATUS_RELATED_KEYS.has(variables.key)) {
           queryClient.invalidateQueries({ queryKey: ['status'] })

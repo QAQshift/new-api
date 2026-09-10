@@ -443,6 +443,7 @@
     "App": "应用",
     "App rankings shown here are simulated for preview purposes and will be replaced with live usage data once the backend integration is complete.": "此处展示的应用排行为预览模拟数据，待后端对接完成后将替换为真实数据。",
     "Append": "追加",
+    "Append /v1": "需要 /v1",
     "Append mode: New keys will be added to the end of the existing key list": "追加模式：新键将添加到现有键列表的末尾",
     "Append Template": "追加模板",
     "Append to channel": "追加到渠道",
@@ -3329,6 +3330,7 @@
     "One API": "One API",
     "One API key per project": "每个项目一个 API Key",
     "One API, your choice of models.": "一个 API，自由选择模型。",
+    "One base URL for every model.": "一个地址，接入所有模型。",
     "One domain per line": "每行一个域名",
     "One domain per line (only used when domain restriction is enabled)": "每行一个域名 (仅在启用域名限制时使用)",
     "One endpoint for chat, image, and video models. Create a key, choose a model, and ship your integration.": "一个端点接入聊天、图像和视频模型。创建密钥、选择模型即可完成集成。",
@@ -3394,6 +3396,7 @@
     "OpenAI Responses to Gemini Generate Content": "OpenAI Responses 转 Gemini Generate Content",
     "OpenAI Responses to OpenAI Chat": "OpenAI Responses 到 OpenAI Chat",
     "OpenAI-compatible base URL": "兼容 OpenAI 的基础 URL",
+    "OpenAI-compatible clients append /v1. Anthropic clients use the root domain.": "OpenAI 兼容客户端填写带 /v1 的地址，Anthropic 客户端直接使用根域名。",
     "OpenAI-compatible request": "OpenAI 兼容请求",
     "OpenAI-compatible SDKs and CLI tools work with minimal changes.": "兼容 OpenAI 协议的 SDK 和 CLI 工具，改动极少即可使用。",
     "OpenAI, Anthropic, etc.": "OpenAI、Anthropic 等",
@@ -5320,6 +5323,7 @@
     "Use the full-width table to scan prices, then select a row to edit it here.": "先在表格中快速浏览价格，然后选择一行在这里编辑。",
     "Use the group set on the token. If the token has no group, use the user group. The auto group tries the auto assignment order from top to bottom.": "使用令牌上设置的分组；令牌未设置分组时，使用用户分组。auto 分组会按自动分组顺序从上到下尝试。",
     "Use the pricing group table to manage the ratio and whether the group appears in the token creation dropdown.": "使用定价分组表管理倍率，以及该分组是否出现在创建令牌的下拉框中。",
+    "Use the root domain": "使用根域名",
     "Use the same OpenAI-compatible format you already know. Keys and usage are managed from the console.": "继续使用熟悉的 OpenAI 兼容格式，密钥和用量在控制台管理。",
     "Use the URL below as the base endpoint. Every request must include a bearer token.": "使用以下 URL 作为基础端点，每个请求都必须包含 bearer token。",
     "Use this callback URL pattern when registering a custom OAuth provider.": "注册自定义 OAuth 提供商时使用此回调 URL 格式。",
@@ -5686,6 +5690,15 @@
     "OpenAI-compatible API works with existing SDKs and CLI tools — including Claude Code, Codex, and Gemini CLI — with zero code changes.": "兼容 OpenAI API 规范，现有 SDK 与 CLI 工具（含 Claude Code、Codex、Gemini CLI 等）零改造接入。",
     "Request routed through the unified gateway to the healthiest model route. Streaming the response back.": "请求已通过统一网关路由至最健康的模型线路，正在以流式方式返回结果...",
     "Unified access layer, full model ecosystem.": "统一接入层 · 全模型生态",
-    "Production-grade reliability.": "生产级长期可用"
+    "Production-grade reliability.": "生产级长期可用",
+    "About page content": "关于页内容",
+    "About page settings saved": "关于页设置已保存",
+    "Failed to save about page settings": "关于页设置保存失败",
+    "Clear and use built-in page": "清空并改用内置页面",
+    "Open public page": "打开公共页面",
+    "Hide preview": "隐藏预览",
+    "QR code is temporarily unavailable": "二维码暂时无法加载",
+    "Design the About page with the same blocks as the documentation. Use QR code blocks for WeChat or QQ contact codes, and contact cards for copyable support handles.": "使用与文档页相同的内容块来设计关于页。用二维码块放置微信或 QQ 联系方式，用联系卡片放置可复制的客服账号。",
+    "No content blocks yet. Add cards, contact info, or WeChat / QQ QR codes.": "还没有内容块。可以添加卡片、联系方式，或微信 / QQ 二维码。"
   }
 }
