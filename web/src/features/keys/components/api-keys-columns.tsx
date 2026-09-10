@@ -297,6 +297,9 @@ export function useApiKeysColumns(now: number): ColumnDef<ApiKey>[] {
       id: 'actions',
       header: () => t('Actions'),
       cell: ({ row }) => <DataTableRowActions row={row} />,
+      // Five inline icon buttons plus the overflow menu; pinned, so it needs an
+      // explicit width to avoid clipping the right-most control.
+      size: 190,
       meta: { pinned: 'right' as const },
     },
   ]

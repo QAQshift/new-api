@@ -182,6 +182,21 @@ export function DataTableRowActions<TData>({
     }
   }
 
+  const handleCopyKey = async () => {
+    const realKey = await resolveRealKey(apiKey.id)
+    if (!realKey) return
+    const ok = await copyToClipboard(realKey)
+    if (ok) toast.success(t('Copied'))
+  }
+
+  const handleOpenCcSwitch = async () => {
+    const realKey = await resolveRealKey(apiKey.id)
+    if (!realKey) return
+    setResolvedKey(realKey)
+    setCurrentRow(apiKey)
+    setOpen('cc-switch')
+  }
+
   let statusIcon = <Power className='size-4' />
   if (isTogglingStatus) {
     statusIcon = <Loader2 className='size-4 animate-spin' />
@@ -230,6 +245,38 @@ export function DataTableRowActions<TData>({
           <Edit />
         </TooltipTrigger>
         <TooltipContent>{t('Edit')}</TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              variant='ghost'
+              size='icon-sm'
+              onClick={handleCopyKey}
+              aria-label={t('Copy Key')}
+            />
+          }
+        >
+          <Copy className='size-4' />
+        </TooltipTrigger>
+        <TooltipContent>{t('Copy Key')}</TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              variant='ghost'
+              size='icon-sm'
+              onClick={handleOpenCcSwitch}
+              aria-label={t('CC Switch')}
+            />
+          }
+        >
+          <ArrowRightLeft className='size-4' />
+        </TooltipTrigger>
+        <TooltipContent>{t('CC Switch')}</TooltipContent>
       </Tooltip>
 
       <DataTableRowActionMenu

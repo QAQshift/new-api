@@ -664,6 +664,12 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
  * menus, tables, the sidebar and the branded public panels all share a
  * single optical language. Components need no changes.
  *
+ * `[data-slot='tooltip-content']` is deliberately NOT part of the recipe: the
+ * tooltip is an inverted chip (`bg-foreground text-background`) whose arrow is
+ * painted with the same `--foreground`. Repainting its surface with the glass
+ * tint left the text in `--background` on a near-`--background` fill — white on
+ * white in light mode, black on black in dark mode — with a stray dark arrow.
+ *
  * NOTE: this rule is purely visual — it deliberately does NOT set
  * `position`. Positioning lives in its own rule below so floating layers
  * never inherit `position: relative`.
@@ -680,7 +686,6 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
     [data-slot='hover-card-content'],
     [data-slot='context-menu-content'],
     [data-slot='alert-dialog-content'],
-    [data-slot='tooltip-content'],
     [data-slot='navigation-menu-content'],
     [data-slot='menubar-content'],
     [data-slot='table-container'],
@@ -734,7 +739,6 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
     [data-slot='hover-card-content'],
     [data-slot='context-menu-content'],
     [data-slot='alert-dialog-content'],
-    [data-slot='tooltip-content'],
     [data-slot='navigation-menu-content'],
     [data-slot='menubar-content']
   ) {
@@ -850,7 +854,6 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
       [data-slot='hover-card-content'],
       [data-slot='context-menu-content'],
       [data-slot='alert-dialog-content'],
-      [data-slot='tooltip-content'],
       [data-slot='navigation-menu-content'],
       [data-slot='menubar-content'],
       [data-slot='table-container'],
