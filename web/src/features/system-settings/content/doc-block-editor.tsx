@@ -20,6 +20,7 @@ import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { ImageUrlField } from '@/components/image-url-field'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -165,12 +166,11 @@ function DocBlockEditor(props: {
   if (block.type === 'image') {
     return (
       <div className='space-y-2'>
-        <Input
+        <ImageUrlField
           value={block.src}
-          placeholder='https://... image URL'
-          onChange={(event) =>
-            props.onChange({ ...block, src: event.target.value })
-          }
+          placeholder={t('https://example.com/image.png')}
+          previewClassName='h-20 w-32'
+          onChange={(value) => props.onChange({ ...block, src: value })}
         />
         <Input
           value={block.alt}
@@ -192,12 +192,11 @@ function DocBlockEditor(props: {
   if (block.type === 'qr') {
     return (
       <div className='space-y-2'>
-        <Input
+        <ImageUrlField
           value={block.src}
-          placeholder='https://... QR code image URL'
-          onChange={(event) =>
-            props.onChange({ ...block, src: event.target.value })
-          }
+          placeholder={t('https://example.com/qr-code.png')}
+          previewClassName='size-24'
+          onChange={(value) => props.onChange({ ...block, src: value })}
         />
         <div className='grid gap-2 sm:grid-cols-2'>
           <Input

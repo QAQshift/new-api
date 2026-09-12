@@ -26,6 +26,7 @@ import { toast } from 'sonner'
 import * as z from 'zod'
 
 import { CopyButton } from '@/components/copy-button'
+import { ImageUrlField } from '@/components/image-url-field'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Form,
@@ -1079,16 +1080,12 @@ export function OAuthSection(props: OAuthSectionProps) {
                     <FormItem>
                       <FormLabel>{t('QR Code Image URL')}</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder={t('https://example.com/qr-code.png')}
-                          autoComplete='off'
+                        <ImageUrlField
                           value={field.value ?? ''}
-                          onChange={(event) =>
-                            field.onChange(event.target.value)
-                          }
                           name={field.name}
-                          onBlur={field.onBlur}
-                          ref={field.ref}
+                          placeholder={t('https://example.com/qr-code.png')}
+                          previewClassName='size-24'
+                          onChange={(value) => field.onChange(value)}
                         />
                       </FormControl>
                       <FormMessage />

@@ -33,6 +33,13 @@ func SetApiRouter(router *gin.Engine) {
 		apiRouter.GET("/home_page_content", controller.GetHomePageContent)
 		apiRouter.GET("/docs/content", controller.GetDocsContent)
 		apiRouter.GET("/about/content", controller.GetAboutDocument)
+		assetAdminRoute := apiRouter.Group("/assets/images")
+		assetAdminRoute.Use(middleware.AdminAuth())
+		{
+			assetAdminRoute.GET("", controller.ListAssetImages)
+			assetAdminRoute.POST("", controller.UploadAssetImage)
+			assetAdminRoute.DELETE("/:filename", controller.DeleteAssetImage)
+		}
 		apiRouter.GET("/pricing", middleware.HeaderNavModuleAuth("pricing"), controller.GetPricing)
 		perfMetricsRoute := apiRouter.Group("/perf-metrics")
 		perfMetricsRoute.Use(middleware.HeaderNavModulePublicOrUserAuth("pricing"))

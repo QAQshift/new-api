@@ -7,12 +7,16 @@ import (
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/controller"
 	"github.com/QuantumNous/new-api/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 func SetRouter(router *gin.Engine, assets WebAssets) {
+	// Uploaded images live outside the embedded frontend build and are served
+	// from disk so the links stay stable across deployments.
+	router.GET(common.AssetImageURLPrefix+"/:filename", controller.GetAssetImage)
 	SetApiRouter(router)
 	SetDashboardRouter(router)
 	SetRelayRouter(router)

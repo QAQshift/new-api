@@ -20,6 +20,7 @@ import type { ContentSettings } from '../types'
 import { createSectionRegistry } from '../utils/section-registry'
 import { AboutSection } from './about-section'
 import { AnnouncementsSection } from './announcements-section'
+import { AssetLibrarySection } from './asset-library-section'
 import { ApiInfoSection } from './api-info-section'
 import { ChatSettingsSection } from './chat-settings-section'
 import { DashboardSection } from './dashboard-section'
@@ -98,6 +99,11 @@ const CONTENT_SECTIONS = [
     build: (settings: ContentSettings) => (
       <AboutSection data={settings['console_setting.about_document']} />
     ),
+  },
+  {
+    id: 'assets',
+    titleKey: 'Image library',
+    build: () => <AssetLibrarySection />,
   },
   {
     id: 'uptime-kuma',

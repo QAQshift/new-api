@@ -17,14 +17,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ImagePlus, Upload, X } from 'lucide-react'
-import { useRef, type ChangeEvent } from 'react'
+import { ImagePlus } from 'lucide-react'
 import type { Resolver } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
 import * as z from 'zod'
 
-import { Button } from '@/components/ui/button'
+import { ImageUrlField } from '@/components/image-url-field'
 import {
   Form,
   FormControl,
@@ -36,11 +34,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  IMAGE_UPLOAD_LIMITS,
-  isImageDataUrl,
-  readImageFileAsDataUrl,
-} from '@/lib/image-data-url'
+import { isImageDataUrl } from '@/lib/image-data-url'
 
 import { FormDirtyIndicator } from '../components/form-dirty-indicator'
 import { FormNavigationGuard } from '../components/form-navigation-guard'
@@ -81,7 +75,6 @@ function normalizeValue(value: unknown): string {
 export function SystemInfoSection({ defaultValues }: SystemInfoSectionProps) {
   const { t } = useTranslation()
   const updateOption = useUpdateOption()
-  const logoInputRef = useRef<HTMLInputElement>(null)
 
   const normalizedDefaults: SystemInfoFormValues = {
     SystemName: normalizeValue(defaultValues.SystemName),
@@ -138,30 +131,6 @@ export function SystemInfoSection({ defaultValues }: SystemInfoSectionProps) {
         }
       },
     })
-
-  const handleLogoFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
-
-    try {
-      const dataUrl = await readImageFileAsDataUrl(
-        file,
-        IMAGE_UPLOAD_LIMITS.logo
-      )
-      form.setValue('Logo', dataUrl, {
-        shouldDirty: true,
-        shouldValidate: true,
-      })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : ''
-      toast.error(
-        message === 'Image file is too large'
-          ? t('Logo image must be 512 KB or smaller')
-          : t('Please choose a PNG, JPG, WebP, or GIF image')
-      )
-    }
-  }
 
   return (
     <>
@@ -223,48 +192,25 @@ export function SystemInfoSection({ defaultValues }: SystemInfoSectionProps) {
                       <ImagePlus className='size-4' /> {t('Logo')}
                     </FormLabel>
                     <FormControl>
-                      <div className='flex flex-wrap items-center gap-3'>
-                        <div className='bg-muted/50 flex size-14 items-center justify-center overflow-hidden rounded-lg border'>
-                          {field.value ? (
-                            <img
-                              src={field.value}
-                              alt={t('Logo')}
-                              className='size-full object-contain'
-                            />
-                          ) : (
-                            <ImagePlus className='text-muted-foreground size-5' />
-                          )}
-                        </div>
-                        <input
-                          ref={logoInputRef}
-                          type='file'
-                          accept='image/png,image/jpeg,image/webp,image/gif'
-                          className='hidden'
-                          onChange={handleLogoFileChange}
-                        />
-                        <Button
-                          type='button'
-                          variant='outline'
-                          onClick={() => logoInputRef.current?.click()}
-                        >
-                          <Upload className='mr-2 size-4' /> {t('Upload')}
-                        </Button>
-                        {field.value ? (
-                          <Button
-                            type='button'
-                            variant='ghost'
-                            onClick={() =>
-                              form.setValue('Logo', '', { shouldDirty: true })
-                            }
-                          >
-                            <X className='mr-2 size-4' /> {t('Clear')}
-                          </Button>
-                        ) : null}
-                      </div>
+                      <ImageUrlField
+                        value={field.value ?? ''}
+                        name={field.name}
+                        placeholder={t('Paste an image link from the image library')}
+                        previewClassName='size-14'
+                        onClear={() =>
+                          form.setValue('Logo', '', { shouldDirty: true })
+                        }
+                        onChange={(value) =>
+                          form.setValue('Logo', value.trim(), {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          })
+                        }
+                      />
                     </FormControl>
                     <FormDescription>
                       {t(
-                        'Upload a PNG, JPG, WebP, or GIF logo image. Maximum size: 512 KB.'
+                        'Paste a link from the image library. Upload images there first, then copy the link.'
                       )}
                     </FormDescription>
                     <FormMessage />
