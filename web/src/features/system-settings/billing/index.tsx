@@ -24,6 +24,16 @@ import {
   getBillingSectionMeta,
 } from './section-registry.tsx'
 
+// Mirrors the backend lottery defaults so the prize editor stays usable even
+// when the option row has not been persisted yet.
+const DEFAULT_LOTTERY_PRIZES =
+  '[{"quota":10000,"weight":70},{"quota":50000,"weight":25},{"quota":200000,"weight":5}]'
+
+// Mirrors the backend affiliate defaults (bblabu-style ladder): first 3 top-ups
+// pay 5%, everything after that pays 3%. rate_bp is a basis-point value.
+const DEFAULT_AFFILIATE_TIERS =
+  '[{"times":3,"rate_bp":500},{"times":0,"rate_bp":300}]'
+
 const defaultBillingSettings: BillingSettings = {
   QuotaForNewUser: 0,
   PreConsumedQuota: 0,
@@ -107,6 +117,23 @@ const defaultBillingSettings: BillingSettings = {
   'checkin_setting.enabled': false,
   'checkin_setting.min_quota': 1000,
   'checkin_setting.max_quota': 10000,
+  'checkin_setting.min_daily_calls': 3,
+  'lottery_setting.enabled': false,
+  'lottery_setting.mode': 'segment',
+  'lottery_setting.segment_consume_quota': 500000,
+  'lottery_setting.segment_prizes': DEFAULT_LOTTERY_PRIZES,
+  'lottery_setting.first_threshold_quota': 500000,
+  'lottery_setting.threshold_step_quota': 500000,
+  'lottery_setting.tier_prizes': DEFAULT_LOTTERY_PRIZES,
+  'lottery_setting.tier_prize_step': 10000,
+  'lottery_setting.tier_prize_max': 5000000,
+  'welfare_setting.activities_enabled': false,
+  'affiliate_setting.enabled': false,
+  'affiliate_setting.tiers': DEFAULT_AFFILIATE_TIERS,
+  'affiliate_setting.cooldown_days': 7,
+  'affiliate_setting.max_rebate_per_invitee': 0,
+  'payment_setting.disabled_methods': '[]',
+  'payment_setting.disabled_notice': '',
 }
 
 export function BillingSettings() {

@@ -253,7 +253,7 @@ func InitLogDB() (err error) {
 	return err
 }
 
-var userQuotaColumns = []string{"quota", "used_quota", "aff_quota", "aff_history"}
+var userQuotaColumns = []string{"quota", "used_quota", "aff_quota", "aff_pending", "aff_history"}
 
 // ensureUserQuotaColumns rejects a legacy 32-bit wallet schema before any
 // migrations run. The 64-bit-only build intentionally does not auto-upgrade
@@ -335,6 +335,10 @@ func migrateDB() error {
 		&TwoFA{},
 		&TwoFABackupCode{},
 		&Checkin{},
+		&LotteryDraw{},
+		&AffiliateRebate{},
+		&WelfareActivity{},
+		&WelfareActivityEntry{},
 		&SubscriptionOrder{},
 		&UserSubscription{},
 		&SubscriptionPreConsumeRecord{},
@@ -398,6 +402,10 @@ func migrateDBFast() error {
 		{&TwoFA{}, "TwoFA"},
 		{&TwoFABackupCode{}, "TwoFABackupCode"},
 		{&Checkin{}, "Checkin"},
+		{&LotteryDraw{}, "LotteryDraw"},
+		{&AffiliateRebate{}, "AffiliateRebate"},
+		{&WelfareActivity{}, "WelfareActivity"},
+		{&WelfareActivityEntry{}, "WelfareActivityEntry"},
 		{&SubscriptionOrder{}, "SubscriptionOrder"},
 		{&UserSubscription{}, "UserSubscription"},
 		{&SubscriptionPreConsumeRecord{}, "SubscriptionPreConsumeRecord"},

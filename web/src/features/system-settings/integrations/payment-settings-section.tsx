@@ -46,6 +46,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 
 import { confirmPaymentCompliance } from '../api'
@@ -142,6 +143,16 @@ const paymentSchema = z.object({
     }
   }),
   EnableCustomTopup: z.boolean(),
+  DisabledMethods: z.string().superRefine((value, ctx) => {
+    const error = getJsonError(value, (parsed) => Array.isArray(parsed))
+    if (error) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: error,
+      })
+    }
+  }),
+  DisabledNotice: z.string(),
   StripeApiSecret: z.string(),
   StripeWebhookSecret: z.string(),
   StripePriceId: z.string(),
@@ -356,6 +367,7 @@ export function PaymentSettingsSection({
       PayMethods: formatJsonForEditor(initialFormValues.PayMethods),
       AmountOptions: formatJsonForEditor(initialFormValues.AmountOptions),
       AmountDiscount: formatJsonForEditor(initialFormValues.AmountDiscount),
+      DisabledMethods: formatJsonForEditor(initialFormValues.DisabledMethods),
       CreemProducts: formatJsonForEditor(initialFormValues.CreemProducts),
     },
   })
@@ -413,6 +425,7 @@ export function PaymentSettingsSection({
       PayMethods: formatJsonForEditor(parsedDefaults.PayMethods),
       AmountOptions: formatJsonForEditor(parsedDefaults.AmountOptions),
       AmountDiscount: formatJsonForEditor(parsedDefaults.AmountDiscount),
+      DisabledMethods: formatJsonForEditor(parsedDefaults.DisabledMethods),
       CreemProducts: formatJsonForEditor(parsedDefaults.CreemProducts),
     })
   }, [defaultsSignature, form])
@@ -429,6 +442,8 @@ export function PaymentSettingsSection({
       AmountOptions: values.AmountOptions.trim(),
       AmountDiscount: values.AmountDiscount.trim(),
       EnableCustomTopup: values.EnableCustomTopup,
+      DisabledMethods: values.DisabledMethods.trim(),
+      DisabledNotice: values.DisabledNotice.trim(),
       StripeApiSecret: values.StripeApiSecret.trim(),
       StripeWebhookSecret: values.StripeWebhookSecret.trim(),
       StripePriceId: values.StripePriceId.trim(),
@@ -474,6 +489,8 @@ export function PaymentSettingsSection({
       AmountOptions: initialRef.current.AmountOptions.trim(),
       AmountDiscount: initialRef.current.AmountDiscount.trim(),
       EnableCustomTopup: initialRef.current.EnableCustomTopup,
+      DisabledMethods: initialRef.current.DisabledMethods.trim(),
+      DisabledNotice: initialRef.current.DisabledNotice.trim(),
       StripeApiSecret: initialRef.current.StripeApiSecret.trim(),
       StripeWebhookSecret: initialRef.current.StripeWebhookSecret.trim(),
       StripePriceId: initialRef.current.StripePriceId.trim(),
@@ -569,6 +586,23 @@ export function PaymentSettingsSection({
       updates.push({
         key: 'payment_setting.enable_custom_topup',
         value: sanitized.EnableCustomTopup,
+      })
+    }
+
+    if (
+      normalizeJsonForComparison(sanitized.DisabledMethods) !==
+      normalizeJsonForComparison(initial.DisabledMethods)
+    ) {
+      updates.push({
+        key: 'payment_setting.disabled_methods',
+        value: sanitized.DisabledMethods,
+      })
+    }
+
+    if (sanitized.DisabledNotice !== initial.DisabledNotice) {
+      updates.push({
+        key: 'payment_setting.disabled_notice',
+        value: sanitized.DisabledNotice,
       })
     }
 
@@ -1279,6 +1313,57 @@ export function PaymentSettingsSection({
                         </FormControl>
                         <FormDescription>
                           {t('Leave blank unless rotating the secret')}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='DisabledMethods'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {t('Temporarily disabled payment methods')}
+                        </FormLabel>
+                        <FormControl>
+                          <JsonCodeEditor
+                            value={field.value}
+                            onChange={field.onChange}
+                            name={field.name}
+                            onBlur={field.onBlur}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          {t(
+                            'JSON array of payment method types to hide, for example ["alipay","wxpay"]. Disabled methods disappear from the top-up page and their payment requests are rejected.'
+                          )}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='DisabledNotice'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('Disabled methods notice')}</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            rows={3}
+                            placeholder={t(
+                              'Shown on the top-up page while methods are disabled, for example: Alipay and WeChat Pay are under maintenance, please use another method.'
+                            )}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          {t(
+                            'Explain why these methods are unavailable. Leave blank to show nothing.'
+                          )}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

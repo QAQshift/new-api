@@ -96,7 +96,13 @@ func GetTopUpInfo(c *gin.Context) {
 		}
 	}
 
+	// 管理员临时停用的支付方式：不再下发给前端，改为在充值页展示停用公告
+	payMethods = lo.Filter(payMethods, func(method map[string]string, _ int) bool {
+		return !operation_setting.IsPayMethodDisabled(method["type"])
+	})
+
 	data := gin.H{
+		"disabled_payment_notice":          operation_setting.GetDisabledPaymentNotice(),
 		"enable_online_topup":              isEpayTopUpEnabled(),
 		"enable_stripe_topup":              isStripeTopUpEnabled(),
 		"enable_creem_topup":               isCreemTopUpEnabled(),
@@ -297,6 +303,10 @@ func RequestEpay(c *gin.Context) {
 
 	if !operation_setting.ContainsPayMethod(req.PaymentMethod) {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "支付方式不存在"})
+		return
+	}
+	if operation_setting.IsPayMethodDisabled(req.PaymentMethod) {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "该支付方式已暂停使用，请选择其他方式"})
 		return
 	}
 

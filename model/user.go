@@ -98,9 +98,11 @@ type User struct {
 	Group            string                     `json:"group" gorm:"type:varchar(64);default:'default'"`
 	AffCode          string                     `json:"aff_code" gorm:"type:varchar(32);column:aff_code;uniqueIndex"`
 	AffCount         int                        `json:"aff_count" gorm:"type:int;default:0;column:aff_count"`
-	AffQuota         int                        `json:"aff_quota" gorm:"type:int;default:0;column:aff_quota"`           // 邀请剩余额度
-	AffHistoryQuota  int                        `json:"aff_history_quota" gorm:"type:int;default:0;column:aff_history"` // 邀请历史额度
+	AffQuota         int                        `json:"aff_quota" gorm:"type:int;default:0;column:aff_quota"`                // 邀请剩余额度（可转移）
+	AffPendingQuota  int                        `json:"aff_pending_quota" gorm:"type:bigint;default:0;column:aff_pending"` // 邀请返利待确认额度（冷却期内）
+	AffHistoryQuota  int                        `json:"aff_history_quota" gorm:"type:int;default:0;column:aff_history"`   // 邀请历史额度
 	InviterId        int                        `json:"inviter_id" gorm:"type:int;column:inviter_id;index"`
+	TopupCount       int                        `json:"topup_count" gorm:"type:int;default:0;column:topup_count"` // 成功充值计次（含兑换码），用于返利分档
 	DeletedAt        gorm.DeletedAt             `gorm:"index"`
 	LinuxDOId        string                     `json:"linux_do_id" gorm:"column:linux_do_id;index"`
 	Setting          string                     `json:"setting" gorm:"type:text;column:setting"`
@@ -529,11 +531,14 @@ func HardDeleteUserById(id int) error {
 	return user.HardDelete()
 }
 
-func inviteUser(inviterId int) error {
+// recordInvitation 登记一次成功邀请，只累计邀请人数。
+//
+// 注册不再给邀请人发放任何额度：邀请人的收益改为按被邀请人的**真实充值**返利
+// （见 SettleAffiliateRebate），这样每一笔返利都有真实收入支撑，批量注册小号
+// 无法再零成本套利。
+func recordInvitation(inviterId int) error {
 	result := DB.Model(&User{}).Where("id = ?", inviterId).Updates(map[string]interface{}{
-		"aff_count":   gorm.Expr("aff_count + ?", 1),
-		"aff_quota":   gorm.Expr("aff_quota + ?", common.QuotaForInviter),
-		"aff_history": gorm.Expr("aff_history + ?", common.QuotaForInviter),
+		"aff_count": gorm.Expr("aff_count + ?", 1),
 	})
 	if result.Error != nil {
 		return result.Error
@@ -578,7 +583,14 @@ func (user *User) TransferAffQuotaToQuota(quota int) error {
 	}
 
 	// 提交事务
-	return tx.Commit().Error
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	// 与其它所有加额路径（充值/兑换码/抽奖/活动）保持一致：事务内的额度变更必须
+	// 补进 Redis 用户缓存，否则在缓存过期前，用户看不到也用不了刚转过来的额度。
+	syncCreditUserQuotaCache(user.Id, quota, "aff transfer")
+	return nil
 }
 
 func (user *User) prepareForInsert(tx *gorm.DB) error {
@@ -682,11 +694,7 @@ func (user *User) finishInsert(inviterId int) {
 			_ = IncreaseUserQuota(user.Id, common.QuotaForInvitee, true)
 			RecordLog(user.Id, LogTypeSystem, fmt.Sprintf("使用邀请码赠送 %s", logger.LogQuota(common.QuotaForInvitee)))
 		}
-		if common.QuotaForInviter > 0 {
-			//_ = IncreaseUserQuota(inviterId, common.QuotaForInviter)
-			RecordLog(inviterId, LogTypeSystem, fmt.Sprintf("邀请用户赠送 %s", logger.LogQuota(common.QuotaForInviter)))
-			_ = inviteUser(inviterId)
-		}
+		_ = recordInvitation(inviterId)
 	}
 }
 
@@ -739,10 +747,7 @@ func (user *User) FinalizeOAuthUserCreation(inviterId int) {
 			_ = IncreaseUserQuota(user.Id, common.QuotaForInvitee, true)
 			RecordLog(user.Id, LogTypeSystem, fmt.Sprintf("使用邀请码赠送 %s", logger.LogQuota(common.QuotaForInvitee)))
 		}
-		if common.QuotaForInviter > 0 {
-			RecordLog(inviterId, LogTypeSystem, fmt.Sprintf("邀请用户赠送 %s", logger.LogQuota(common.QuotaForInviter)))
-			_ = inviteUser(inviterId)
-		}
+		_ = recordInvitation(inviterId)
 	}
 }
 

@@ -19,11 +19,16 @@ For commercial licensing, please contact support@quantumnous.com
 import { parseCurrencyDisplayType } from '@/lib/currency'
 
 import { CheckinSettingsSection } from '../general/checkin-settings-section'
+import { AffiliateSettingsSection } from '../general/affiliate-settings-section'
+import { LotterySettingsSection } from '../general/lottery-settings-section'
 import { PricingSection } from '../general/pricing-section'
+import { WelfareActivitySection } from '../general/welfare-activity-section'
 import { QuotaSettingsSection } from '../general/quota-settings-section'
 import { PaymentSettingsSection } from '../integrations/payment-settings-section'
 import { RatioSettingsCard } from '../models/ratio-settings-card'
 import type { BillingSettings } from '../types'
+import { parseAffiliateTiers } from '../utils/affiliate-tiers'
+import { parseLotteryPool } from '../utils/lottery-pool'
 import { createSectionRegistry } from '../utils/section-registry'
 
 const getModelDefaults = (settings: BillingSettings) => ({
@@ -145,6 +150,8 @@ const BILLING_SECTIONS = [
           AmountDiscount: settings['payment_setting.amount_discount'],
           EnableCustomTopup:
             settings['payment_setting.enable_custom_topup'] ?? true,
+          DisabledMethods: settings['payment_setting.disabled_methods'],
+          DisabledNotice: settings['payment_setting.disabled_notice'] ?? '',
           StripeApiSecret: settings.StripeApiSecret,
           StripeWebhookSecret: settings.StripeWebhookSecret,
           StripePriceId: settings.StripePriceId,
@@ -199,6 +206,57 @@ const BILLING_SECTIONS = [
           enabled: settings['checkin_setting.enabled'],
           minQuota: settings['checkin_setting.min_quota'],
           maxQuota: settings['checkin_setting.max_quota'],
+          minDailyCalls: settings['checkin_setting.min_daily_calls'],
+        }}
+      />
+    ),
+  },
+  {
+    id: 'welfare-activity',
+    titleKey: 'Limited-time Activities',
+    build: (settings: BillingSettings) => (
+      <WelfareActivitySection
+        activitiesEnabled={
+          settings['welfare_setting.activities_enabled'] ?? false
+        }
+      />
+    ),
+  },
+  {
+    id: 'lottery',
+    titleKey: 'Lottery',
+    build: (settings: BillingSettings) => (
+      <LotterySettingsSection
+        defaultValues={{
+          enabled: settings['lottery_setting.enabled'],
+          mode: settings['lottery_setting.mode'],
+          segmentConsumeQuota:
+            settings['lottery_setting.segment_consume_quota'],
+          segmentPrizes: parseLotteryPool(
+            settings['lottery_setting.segment_prizes']
+          ),
+          firstThresholdQuota:
+            settings['lottery_setting.first_threshold_quota'],
+          thresholdStepQuota:
+            settings['lottery_setting.threshold_step_quota'],
+          tierPrizes: parseLotteryPool(settings['lottery_setting.tier_prizes']),
+          tierPrizeStep: settings['lottery_setting.tier_prize_step'],
+          tierPrizeMax: settings['lottery_setting.tier_prize_max'],
+        }}
+      />
+    ),
+  },
+  {
+    id: 'affiliate',
+    titleKey: 'Referral Rebate',
+    build: (settings: BillingSettings) => (
+      <AffiliateSettingsSection
+        defaultValues={{
+          enabled: settings['affiliate_setting.enabled'],
+          tiers: parseAffiliateTiers(settings['affiliate_setting.tiers']),
+          cooldownDays: settings['affiliate_setting.cooldown_days'],
+          maxRebatePerInvitee:
+            settings['affiliate_setting.max_rebate_per_invitee'],
         }}
       />
     ),

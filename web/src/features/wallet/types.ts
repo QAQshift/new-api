@@ -158,6 +158,8 @@ export interface TopupInfo {
   payment_compliance_terms_version?: string
   /** Whether the user-visible custom amount input is enabled */
   enable_custom_topup?: boolean
+  /** Notice shown in place of payment methods the administrator disabled */
+  disabled_payment_notice?: string
 }
 
 /**
@@ -223,6 +225,70 @@ export interface AffiliateTransferRequest {
 }
 
 /**
+ * One rebate tier. The backend already normalises the covered range so the UI
+ * does not have to reconstruct it from the raw config.
+ */
+export interface AffiliateTier {
+  /** Raw `times` value from the config (0 for the fallback tier) */
+  times: number
+  /** First top-up ordinal this tier covers */
+  from: number
+  /** Last top-up ordinal, 0 when the tier has no upper bound */
+  to: number
+  /** Rebate rate in percent, e.g. 5 means 5% */
+  rate_percent: number
+  /** True for the tier covering every remaining top-up */
+  fallback: boolean
+}
+
+/**
+ * One invited user in the referral list.
+ */
+export interface AffiliateInvitee {
+  user_id: number
+  /** Partially masked by the backend */
+  username: string
+  created_at: number
+  /** Successful top-ups and redemptions, drives tier matching */
+  topup_count: number
+  used_quota: number
+  request_count: number
+  /** Rebate this invitee has generated so far */
+  rebate_quota: number
+}
+
+/**
+ * Invite conversion funnel.
+ */
+export interface AffiliateFunnel {
+  registered: number
+  active: number
+  topped_up: number
+  /** active / registered, range 0..1 */
+  active_rate: number
+  /** topped_up / registered, range 0..1 */
+  conversion_rate: number
+}
+
+/**
+ * Everything the referral panel needs, fetched in one request.
+ */
+export interface AffiliateOverview {
+  enabled: boolean
+  cooldown_days: number
+  tiers: AffiliateTier[]
+  pending_quota: number
+  transferable_quota: number
+  total_quota: number
+  aff_count: number
+  funnel: AffiliateFunnel
+  invitees: AffiliateInvitee[]
+  invitees_truncated: boolean
+}
+
+export type AffiliateOverviewResponse = ApiResponse<AffiliateOverview>
+
+/**
  * User wallet data
  */
 export interface UserWalletData {
@@ -236,9 +302,11 @@ export interface UserWalletData {
   used_quota: number
   /** Total request count */
   request_count: number
-  /** Affiliate quota (pending rewards) */
+  /** Affiliate quota ready to transfer to balance */
   aff_quota: number
-  /** Total affiliate quota earned (historical) */
+  /** Affiliate rebate still inside the cooling-off period */
+  aff_pending_quota: number
+  /** Total affiliate quota earned (historical, includes pending) */
   aff_history_quota: number
   /** Number of successful affiliate invites */
   aff_count: number

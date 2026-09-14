@@ -182,34 +182,19 @@ export function QuotaSettingsSection({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name='QuotaForInviter'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('Inviter Reward')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type='number'
-                      value={field.value ?? ''}
-                      onChange={handleNumberChange(field.onChange)}
-                      name={field.name}
-                      onBlur={field.onBlur}
-                      ref={field.ref}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {t(
-                      'Quota given to users who invite others ({{formattedQuota}})',
-                      {
-                        formattedQuota: formatQuotaInputValue(field.value),
-                      }
-                    )}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/*
+              QuotaForInviter 已被「邀请返利」取代：注册不再向邀请人发放固定额度，
+              否则批量注册小号即可零成本套利。这里保留说明而不是输入框，避免管理员
+              继续配置一个不再生效的字段。
+            */}
+            <FormItem>
+              <FormLabel>{t('Inviter Reward')}</FormLabel>
+              <FormDescription>
+                {t(
+                  'Superseded by the referral rebate. Inviters are now rewarded with a rebate on every real top-up made by the users they invited, so this field no longer grants any quota. Configure it under Referral Rebate.'
+                )}
+              </FormDescription>
+            </FormItem>
 
             <FormField
               control={form.control}

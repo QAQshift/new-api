@@ -16,7 +16,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Gift, ExternalLink, Loader2, Receipt, WalletCards } from 'lucide-react'
+import {
+  Gift,
+  ExternalLink,
+  Loader2,
+  Megaphone,
+  Receipt,
+  WalletCards,
+} from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -148,6 +155,9 @@ export function RechargeFormCard({
     Array.isArray(waffoPayMethods) && waffoPayMethods.length > 0
   const minTopup = getMinTopupAmount(topupInfo)
   const redemptionEnabled = topupInfo?.enable_redemption !== false
+  // 管理员临时停用了部分支付方式时，用这段公告替代被下架的方式按钮
+  const disabledPaymentNotice =
+    topupInfo?.disabled_payment_notice?.trim() || ''
 
   if (loading) {
     return (
@@ -349,6 +359,21 @@ export function RechargeFormCard({
                 <Label className='text-muted-foreground text-xs font-medium tracking-wider uppercase'>
                   {t('Payment Method')}
                 </Label>
+                {disabledPaymentNotice && (
+                  <div className='border-warning/40 bg-warning/10 flex items-start gap-3 rounded-lg border p-3 sm:p-4'>
+                    <span className='bg-warning/15 text-warning flex size-8 shrink-0 items-center justify-center rounded-full'>
+                      <Megaphone className='size-4' />
+                    </span>
+                    <div className='min-w-0 flex-1 space-y-1'>
+                      <p className='text-sm font-semibold'>
+                        {t('Some payment methods are temporarily unavailable')}
+                      </p>
+                      <p className='text-muted-foreground text-xs leading-5 whitespace-pre-wrap'>
+                        {disabledPaymentNotice}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 {hasStandardPaymentMethods ? (
                   <div className='grid grid-cols-2 gap-1.5 sm:gap-3 lg:grid-cols-3'>
                     {topupInfo?.pay_methods?.map((method) => {
@@ -416,15 +441,17 @@ export function RechargeFormCard({
                     })}
                   </div>
                 ) : null}
-                {!hasStandardPaymentMethods && !hasWaffoPaymentMethods && (
-                  <Alert>
-                    <AlertDescription>
-                      {t(
-                        'No payment methods available. Please contact administrator.'
-                      )}
-                    </AlertDescription>
-                  </Alert>
-                )}
+                {!hasStandardPaymentMethods &&
+                  !hasWaffoPaymentMethods &&
+                  !disabledPaymentNotice && (
+                    <Alert>
+                      <AlertDescription>
+                        {t(
+                          'No payment methods available. Please contact administrator.'
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  )}
               </div>
 
               {enableWaffoTopup &&

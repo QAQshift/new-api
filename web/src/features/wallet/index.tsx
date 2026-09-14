@@ -24,6 +24,7 @@ import { useStatus } from '@/hooks/use-status'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { getSelf } from '@/lib/api'
 
+import { AffiliateProgramCard } from './components/affiliate-program-card'
 import { AffiliateRewardsCard } from './components/affiliate-rewards-card'
 import { BillingHistoryDialog } from './components/dialogs/billing-history-dialog'
 import { CreemConfirmDialog } from './components/dialogs/creem-confirm-dialog'
@@ -99,7 +100,9 @@ export function Wallet(props: WalletProps) {
   } = usePayment()
   const {
     affiliateLink,
+    overview: affiliateOverview,
     loading: affiliateLoading,
+    overviewLoading: affiliateOverviewLoading,
     transferQuota,
     transferring,
   } = useAffiliate()
@@ -360,6 +363,12 @@ export function Wallet(props: WalletProps) {
                 topupInfo?.payment_compliance_confirmed !== false
               }
               loading={affiliateLoading}
+            />
+
+            <AffiliateProgramCard
+              affiliateLink={affiliateLink}
+              overview={affiliateOverview}
+              loading={affiliateOverviewLoading}
             />
           </div>
         </SectionPageLayout.Content>

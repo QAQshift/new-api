@@ -120,6 +120,9 @@ export function CheckinCalendarCard({
 
   const checkedToday = checkinData?.stats?.checked_in_today === true
   const todayAward = checkinRecordsMap[todayString]
+  const requiredCalls = checkinData?.required_calls ?? 0
+  const todayCalls = checkinData?.today_calls ?? 0
+  const callsSatisfied = requiredCalls <= 0 || todayCalls >= requiredCalls
 
   useEffect(() => {
     if (initialLoaded) return
@@ -247,6 +250,22 @@ export function CheckinCalendarCard({
     checkinButtonLabel = t('Loading...')
   } else if (checkedToday) {
     checkinButtonLabel = t('Checked in')
+  } else if (!callsSatisfied) {
+    checkinButtonLabel = t('Not enough calls today')
+  }
+
+  let checkinSubtitle = t('Check in daily to receive random quota rewards')
+  if (checkedToday && todayAward !== undefined) {
+    checkinSubtitle = `${t('Today')} +${formatQuotaWithCurrency(todayAward)}`
+  } else if (!callsSatisfied) {
+    checkinSubtitle = t(
+      'Today {{current}}/{{required}} calls, {{remaining}} more to check in',
+      {
+        current: todayCalls,
+        required: requiredCalls,
+        remaining: Math.max(requiredCalls - todayCalls, 0),
+      }
+    )
   }
 
   return (
@@ -316,15 +335,13 @@ export function CheckinCalendarCard({
                   </span>
                 </div>
                 <p className='text-muted-foreground mt-1 line-clamp-2 text-xs sm:text-sm'>
-                  {checkedToday && todayAward !== undefined
-                    ? `${t('Today')} +${formatQuotaWithCurrency(todayAward)}`
-                    : t('Check in daily to receive random quota rewards')}
+                  {checkinSubtitle}
                 </p>
               </div>
             </button>
             <Button
               onClick={() => doCheckin()}
-              disabled={checkinLoading || checkedToday}
+              disabled={checkinLoading || checkedToday || !callsSatisfied}
               size='sm'
               className='w-full shrink-0 sm:w-auto'
             >

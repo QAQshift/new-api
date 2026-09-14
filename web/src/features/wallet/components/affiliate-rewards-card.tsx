@@ -75,15 +75,16 @@ export function AffiliateRewardsCard({
             </h3>
             <p className='text-muted-foreground line-clamp-1 text-xs'>
               {t(
-                'Earn rewards when users join through your referral link. Transfer accumulated rewards to your balance anytime.'
+                'Earn a rebate on every top-up made by users you invite. Rebates clear a cooling-off period before they can be transferred to your balance.'
               )}
             </p>
           </div>
         </div>
 
-        <div className='grid grid-cols-3 gap-1.5 text-center'>
+        <div className='grid grid-cols-2 gap-2 text-center sm:grid-cols-4 sm:gap-1.5'>
           {[
-            [t('Pending'), formatQuota(user?.aff_quota ?? 0)],
+            [t('Pending'), formatQuota(user?.aff_pending_quota ?? 0)],
+            [t('Transferable'), formatQuota(user?.aff_quota ?? 0)],
             [t('Total Earned'), formatQuota(user?.aff_history_quota ?? 0)],
             [t('Invites'), String(user?.aff_count ?? 0)],
           ].map(([label, value]) => (

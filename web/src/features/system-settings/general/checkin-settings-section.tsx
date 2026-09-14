@@ -47,6 +47,7 @@ const schema = z.object({
   enabled: z.boolean(),
   minQuota: z.coerce.number().int().min(0),
   maxQuota: z.coerce.number().int().min(0),
+  minDailyCalls: z.coerce.number().int().min(0),
 })
 
 type Values = z.infer<typeof schema>
@@ -58,6 +59,7 @@ export function CheckinSettingsSection({
     enabled: boolean
     minQuota: number
     maxQuota: number
+    minDailyCalls: number
   }
 }) {
   const { t } = useTranslation()
@@ -69,6 +71,7 @@ export function CheckinSettingsSection({
       enabled: defaultValues.enabled,
       minQuota: defaultValues.minQuota,
       maxQuota: defaultValues.maxQuota,
+      minDailyCalls: defaultValues.minDailyCalls,
     },
   })
 
@@ -96,6 +99,13 @@ export function CheckinSettingsSection({
       updates.push({
         key: 'checkin_setting.max_quota',
         value: String(values.maxQuota),
+      })
+    }
+
+    if (values.minDailyCalls !== defaultValues.minDailyCalls) {
+      updates.push({
+        key: 'checkin_setting.min_daily_calls',
+        value: String(values.minDailyCalls),
       })
     }
 
@@ -146,7 +156,7 @@ export function CheckinSettingsSection({
           />
 
           {enabled && (
-            <div className='grid gap-6 sm:grid-cols-2'>
+            <div className='grid gap-6 sm:grid-cols-3'>
               <FormField
                 control={form.control}
                 name='minQuota'
@@ -185,6 +195,25 @@ export function CheckinSettingsSection({
                     </FormControl>
                     <FormDescription>
                       {t('Maximum quota amount awarded for check-in')}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='minDailyCalls'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Minimum daily calls required')}</FormLabel>
+                    <FormControl>
+                      <Input type='number' min={0} placeholder='3' {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      {t(
+                        'Model calls the user must make today before check-in. Set 0 to allow checking in without any call.'
+                      )}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

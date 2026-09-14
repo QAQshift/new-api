@@ -175,13 +175,14 @@ func Redeem(key string, userId int) (quota int, err error) {
 		if result.RowsAffected == 0 {
 			return errors.New("该兑换码已被使用")
 		}
-		return creditTopUpQuota(tx, userId, redemption.Quota, nil)
+		return creditTopUpQuota(tx, userId, redemption.Quota, TopupCountUpdate(nil))
 	})
 	if err != nil {
 		common.SysError("redemption failed: " + err.Error())
 		return 0, ErrRedeemFailed
 	}
 	syncCreditUserQuotaCache(userId, redemption.Quota, "redemption")
+	settleAffiliateRebateAfterRedemption(userId, redemption.Id, redemption.Quota)
 	RecordLog(userId, LogTypeTopup, fmt.Sprintf("通过兑换码充值 %s，兑换码ID %d", logger.LogQuota(redemption.Quota), redemption.Id))
 	return redemption.Quota, nil
 }

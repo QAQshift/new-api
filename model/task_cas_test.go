@@ -49,6 +49,7 @@ func TestMain(m *testing.M) {
 		&QuotaData{},
 		&Ability{},
 		&TopUp{},
+		&Redemption{},
 		&SubscriptionPlan{},
 		&SubscriptionOrder{},
 		&UserSubscription{},
@@ -57,6 +58,11 @@ func TestMain(m *testing.M) {
 		&SystemInstance{},
 		&SystemTask{},
 		&SystemTaskLock{},
+		&Checkin{},
+		&LotteryDraw{},
+		&AffiliateRebate{},
+		&WelfareActivity{},
+		&WelfareActivityEntry{},
 	); err != nil {
 		panic("failed to migrate: " + err.Error())
 	}
@@ -68,6 +74,11 @@ func truncateTables(t *testing.T) {
 	t.Helper()
 	t.Cleanup(func() {
 		DB.Exec("DELETE FROM tasks")
+		DB.Exec("DELETE FROM checkins")
+		DB.Exec("DELETE FROM lottery_draws")
+		DB.Exec("DELETE FROM affiliate_rebates")
+		DB.Exec("DELETE FROM welfare_activities")
+		DB.Exec("DELETE FROM welfare_activity_entries")
 		DB.Exec("DELETE FROM auth_flows")
 		DB.Exec("DELETE FROM external_identity_claims")
 		DB.Exec("DELETE FROM user_sessions")
@@ -82,6 +93,7 @@ func truncateTables(t *testing.T) {
 		DB.Exec("DELETE FROM quota_data")
 		DB.Exec("DELETE FROM abilities")
 		DB.Exec("DELETE FROM top_ups")
+		DB.Exec("DELETE FROM redemptions")
 		DB.Exec("DELETE FROM subscription_orders")
 		DB.Exec("DELETE FROM subscription_plans")
 		DB.Exec("DELETE FROM user_subscriptions")

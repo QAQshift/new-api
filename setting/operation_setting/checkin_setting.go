@@ -7,13 +7,17 @@ type CheckinSetting struct {
 	Enabled  bool `json:"enabled"`   // 是否启用签到功能
 	MinQuota int  `json:"min_quota"` // 签到最小额度奖励
 	MaxQuota int  `json:"max_quota"` // 签到最大额度奖励
+	// MinDailyCalls 当日需要完成的模型调用次数门槛，0 表示不限制。
+	// 用于避免从不调用的账号白嫖签到奖励。
+	MinDailyCalls int `json:"min_daily_calls"`
 }
 
 // 默认配置
 var checkinSetting = CheckinSetting{
-	Enabled:  false, // 默认关闭
-	MinQuota: 1000,  // 默认最小额度 1000 (约 0.002 USD)
-	MaxQuota: 10000, // 默认最大额度 10000 (约 0.02 USD)
+	Enabled:       false, // 默认关闭
+	MinQuota:      1000,  // 默认最小额度 1000 (约 0.002 USD)
+	MaxQuota:      10000, // 默认最大额度 10000 (约 0.02 USD)
+	MinDailyCalls: 3,     // 默认当日需 3 次调用记录
 }
 
 func init() {

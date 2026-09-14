@@ -344,6 +344,10 @@ func RequestWaffoPancakePay(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Waffo Pancake 配置不完整"})
 		return
 	}
+	if operation_setting.IsPayMethodDisabled(model.PaymentMethodWaffoPancake) {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "该支付方式已暂停使用，请选择其他方式"})
+		return
+	}
 
 	var req WaffoPancakePayRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

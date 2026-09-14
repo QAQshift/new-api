@@ -373,6 +373,28 @@ func UpdateOption(c *gin.Context) {
 			common.ApiErrorMsg(c, "合规确认字段不允许通过通用设置接口修改")
 			return
 		}
+		if strings.HasPrefix(option.Key, lotteryOptionPrefix) {
+			if raw, ok := option.Value.(string); ok {
+				if lotteryErr := validateLotteryOptionUpdate(option.Key, raw); lotteryErr != nil {
+					c.JSON(http.StatusOK, gin.H{
+						"success": false,
+						"message": lotteryErr.Error(),
+					})
+					return
+				}
+			}
+		}
+		if strings.HasPrefix(option.Key, affiliateOptionPrefix) {
+			if raw, ok := option.Value.(string); ok {
+				if affiliateErr := validateAffiliateOptionUpdate(option.Key, raw); affiliateErr != nil {
+					c.JSON(http.StatusOK, gin.H{
+						"success": false,
+						"message": affiliateErr.Error(),
+					})
+					return
+				}
+			}
+		}
 	}
 	switch option.Key {
 	case "GitHubOAuthEnabled":
@@ -608,6 +630,7 @@ func UpdateOption(c *gin.Context) {
 			})
 			return
 		}
+
 	case "console_setting.announcements":
 		err = console_setting.ValidateConsoleSettings(option.Value.(string), "Announcements")
 		if err != nil {

@@ -152,6 +152,10 @@ func RequestStripeAmount(c *gin.Context) {
 }
 
 func RequestStripePay(c *gin.Context) {
+	if operation_setting.IsPayMethodDisabled(model.PaymentMethodStripe) {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "该支付方式已暂停使用，请选择其他方式"})
+		return
+	}
 	var req StripePayRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {

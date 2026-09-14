@@ -107,6 +107,7 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.POST("/passkey/verify/finish", middleware.DisableCache(), controller.PasskeyVerifyFinish)
 				selfRoute.DELETE("/passkey", middleware.DisableCache(), controller.PasskeyDelete)
 				selfRoute.GET("/aff", controller.GetAffCode)
+				selfRoute.GET("/aff/overview", controller.GetAffiliateOverview)
 				selfRoute.GET("/topup/info", controller.GetTopUpInfo)
 				selfRoute.GET("/topup/self", controller.GetUserTopUps)
 				selfRoute.POST("/topup", middleware.CriticalRateLimit(), controller.TopUp)
@@ -132,6 +133,14 @@ func SetApiRouter(router *gin.Engine) {
 				// Check-in routes
 				selfRoute.GET("/checkin", controller.GetCheckinStatus)
 				selfRoute.POST("/checkin", middleware.TurnstileCheck(), controller.DoCheckin)
+
+				// Lottery routes
+				selfRoute.GET("/lottery", controller.GetLotteryStatus)
+				selfRoute.POST("/lottery/draw", controller.DrawLottery)
+
+				// Welfare limited-time activities
+				selfRoute.GET("/welfare/activities", controller.GetWelfareActivities)
+				selfRoute.POST("/welfare/activities/:id/draw", controller.EnterWelfareActivity)
 
 				// Custom OAuth bindings
 				selfRoute.GET("/oauth/bindings", controller.GetUserOAuthBindings)
@@ -190,6 +199,15 @@ func SetApiRouter(router *gin.Engine) {
 			subscriptionAdminRoute.POST("/users/:id/subscriptions/reset", controller.AdminResetUserSubscriptionsByPlan)
 			subscriptionAdminRoute.POST("/user_subscriptions/:id/invalidate", controller.AdminInvalidateUserSubscription)
 			subscriptionAdminRoute.DELETE("/user_subscriptions/:id", controller.AdminDeleteUserSubscription)
+		}
+
+		welfareAdminRoute := apiRouter.Group("/welfare/admin")
+		welfareAdminRoute.Use(middleware.AdminAuth())
+		{
+			welfareAdminRoute.GET("/activities", controller.AdminListWelfareActivities)
+			welfareAdminRoute.POST("/activities", controller.AdminCreateWelfareActivity)
+			welfareAdminRoute.PUT("/activities/:id", controller.AdminUpdateWelfareActivity)
+			welfareAdminRoute.DELETE("/activities/:id", controller.AdminDeleteWelfareActivity)
 		}
 
 		// Subscription payment callbacks (no auth)

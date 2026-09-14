@@ -615,6 +615,23 @@ type Stat struct {
 	Tpm   int `json:"tpm"`
 }
 
+// CountTodayConsumeLogs 统计用户当天的模型调用次数（按本地时区的当日 0 点起算）。
+// 日志可能与主库分离（LOG_SQL_DSN），因此只能在日志库上单独计数，不能与业务表联表。
+func CountTodayConsumeLogs(userId int) (int64, error) {
+	now := time.Now()
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	var count int64
+	err := LOG_DB.Table("logs").
+		Where("user_id = ? AND type = ? AND created_at >= ? AND created_at < ?",
+			userId, LogTypeConsume, startOfDay.Unix(), startOfDay.AddDate(0, 0, 1).Unix()).
+		Count(&count).Error
+	if err != nil {
+		common.SysError("failed to count today consume logs: " + err.Error())
+		return 0, errors.New("查询今日调用次数失败")
+	}
+	return count, nil
+}
+
 func SumUsedQuota(logType int, startTimestamp int64, endTimestamp int64, modelName string, username string, tokenName string, channel int, group string) (stat Stat, err error) {
 	tx := LOG_DB.Table("logs").Select("COALESCE(sum(quota), 0) quota")
 

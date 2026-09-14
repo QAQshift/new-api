@@ -124,6 +124,10 @@ export function SidebarModulesSection({
         title: t('Wallet'),
         description: t('Top up balance and view billing history.'),
       },
+      welfare: {
+        title: t('Welfare Center'),
+        description: t('Check-in and lottery rewards'),
+      },
       personal: {
         title: t('Profile'),
         description: t('Personal settings and profile management.'),

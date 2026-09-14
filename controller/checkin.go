@@ -32,13 +32,23 @@ func GetCheckinStatus(c *gin.Context) {
 		return
 	}
 
+	// 当日调用次数门槛，供前端展示签到进度；统计失败时按 0 展示，不阻断状态查询
+	todayCalls := int64(0)
+	if setting.MinDailyCalls > 0 {
+		if counted, err := model.CountTodayConsumeLogs(userId); err == nil {
+			todayCalls = counted
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
-			"enabled":   setting.Enabled,
-			"min_quota": setting.MinQuota,
-			"max_quota": setting.MaxQuota,
-			"stats":     stats,
+			"enabled":        setting.Enabled,
+			"min_quota":      setting.MinQuota,
+			"max_quota":      setting.MaxQuota,
+			"required_calls": setting.MinDailyCalls,
+			"today_calls":    todayCalls,
+			"stats":          stats,
 		},
 	})
 }

@@ -23,8 +23,13 @@ import { toast } from 'sonner'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { getSelf } from '@/lib/api'
 
-import { getAffiliateCode, transferAffiliateQuota } from '../api'
+import {
+  getAffiliateCode,
+  getAffiliateOverview,
+  transferAffiliateQuota,
+} from '../api'
 import { generateAffiliateLink } from '../lib'
+import type { AffiliateOverview } from '../types'
 
 // ============================================================================
 // Affiliate Hook
@@ -33,7 +38,9 @@ import { generateAffiliateLink } from '../lib'
 export function useAffiliate() {
   const [affiliateCode, setAffiliateCode] = useState<string>('')
   const [affiliateLink, setAffiliateLink] = useState<string>('')
+  const [overview, setOverview] = useState<AffiliateOverview | null>(null)
   const [loading, setLoading] = useState(true)
+  const [overviewLoading, setOverviewLoading] = useState(true)
   const [transferring, setTransferring] = useState(false)
   const { copyToClipboard } = useCopyToClipboard()
 
@@ -56,44 +63,69 @@ export function useAffiliate() {
     }
   }, [])
 
+  // Fetch the rebate ladder, amounts, invitee list and funnel
+  const fetchOverview = useCallback(async () => {
+    try {
+      setOverviewLoading(true)
+      const response = await getAffiliateOverview()
+      if (response.success && response.data) {
+        setOverview(response.data)
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to fetch affiliate overview:', error)
+    } finally {
+      setOverviewLoading(false)
+    }
+  }, [])
+
   // Copy affiliate link
   const copyAffiliateLink = useCallback(() => {
     copyToClipboard(affiliateLink)
   }, [affiliateLink, copyToClipboard])
 
   // Transfer affiliate quota to balance
-  const transferQuota = useCallback(async (quota: number): Promise<boolean> => {
-    try {
-      setTransferring(true)
-      const response = await transferAffiliateQuota({ quota })
+  const transferQuota = useCallback(
+    async (quota: number): Promise<boolean> => {
+      try {
+        setTransferring(true)
+        const response = await transferAffiliateQuota({ quota })
 
-      if (response.success) {
-        toast.success(response.message || i18next.t('Transfer successful'))
-        await getSelf()
-        return true
+        if (response.success) {
+          toast.success(response.message || i18next.t('Transfer successful'))
+          await getSelf()
+          // 转移后待确认/可转移两个金额都变了，重新拉一次避免显示过期数字
+          await fetchOverview()
+          return true
+        }
+
+        toast.error(response.message || i18next.t('Transfer failed'))
+        return false
+      } catch {
+        toast.error(i18next.t('Transfer failed'))
+        return false
+      } finally {
+        setTransferring(false)
       }
-
-      toast.error(response.message || i18next.t('Transfer failed'))
-      return false
-    } catch (_error) {
-      toast.error(i18next.t('Transfer failed'))
-      return false
-    } finally {
-      setTransferring(false)
-    }
-  }, [])
+    },
+    [fetchOverview]
+  )
 
   useEffect(() => {
     fetchAffiliateCode()
-  }, [fetchAffiliateCode])
+    fetchOverview()
+  }, [fetchAffiliateCode, fetchOverview])
 
   return {
     affiliateCode,
     affiliateLink,
+    overview,
     loading,
+    overviewLoading,
     transferring,
     copyAffiliateLink,
     transferQuota,
     refetch: fetchAffiliateCode,
+    refetchOverview: fetchOverview,
   }
 }

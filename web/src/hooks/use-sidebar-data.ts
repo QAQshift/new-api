@@ -22,6 +22,7 @@ import {
   CreditCard,
   FileText,
   FlaskConical,
+  Gift,
   Key,
   LayoutDashboard,
   ListTodo,
@@ -36,7 +37,8 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { type SidebarData } from '@/components/layout/types'
+import type { SidebarData } from '@/components/layout/types'
+import { useStatus } from '@/hooks/use-status'
 import { ROLE } from '@/lib/roles'
 
 /**
@@ -47,6 +49,10 @@ import { ROLE } from '@/lib/roles'
  */
 export function useSidebarData(): SidebarData {
   const { t } = useTranslation()
+  const { status } = useStatus()
+  // The welfare hub aggregates whatever reward modules are switched on
+  const welfareEnabled =
+    status?.checkin_enabled === true || status?.lottery_enabled === true
 
   return {
     navGroups: [
@@ -108,6 +114,16 @@ export function useSidebarData(): SidebarData {
             url: '/wallet',
             icon: Wallet,
           },
+          // Only listed while at least one welfare module is switched on
+          ...(welfareEnabled
+            ? [
+                {
+                  title: t('Welfare Center'),
+                  url: '/welfare',
+                  icon: Gift,
+                },
+              ]
+            : []),
           {
             title: t('Profile'),
             url: '/profile',

@@ -221,6 +221,10 @@ export interface CheckinStats {
 export interface CheckinStatusResponse {
   /** Whether check-in feature is enabled */
   enabled: boolean
+  /** Model calls required today before check-in is allowed; 0 disables the gate */
+  required_calls?: number
+  /** Model calls the user has already made today */
+  today_calls?: number
   /** Check-in statistics */
   stats: CheckinStats
 }

@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -65,6 +66,17 @@ func UserCheckin(userId int) (*Checkin, error) {
 	}
 	if hasChecked {
 		return nil, errors.New("今日已签到")
+	}
+
+	// 门槛校验：当日需要足够的模型调用记录，避免从不调用的账号白嫖签到奖励
+	if setting.MinDailyCalls > 0 {
+		todayCalls, err := CountTodayConsumeLogs(userId)
+		if err != nil {
+			return nil, err
+		}
+		if todayCalls < int64(setting.MinDailyCalls) {
+			return nil, fmt.Errorf("今日调用次数不足：需 %d 次，当前 %d 次", setting.MinDailyCalls, todayCalls)
+		}
 	}
 
 	// 计算随机额度奖励

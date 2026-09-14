@@ -303,6 +303,8 @@ export type BillingSettings = {
   'payment_setting.amount_options': string
   'payment_setting.amount_discount': string
   'payment_setting.enable_custom_topup': boolean
+  'payment_setting.disabled_methods': string
+  'payment_setting.disabled_notice': string
   'payment_setting.compliance_confirmed': boolean
   'payment_setting.compliance_terms_version': string
   'payment_setting.compliance_confirmed_at': number
@@ -343,6 +345,21 @@ export type BillingSettings = {
   'checkin_setting.enabled': boolean
   'checkin_setting.min_quota': number
   'checkin_setting.max_quota': number
+  'checkin_setting.min_daily_calls': number
+  'lottery_setting.enabled': boolean
+  'lottery_setting.mode': string
+  'lottery_setting.segment_consume_quota': number
+  'lottery_setting.segment_prizes': string
+  'lottery_setting.first_threshold_quota': number
+  'lottery_setting.threshold_step_quota': number
+  'lottery_setting.tier_prizes': string
+  'lottery_setting.tier_prize_step': number
+  'lottery_setting.tier_prize_max': number
+  'welfare_setting.activities_enabled': boolean
+  'affiliate_setting.enabled': boolean
+  'affiliate_setting.tiers': string
+  'affiliate_setting.cooldown_days': number
+  'affiliate_setting.max_rebate_per_invitee': number
 }
 
 export type OperationsSettings = {

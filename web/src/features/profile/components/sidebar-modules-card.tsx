@@ -116,6 +116,11 @@ export function SidebarModulesCard() {
           description: t('Balance and top-up management'),
         },
         {
+          key: 'welfare',
+          title: t('Welfare Center'),
+          description: t('Check-in and lottery rewards'),
+        },
+        {
           key: 'personal',
           title: t('Personal Settings'),
           description: t('Personal info settings'),
