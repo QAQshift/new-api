@@ -213,7 +213,15 @@ export function CustomTabPage({ pageId }: CustomTabPageProps) {
     <SectionPageLayout>
       <SectionPageLayout.Title>{page.title}</SectionPageLayout.Title>
       <SectionPageLayout.Content>
-        <div className='mx-auto w-full max-w-5xl'>
+        {/* 嵌入页铺满可用宽度：它本身就是一个应用窗口，再套一层正文宽度
+            （max-w-5xl 居中）会左右各留一大片空白，看起来"窗口很小"。 */}
+        <div
+          className={
+            page.type === 'iframe'
+              ? 'w-full'
+              : 'mx-auto w-full max-w-5xl'
+          }
+        >
           <CustomTabBody page={page} />
         </div>
       </SectionPageLayout.Content>
