@@ -46,6 +46,7 @@ import {
   AppearanceSection,
   type AppearanceSettings,
 } from './appearance-section'
+import { SidebarTabsSection } from './sidebar-tabs-section'
 
 const SITE_SECTIONS = [
   {
@@ -137,6 +138,13 @@ const SITE_SECTIONS = [
         />
       )
     },
+  },
+  {
+    id: 'sidebar-tabs',
+    titleKey: 'Custom sidebar tabs',
+    build: (settings: SiteSettings) => (
+      <SidebarTabsSection initialSerialized={settings.SidebarCustomTabs ?? ''} />
+    ),
   },
 ] as const
 

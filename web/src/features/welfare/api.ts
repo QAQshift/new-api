@@ -21,7 +21,7 @@ import { api } from '@/lib/api'
 import type {
   AdminWelfareActivity,
   ApiResponse,
-  WelfareActivity,
+  WelfareActivitiesPayload,
   WelfareActivityEntryResult,
   WelfareActivityPayload,
 } from './types'
@@ -34,7 +34,7 @@ import type {
  * List the limited-time activities this user can see, with their own progress
  */
 export async function getWelfareActivities(): Promise<
-  ApiResponse<{ activities: WelfareActivity[] }>
+  ApiResponse<WelfareActivitiesPayload>
 > {
   const res = await api.get('/api/user/welfare/activities')
   return res.data

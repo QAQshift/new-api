@@ -128,6 +128,10 @@ export function SidebarModulesSection({
         title: t('Welfare Center'),
         description: t('Check-in and lottery rewards'),
       },
+      referral: {
+        title: t('Referral Program'),
+        description: t('Invite users and earn top-up rebates.'),
+      },
       personal: {
         title: t('Profile'),
         description: t('Personal settings and profile management.'),

@@ -157,6 +157,111 @@ func TestPickLotteryPrizeRejectsInvalidPool(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestPickLotteryPrizeStaysInsideTheRange(t *testing.T) {
+	pool := []LotteryPrize{{Quota: 100, QuotaMax: 200, Weight: 5}}
+	seen := map[int]bool{}
+
+	for i := 0; i < 300; i++ {
+		prize, err := PickLotteryPrize(pool)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, prize, 100)
+		require.LessOrEqual(t, prize, 200)
+		seen[prize] = true
+	}
+
+	// 固定区间会退化成一个点；真区间应当落在多个不同取值上。
+	assert.Greater(t, len(seen), 10, "区间档位应当在区间内取值，而不是固定值")
+}
+
+func TestPickLotteryPrizeKeepsFixedTierFixed(t *testing.T) {
+	// 上限缺省（升级前的配置形态）与上限等于下限都必须发固定额度
+	for _, pool := range [][]LotteryPrize{
+		{{Quota: 321, Weight: 1}},
+		{{Quota: 321, QuotaMax: 321, Weight: 1}},
+		{{Quota: 321, QuotaMax: 100, Weight: 1}}, // 上限小于下限时按下限兜底
+	} {
+		for i := 0; i < 20; i++ {
+			prize, err := PickLotteryPrize(pool)
+			require.NoError(t, err)
+			assert.Equal(t, 321, prize)
+		}
+	}
+}
+
+func TestTierPrizePoolForRaisesBothBounds(t *testing.T) {
+	setting := &LotterySetting{
+		Enabled:       true,
+		Mode:          LotteryModeTiered,
+		TierPrizes:    []LotteryPrize{{Quota: 100, QuotaMax: 200, Weight: 1}},
+		TierPrizeStep: 10,
+	}
+
+	assert.Equal(t, []LotteryPrize{
+		{Quota: 100, QuotaMax: 200, Weight: 1},
+	}, setting.TierPrizePoolFor(1), "第一档不加步长")
+	assert.Equal(t, []LotteryPrize{
+		{Quota: 110, QuotaMax: 210, Weight: 1},
+	}, setting.TierPrizePoolFor(2), "上下限一起抬高，区间宽度不变")
+}
+
+func TestTierPrizePoolForDoesNotInventARange(t *testing.T) {
+	setting := &LotterySetting{
+		Enabled:       true,
+		Mode:          LotteryModeTiered,
+		TierPrizes:    []LotteryPrize{{Quota: 100, Weight: 1}},
+		TierPrizeStep: 10,
+	}
+
+	// 固定额度的档位不能因为 step 变成 [100+step, ...] 的区间
+	assert.Equal(t, []LotteryPrize{
+		{Quota: 110, Weight: 1},
+	}, setting.TierPrizePoolFor(2))
+}
+
+func TestTierPrizeMaxCapsTheUpperBound(t *testing.T) {
+	setting := &LotterySetting{
+		Enabled:       true,
+		Mode:          LotteryModeTiered,
+		TierPrizes:    []LotteryPrize{{Quota: 100, QuotaMax: 900, Weight: 1}},
+		TierPrizeStep: 100,
+		TierPrizeMax:  500,
+	}
+
+	assert.Equal(t, []LotteryPrize{
+		{Quota: 200, QuotaMax: 500, Weight: 1},
+	}, setting.TierPrizePoolFor(2), "上限被封顶单独收敛，下限不受影响")
+
+	assert.Equal(t, []LotteryPrize{
+		{Quota: 500, QuotaMax: 500, Weight: 1},
+	}, setting.TierPrizePoolFor(5), "下限超过封顶时区间收敛成一个点")
+}
+
+func TestValidatePrizeTierRejectsInvertedRange(t *testing.T) {
+	assert.NoError(t, ValidatePrizeTier(LotteryPrize{Quota: 100, Weight: 1}))
+	assert.NoError(t, ValidatePrizeTier(LotteryPrize{Quota: 100, QuotaMax: 200, Weight: 1}))
+
+	assert.Error(t, ValidatePrizeTier(LotteryPrize{Quota: 200, QuotaMax: 100, Weight: 1}),
+		"上限低于下限属于配置错误")
+	assert.Error(t, ValidatePrizeTier(LotteryPrize{Quota: 100, QuotaMax: -1, Weight: 1}),
+		"上限不能为负数")
+	assert.Error(t, ValidatePrizeTier(LotteryPrize{Quota: 0, QuotaMax: 10, Weight: 1}))
+	assert.Error(t, ValidatePrizeTier(LotteryPrize{Quota: 100, Weight: 0}))
+}
+
+func TestValidateLotterySettingChecksTheRangeCeiling(t *testing.T) {
+	setting := &LotterySetting{
+		Enabled:             true,
+		Mode:                LotteryModeTiered,
+		FirstThresholdQuota: 1000,
+		ThresholdStepQuota:  500,
+		TierPrizes:          []LotteryPrize{{Quota: 100, QuotaMax: 900, Weight: 1}},
+		TierPrizeMax:        500,
+	}
+
+	assert.Error(t, ValidateLotterySetting(setting),
+		"奖池上限超过阶梯封顶时应当被拦下")
+}
+
 func TestValidateLotterySettingAcceptsDefaults(t *testing.T) {
 	setting := GetLotterySetting()
 	assert.NoError(t, ValidateLotterySetting(setting))

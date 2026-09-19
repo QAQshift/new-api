@@ -75,10 +75,13 @@ function renderPanel() {
   )
 }
 
-function mockActivities(activities: WelfareActivity[]) {
+function mockActivities(
+  activities: WelfareActivity[],
+  showPrizeProbability?: boolean
+) {
   mockedGetActivities.mockResolvedValue({
     success: true,
-    data: { activities },
+    data: { activities, show_prize_probability: showPrizeProbability },
   })
 }
 
@@ -93,6 +96,28 @@ describe('activity panel', () => {
     renderPanel()
 
     expect(await screen.findByText('No activities yet')).toBeInTheDocument()
+  })
+
+  test('hides the chances when the admin turned the toggle off', async () => {
+    mockActivities([baseActivity()], false)
+
+    renderPanel()
+
+    expect(await screen.findByText('Summer event')).toBeInTheDocument()
+    expect(screen.queryByText('70%')).toBeNull()
+    expect(screen.queryByText('30%')).toBeNull()
+  })
+
+  test('renders a tier with an amount range as a range', async () => {
+    mockActivities([
+      baseActivity({ prizes: [{ quota: 100, quota_max: 500, weight: 100 }] }),
+    ])
+
+    renderPanel()
+
+    expect(await screen.findByText('Summer event')).toBeInTheDocument()
+    // 金额格式随货币配置变化，只断言区间分隔符
+    expect(screen.getByText(/~/)).toBeInTheDocument()
   })
 
   test('shows the activity, its prize pool and chances', async () => {

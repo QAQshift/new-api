@@ -137,6 +137,8 @@ func GetStatus(c *gin.Context) {
 		// 模块管理配置
 		"HeaderNavModules":    common.OptionMap["HeaderNavModules"],
 		"SidebarModulesAdmin": common.OptionMap["SidebarModulesAdmin"],
+		// 自定义侧边栏 tab：JSON 字符串，前端解析后追加到侧边栏
+		"SidebarCustomTabs": common.OptionMap["SidebarCustomTabs"],
 
 		"oidc_enabled":                system_setting.GetOIDCSettings().Enabled,
 		"oidc_client_id":              system_setting.GetOIDCSettings().ClientId,

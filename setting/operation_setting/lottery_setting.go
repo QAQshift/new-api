@@ -26,11 +26,24 @@ const (
 	maxLotteryDrawIndex = 1_000_000
 )
 
-// LotteryPrize 奖池中的一档奖品：按权重命中后发放 Quota 额度。
-// Quota 的单位与用户余额一致（系统内部额度单位），不绑定具体货币。
+// LotteryPrize 奖池中的一档奖品：按权重命中后，在 [Quota, QuotaMax] 区间内均匀
+// 随机发放一份额度。QuotaMax 为 0（或小于等于 Quota）时表示固定额度，区间退化为
+// 一个点 —— 升级前保存的奖池没有这个字段，解析后正好落到这条分支，行为不变。
+//
+// 两个字段的单位都与用户余额一致（系统内部额度单位），不绑定具体货币。
 type LotteryPrize struct {
-	Quota  int `json:"quota"`
-	Weight int `json:"weight"`
+	Quota    int `json:"quota"`
+	QuotaMax int `json:"quota_max,omitempty"`
+	Weight   int `json:"weight"`
+}
+
+// PrizeMaxQuota 返回该档实际发放上限。上限缺失或不大于下限时退化为固定额度，
+// 这样调用方不必在各处重复判断 0 值。
+func (p LotteryPrize) PrizeMaxQuota() int {
+	if p.QuotaMax <= p.Quota {
+		return p.Quota
+	}
+	return p.QuotaMax
 }
 
 type LotterySetting struct {
@@ -152,10 +165,25 @@ func (s *LotterySetting) TierPrizePoolFor(drawIndex int) []LotteryPrize {
 	pool := make([]LotteryPrize, len(s.TierPrizes))
 	for i, prize := range s.TierPrizes {
 		quota := saturatingAdd(int64(prize.Quota), step)
-		if s.TierPrizeMax > 0 && quota > int64(s.TierPrizeMax) {
-			quota = int64(s.TierPrizeMax)
+		// 只有真正的区间才一起抬高上限；固定额度的档位保持固定，
+		// 否则会被 step 撑成一个它本来并不存在的区间。
+		quotaMax := int64(0)
+		if prize.QuotaMax > prize.Quota {
+			quotaMax = saturatingAdd(int64(prize.QuotaMax), step)
 		}
-		pool[i] = LotteryPrize{Quota: clampLotteryQuota(quota), Weight: prize.Weight}
+		if s.TierPrizeMax > 0 {
+			if quota > int64(s.TierPrizeMax) {
+				quota = int64(s.TierPrizeMax)
+			}
+			if quotaMax > int64(s.TierPrizeMax) {
+				quotaMax = int64(s.TierPrizeMax)
+			}
+		}
+		pool[i] = LotteryPrize{
+			Quota:    clampLotteryQuota(quota),
+			QuotaMax: clampLotteryQuota(quotaMax),
+			Weight:   prize.Weight,
+		}
 	}
 	return pool
 }
@@ -229,11 +257,48 @@ func PickLotteryPrize(pool []LotteryPrize) (int, error) {
 	for _, prize := range pool {
 		remaining -= int64(prize.Weight)
 		if remaining < 0 {
-			return prize.Quota, nil
+			return randomPrizeQuota(prize)
 		}
 	}
 	// 理论上不可达：上面的权重之和保证必然命中。
-	return pool[len(pool)-1].Quota, nil
+	return randomPrizeQuota(pool[len(pool)-1])
+}
+
+// randomPrizeQuota 在一档奖品允许的区间 [Quota, PrizeMaxQuota()] 内均匀取值。
+// 区间退化成一个点时直接返回该值，不消耗随机数。
+func randomPrizeQuota(prize LotteryPrize) (int, error) {
+	low := int64(prize.Quota)
+	high := int64(prize.PrizeMaxQuota())
+	if high <= low {
+		return clampLotteryQuota(low), nil
+	}
+	span := high - low + 1
+	offset, err := cryptorand.Int(cryptorand.Reader, big.NewInt(span))
+	if err != nil {
+		return 0, err
+	}
+	return clampLotteryQuota(low + offset.Int64()), nil
+}
+
+// ValidatePrizeTier 校验单档奖品的额度区间与权重。
+// 抽奖奖池与限时活动奖池共用同一套约束，避免两边规则漂移。
+func ValidatePrizeTier(prize LotteryPrize) error {
+	if prize.Quota <= 0 {
+		return errors.New("奖品额度必须大于 0")
+	}
+	if prize.QuotaMax < 0 {
+		return errors.New("奖品上限不能为负数")
+	}
+	if prize.QuotaMax > 0 && prize.QuotaMax < prize.Quota {
+		return errors.New("奖品上限不能低于额度下限")
+	}
+	if prize.PrizeMaxQuota() > common.MaxWalletQuota {
+		return errors.New("奖品额度超过单次发放上限")
+	}
+	if prize.Weight <= 0 {
+		return errors.New("权重必须大于 0")
+	}
+	return nil
 }
 
 func validateLotteryPrizePool(name string, pool []LotteryPrize, ceiling int) error {
@@ -245,17 +310,11 @@ func validateLotteryPrizePool(name string, pool []LotteryPrize, ceiling int) err
 	}
 	totalWeight := int64(0)
 	for i, prize := range pool {
-		if prize.Quota <= 0 {
-			return fmt.Errorf("%s第 %d 档的奖品额度必须大于 0", name, i+1)
+		if err := ValidatePrizeTier(prize); err != nil {
+			return fmt.Errorf("%s第 %d 档：%w", name, i+1, err)
 		}
-		if prize.Quota > common.MaxWalletQuota {
-			return fmt.Errorf("%s第 %d 档的奖品额度超过单次发放上限", name, i+1)
-		}
-		if ceiling > 0 && prize.Quota > ceiling {
+		if ceiling > 0 && prize.PrizeMaxQuota() > ceiling {
 			return fmt.Errorf("%s第 %d 档的奖品额度超过封顶值", name, i+1)
-		}
-		if prize.Weight <= 0 {
-			return fmt.Errorf("%s第 %d 档的权重必须大于 0", name, i+1)
 		}
 		totalWeight += int64(prize.Weight)
 		if totalWeight <= 0 {

@@ -242,6 +242,9 @@ const BILLING_SECTIONS = [
           tierPrizes: parseLotteryPool(settings['lottery_setting.tier_prizes']),
           tierPrizeStep: settings['lottery_setting.tier_prize_step'],
           tierPrizeMax: settings['lottery_setting.tier_prize_max'],
+          // 抽奖与限时活动共用的开关；缺省视为开启，与后端默认值一致
+          showProbability:
+            settings['welfare_setting.show_prize_probability'] ?? true,
         }}
       />
     ),

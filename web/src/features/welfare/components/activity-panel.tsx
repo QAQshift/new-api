@@ -21,13 +21,17 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatQuotaWithCurrency } from '@/lib/currency'
 import dayjs from '@/lib/dayjs'
+import { cn } from '@/lib/utils'
 import {
+  isPrizeRange,
   mergeIdenticalPrizes,
+  prizeMax,
   prizeWeightPercent,
 } from '@/features/lottery/prize-pool'
 
@@ -55,6 +59,8 @@ function actionLabelKey(activity: WelfareActivity): string {
 interface ActivityCardProps {
   activity: WelfareActivity
   entering: boolean
+  /** Admin-controlled: whether each tier's chance may be shown */
+  showProbability: boolean
   onEnter: (activityId: number) => void
 }
 
@@ -84,6 +90,25 @@ function ActivityCard(props: ActivityCardProps) {
     actionLabel = t('Loading...')
   }
 
+  // 状态文案必须区分"未开始"：否则未开始的活动会被显示成"已结束"
+  let statusLabel = t('Ended')
+  let statusVariant: 'default' | 'warning' | 'secondary' = 'secondary'
+  if (activity.status === 'active') {
+    statusLabel = t('Active')
+    statusVariant = 'default'
+  } else if (activity.status === 'upcoming') {
+    statusLabel = t('Not started')
+    statusVariant = 'warning'
+  }
+
+  const thresholdPercent =
+    activity.min_consume_quota > 0
+      ? Math.min(
+          100,
+          (activity.used_quota / activity.min_consume_quota) * 100
+        )
+      : 0
+
   return (
     <Card data-card-hover='false' className='gap-0 overflow-hidden py-0'>
       <div className='border-b p-4 sm:p-5'>
@@ -93,9 +118,7 @@ function ActivityCard(props: ActivityCardProps) {
               <h3 className='text-base font-semibold tracking-tight'>
                 {activity.title}
               </h3>
-              <span className='bg-muted text-muted-foreground inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium'>
-                {t(activity.status === 'active' ? 'Active' : 'Ended')}
-              </span>
+              <Badge variant={statusVariant}>{statusLabel}</Badge>
             </div>
             {activity.description && (
               <p className='text-muted-foreground mt-1.5 text-sm whitespace-pre-wrap'>
@@ -114,41 +137,66 @@ function ActivityCard(props: ActivityCardProps) {
         </div>
       </div>
 
-      <div className='grid gap-3 border-b p-4 text-sm sm:grid-cols-3 sm:p-5'>
-        <div>
-          <div className='text-muted-foreground text-xs'>
-            {t('Activity period')}
+      <div className='border-b p-4 sm:p-5'>
+        <div className='grid gap-2 text-sm sm:grid-cols-3 sm:gap-3'>
+          <div className='bg-muted/40 rounded-xl border px-3 py-2.5'>
+            <div className='text-muted-foreground text-[11px] font-medium tracking-wide uppercase'>
+              {t('Activity period')}
+            </div>
+            <div className='mt-1 text-xs tabular-nums'>
+              {t('{{start}} to {{end}}', { start, end })}
+            </div>
           </div>
-          <div className='mt-1 tabular-nums'>
-            {t('{{start}} to {{end}}', { start, end })}
-          </div>
-        </div>
-        <div>
-          <div className='text-muted-foreground text-xs'>{t('Threshold')}</div>
-          <div className='mt-1 tabular-nums'>
-            {activity.min_consume_quota > 0
-              ? t('{{required}} (current {{current}})', {
-                  required: formatQuotaWithCurrency(activity.min_consume_quota, {
+          <div className='bg-muted/40 rounded-xl border px-3 py-2.5'>
+            <div className='text-muted-foreground text-[11px] font-medium tracking-wide uppercase'>
+              {t('Threshold')}
+            </div>
+            <div className='mt-1 text-xs tabular-nums'>
+              {activity.min_consume_quota > 0
+                ? formatQuotaWithCurrency(activity.min_consume_quota, {
                     digitsLarge: 0,
-                  }),
-                  current: formatQuotaWithCurrency(activity.used_quota, {
-                    digitsLarge: 0,
-                  }),
-                })
-              : t('No threshold')}
+                  })
+                : t('No threshold')}
+            </div>
+          </div>
+          <div className='bg-muted/40 rounded-xl border px-3 py-2.5'>
+            <div className='text-muted-foreground text-[11px] font-medium tracking-wide uppercase'>
+              {t('Remaining entries')}
+            </div>
+            <div className='mt-1 text-xs tabular-nums'>
+              {t('{{today}} today, {{total}} in total', {
+                today: remainingToday,
+                total: remainingTotal,
+              })}
+            </div>
           </div>
         </div>
-        <div>
-          <div className='text-muted-foreground text-xs'>
-            {t('Remaining entries')}
+
+        {activity.min_consume_quota > 0 && (
+          <div className='mt-3 space-y-1.5'>
+            <div className='flex items-baseline justify-between text-xs'>
+              <span className='text-muted-foreground'>{t('Threshold')}</span>
+              <span className='font-semibold tabular-nums'>
+                {formatQuotaWithCurrency(activity.used_quota, {
+                  digitsLarge: 0,
+                })}{' '}
+                /{' '}
+                {formatQuotaWithCurrency(activity.min_consume_quota, {
+                  digitsLarge: 0,
+                })}
+              </span>
+            </div>
+            <div className='bg-muted h-1.5 w-full overflow-hidden rounded-full'>
+              <div
+                className={cn(
+                  'h-full rounded-full transition-[width]',
+                  activity.threshold_met ? 'bg-success' : 'bg-primary'
+                )}
+                style={{ width: `${thresholdPercent}%` }}
+              />
+            </div>
           </div>
-          <div className='mt-1 tabular-nums'>
-            {t('{{today}} today, {{total}} in total', {
-              today: remainingToday,
-              total: remainingTotal,
-            })}
-          </div>
-        </div>
+        )}
       </div>
 
       <div className='p-4 sm:p-5'>
@@ -156,15 +204,19 @@ function ActivityCard(props: ActivityCardProps) {
         <div className='mt-2 flex flex-wrap gap-2'>
           {prizePool.map((prize) => (
             <div
-              key={`${prize.quota}-${prize.weight}`}
+              key={`${prize.quota}-${prize.quota_max ?? 0}-${prize.weight}`}
               className='bg-muted/40 flex items-center gap-2 rounded-lg border px-2.5 py-1.5'
             >
               <span className='text-xs font-semibold tabular-nums sm:text-sm'>
-                {formatQuotaWithCurrency(prize.quota)}
+                {isPrizeRange(prize)
+                  ? `${formatQuotaWithCurrency(prize.quota)} ~ ${formatQuotaWithCurrency(prizeMax(prize))}`
+                  : formatQuotaWithCurrency(prize.quota)}
               </span>
-              <span className='text-muted-foreground text-[10px] tabular-nums sm:text-xs'>
-                {prizeWeightPercent(prize, prizePool)}%
-              </span>
+              {props.showProbability && (
+                <span className='text-muted-foreground text-[10px] tabular-nums sm:text-xs'>
+                  {prizeWeightPercent(prize, prizePool)}%
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -196,7 +248,8 @@ export function ActivityPanel() {
     queryFn: async () => {
       const res = await getWelfareActivities()
       if (res.success && res.data) {
-        return res.data.activities
+        // 整份负载都要留下：里面有活动的概率展示开关
+        return res.data
       }
       throw new Error(res.message || t('Failed to fetch welfare activities'))
     },
@@ -231,7 +284,9 @@ export function ActivityPanel() {
     )
   }
 
-  const activities = data ?? []
+  const activities = data?.activities ?? []
+  // 后端缺省该字段时按“展示”处理，保持与加开关之前的行为一致
+  const showProbability = data?.show_prize_probability !== false
   if (activities.length === 0) {
     return (
       <Card data-card-hover='false' className='gap-0 py-12'>
@@ -252,6 +307,7 @@ export function ActivityPanel() {
           key={activity.id}
           activity={activity}
           entering={enteringId === activity.id}
+          showProbability={showProbability}
           onEnter={handleEnter}
         />
       ))}

@@ -23,7 +23,10 @@ For commercial licensing, please contact support@quantumnous.com
  */
 export interface LotteryPrizeDraft {
   id: string
+  /** 额度下限。上限缺省或等于下限时表示固定额度。 */
   quota: number
+  /** 额度上限，0 表示固定额度（与旧配置兼容）。 */
+  quotaMax: number
   weight: number
 }
 
@@ -35,7 +38,7 @@ function nextPrizeId(): string {
 }
 
 export function createEmptyPrize(): LotteryPrizeDraft {
-  return { id: nextPrizeId(), quota: 0, weight: 1 }
+  return { id: nextPrizeId(), quota: 0, quotaMax: 0, weight: 1 }
 }
 
 /**
@@ -55,11 +58,12 @@ export function totalPrizeWeight(pool: LotteryPrizeDraft[]): number {
  * into editable drafts.
  */
 export function toPrizeDrafts(
-  prizes: ReadonlyArray<{ quota: number; weight: number }>
+  prizes: ReadonlyArray<{ quota: number; quota_max?: number; weight: number }>
 ): LotteryPrizeDraft[] {
   return prizes.map((prize) => ({
     id: nextPrizeId(),
     quota: Number(prize.quota) || 0,
+    quotaMax: Number(prize.quota_max) || 0,
     weight: Number(prize.weight) || 0,
   }))
 }
@@ -77,6 +81,7 @@ export function parseLotteryPool(value: string | undefined): LotteryPrizeDraft[]
       .map((item) => ({
         id: nextPrizeId(),
         quota: Number(item.quota) || 0,
+        quotaMax: Number(item.quota_max) || 0,
         weight: Number(item.weight) || 0,
       }))
   } catch {
@@ -89,7 +94,13 @@ export function parseLotteryPool(value: string | undefined): LotteryPrizeDraft[]
  */
 export function serializeLotteryPool(pool: LotteryPrizeDraft[]): string {
   return JSON.stringify(
-    pool.map((prize) => ({ quota: prize.quota, weight: prize.weight }))
+    pool.map((prize) => ({
+      quota: prize.quota,
+      // 始终带上上限（0 表示固定额度）：让后端去校验"上限低于下限"并给出明确
+      // 报错，而不是在前端静默丢弃管理员填的值。
+      quota_max: prize.quotaMax,
+      weight: prize.weight,
+    }))
   )
 }
 
@@ -98,5 +109,7 @@ export function serializeLotteryPool(pool: LotteryPrizeDraft[]): string {
  * through the backend never looks like a user edit.
  */
 export function poolSignature(pool: LotteryPrizeDraft[]): string {
-  return JSON.stringify(pool.map((prize) => [prize.quota, prize.weight]))
+  return JSON.stringify(
+    pool.map((prize) => [prize.quota, prize.quotaMax, prize.weight])
+  )
 }

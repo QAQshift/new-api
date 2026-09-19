@@ -112,11 +112,11 @@ func validateLotteryOptionUpdate(key string, raw string) error {
 		}
 	case "segment_prizes":
 		if err := json.Unmarshal([]byte(raw), &draft.SegmentPrizes); err != nil {
-			return errors.New(`分段式奖池必须是 [{"quota":额度,"weight":权重}] 形式的 JSON 数组`)
+			return errors.New(`分段式奖池必须是 [{"quota":额度下限,"quota_max":额度上限,"weight":权重}] 形式的 JSON 数组`)
 		}
 	case "tier_prizes":
 		if err := json.Unmarshal([]byte(raw), &draft.TierPrizes); err != nil {
-			return errors.New(`阶梯式奖池必须是 [{"quota":额度,"weight":权重}] 形式的 JSON 数组`)
+			return errors.New(`阶梯式奖池必须是 [{"quota":额度下限,"quota_max":额度上限,"weight":权重}] 形式的 JSON 数组`)
 		}
 	default:
 		return nil

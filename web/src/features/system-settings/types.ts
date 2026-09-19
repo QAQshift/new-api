@@ -118,6 +118,7 @@ export type SiteSettings = {
   'legal.privacy_policy': string
   HeaderNavModules: string
   SidebarModulesAdmin: string
+  SidebarCustomTabs: string
   UIThemePreset: string
   UIThemeFont: string
   UIThemeRadius: string
@@ -355,6 +356,8 @@ export type BillingSettings = {
   'lottery_setting.tier_prizes': string
   'lottery_setting.tier_prize_step': number
   'lottery_setting.tier_prize_max': number
+  // 抽奖与限时活动共用的概率展示开关，归福利中心命名空间
+  'welfare_setting.show_prize_probability': boolean
   'welfare_setting.activities_enabled': boolean
   'affiliate_setting.enabled': boolean
   'affiliate_setting.tiers': string

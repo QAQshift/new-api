@@ -19,8 +19,11 @@ For commercial licensing, please contact support@quantumnous.com
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Sparkles } from 'lucide-react'
+
 import { SectionPageLayout } from '@/components/layout'
 import { Card } from '@/components/ui/card'
+import { IconBadge } from '@/components/ui/icon-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LotteryTab } from '@/features/lottery/components/lottery-tab'
@@ -71,13 +74,18 @@ export function Welfare() {
       <Skeleton className='h-40 w-full rounded-xl' />
     ) : (
       <Card data-card-hover='false' className='gap-0 py-12'>
-        <div className='text-center'>
-          <h3 className='text-base font-semibold'>
-            {t('No welfare module is currently available')}
-          </h3>
-          <p className='text-muted-foreground mt-2 text-sm'>
-            {t('The administrator has not enabled any welfare module.')}
-          </p>
+        <div className='flex flex-col items-center gap-3 px-4 text-center'>
+          <IconBadge tone='neutral' size='lg'>
+            <Sparkles />
+          </IconBadge>
+          <div>
+            <h3 className='text-base font-semibold'>
+              {t('No welfare module is currently available')}
+            </h3>
+            <p className='text-muted-foreground mt-1.5 text-sm'>
+              {t('The administrator has not enabled any welfare module.')}
+            </p>
+          </div>
         </div>
       </Card>
     )
@@ -87,7 +95,7 @@ export function Welfare() {
         value={activeTab}
         onValueChange={(value) => setSelectedTab(value)}
       >
-        <TabsList>
+        <TabsList className='h-auto w-full flex-wrap justify-start p-1 sm:w-auto'>
           <TabsTrigger value={OVERVIEW_TAB}>{t('Overview')}</TabsTrigger>
           {modules.map((module) => (
             <TabsTrigger key={module.id} value={module.id}>
@@ -127,9 +135,16 @@ export function Welfare() {
 
   return (
     <SectionPageLayout>
-      <SectionPageLayout.Title>{t('Welfare Center')}</SectionPageLayout.Title>
+      <SectionPageLayout.Title>
+        <div className='space-y-0.5'>
+          <div>{t('Welfare Center')}</div>
+          <p className='text-muted-foreground text-xs font-normal sm:text-sm'>
+            {t('Check in, join activities and draw prizes in one place.')}
+          </p>
+        </div>
+      </SectionPageLayout.Title>
       <SectionPageLayout.Content>
-        <div className='mx-auto w-full max-w-4xl'>{body}</div>
+        <div className='mx-auto w-full max-w-5xl'>{body}</div>
       </SectionPageLayout.Content>
     </SectionPageLayout>
   )

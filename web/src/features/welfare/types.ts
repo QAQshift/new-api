@@ -30,7 +30,10 @@ export interface ApiResponse<T = unknown> {
  * One tier of a prize pool. Tiers are drawn by relative weight.
  */
 export interface WelfarePrize {
+  /** Lower bound of the payout when this tier is hit */
   quota: number
+  /** Upper bound of the payout. Absent or <= quota means a fixed amount. */
+  quota_max?: number
   weight: number
 }
 
@@ -101,6 +104,18 @@ export interface AdminWelfareActivity {
   participant_count: number
   /** Total quota handed out by this activity */
   total_prize_quota: number
+}
+
+/**
+ * Payload of the user-facing activity list.
+ */
+export interface WelfareActivitiesPayload {
+  activities: WelfareActivity[]
+  /**
+   * Whether the admin allows showing each tier's chance. Shared with the
+   * lottery; absent means "show", matching the pre-toggle behaviour.
+   */
+  show_prize_probability?: boolean
 }
 
 /**

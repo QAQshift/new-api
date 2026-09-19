@@ -62,7 +62,11 @@ func GetWelfareActivities(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"data":    gin.H{"activities": activities},
+		"data": gin.H{
+			"activities": activities,
+			// 抽奖与限时活动共用同一个概率展示开关
+			"show_prize_probability": operation_setting.GetWelfareSetting().ShowPrizeProbability,
+		},
 	})
 }
 

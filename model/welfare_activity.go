@@ -144,14 +144,8 @@ func ValidateWelfareActivity(a *WelfareActivity) error {
 	}
 	totalWeight := int64(0)
 	for i, prize := range pool {
-		if prize.Quota <= 0 {
-			return fmt.Errorf("第 %d 档的奖品额度必须大于 0", i+1)
-		}
-		if prize.Quota > common.MaxWalletQuota {
-			return fmt.Errorf("第 %d 档的奖品额度超过单次发放上限", i+1)
-		}
-		if prize.Weight <= 0 {
-			return fmt.Errorf("第 %d 档的权重必须大于 0", i+1)
+		if err := operation_setting.ValidatePrizeTier(prize); err != nil {
+			return fmt.Errorf("第 %d 档：%w", i+1, err)
 		}
 		totalWeight += int64(prize.Weight)
 		if totalWeight <= 0 {

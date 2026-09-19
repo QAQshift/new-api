@@ -16,17 +16,27 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Gift, Sparkles } from 'lucide-react'
+import {
+  Coins,
+  Gift,
+  Loader2,
+  Sparkles,
+  Ticket,
+  Trophy,
+} from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { IconBadge } from '@/components/ui/icon-badge'
+import { IconBadge, type IconBadgeTone } from '@/components/ui/icon-badge'
 import { formatQuotaWithCurrency } from '@/lib/currency'
 
 import {
+  isPrizeRange,
   mergeIdenticalPrizes,
+  prizeMax,
   prizeWeightPercent,
   topPrize,
 } from '../prize-pool'
@@ -62,6 +72,8 @@ export function LotteryDrawPanel({
     [status.next_prizes]
   )
   const best = topPrize(prizePool)
+  // 后端缺省该字段时按“展示”处理，保持与加开关之前的行为一致
+  const showProbability = status.show_probability !== false
 
   const progressPercent =
     status.next_threshold > 0
@@ -91,26 +103,56 @@ export function LotteryDrawPanel({
         })
   }
 
+  const statTiles: Array<{
+    key: string
+    label: string
+    value: string
+    icon: typeof Coins
+    tone: IconBadgeTone
+  }> = [
+    {
+      key: 'consumed',
+      label: t('Total consumed'),
+      value: formatQuotaWithCurrency(status.used_quota, { digitsLarge: 0 }),
+      icon: Coins,
+      tone: 'chart-1',
+    },
+    {
+      key: 'made',
+      label: t('Draws made'),
+      value: String(status.drawn_count),
+      icon: Trophy,
+      tone: 'chart-3',
+    },
+    {
+      key: 'available',
+      label: t('Draws available'),
+      value: String(drawableCount),
+      icon: Ticket,
+      tone: 'chart-5',
+    },
+  ]
+
   return (
     <Card data-card-hover='false' className='gap-0 overflow-hidden py-0'>
       {/* Header */}
       <div className='border-b p-5 sm:p-7'>
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
           <div className='flex min-w-0 items-start gap-4'>
-            <IconBadge tone='neutral' size='lg'>
-              <Gift className='h-5 w-5' strokeWidth={2} />
+            <IconBadge tone='chart-5' size='lg'>
+              <Gift className='size-5' strokeWidth={2} />
             </IconBadge>
             <div className='min-w-0'>
               <div className='flex flex-wrap items-center gap-2'>
                 <h3 className='text-lg font-semibold tracking-tight sm:text-xl'>
                   {t('Lottery')}
                 </h3>
-                <span className='bg-muted text-muted-foreground inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium'>
+                <Badge variant='outline'>
                   {isTiered ? t('Tiered mode') : t('Segment mode')}
-                </span>
+                </Badge>
                 {canDraw && (
-                  <span className='inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400'>
-                    <Sparkles className='h-3 w-3' />
+                  <span className='bg-success/10 text-success inline-flex items-center gap-1 rounded-4xl px-2 py-0.5 text-xs font-medium'>
+                    <Sparkles className='size-3' />
                     {t('{{count}} available', { count: drawableCount })}
                   </span>
                 )}
@@ -123,8 +165,13 @@ export function LotteryDrawPanel({
             onClick={onDraw}
             disabled={drawing || !canDraw}
             size='lg'
-            className='w-full shrink-0 sm:w-auto'
+            className='w-full shrink-0 gap-2 sm:w-auto'
           >
+            {drawing ? (
+              <Loader2 className='size-4 animate-spin' />
+            ) : (
+              <Sparkles className='size-4' />
+            )}
             {drawButtonLabel}
           </Button>
         </div>
@@ -136,7 +183,7 @@ export function LotteryDrawPanel({
           <h4 className='text-sm font-semibold'>{t('Next prize pool')}</h4>
           {best && (
             <span className='text-muted-foreground text-xs'>
-              {t('Top prize')} {formatQuotaWithCurrency(best.quota)}
+              {t('Top prize')} {formatQuotaWithCurrency(prizeMax(best))}
             </span>
           )}
         </div>
@@ -144,15 +191,19 @@ export function LotteryDrawPanel({
           <div className='mt-4 flex flex-wrap gap-3'>
             {prizePool.map((prize) => (
               <div
-                key={`${prize.quota}-${prize.weight}`}
-                className='bg-muted/40 min-w-28 rounded-xl border px-4 py-3 text-center'
+                key={`${prize.quota}-${prize.quota_max ?? 0}-${prize.weight}`}
+                className='bg-muted/40 hover:border-primary/30 min-w-28 rounded-xl border px-4 py-3 text-center transition-colors'
               >
                 <div className='text-base font-semibold tabular-nums sm:text-lg'>
-                  {formatQuotaWithCurrency(prize.quota)}
+                  {isPrizeRange(prize)
+                    ? `${formatQuotaWithCurrency(prize.quota)} ~ ${formatQuotaWithCurrency(prizeMax(prize))}`
+                    : formatQuotaWithCurrency(prize.quota)}
                 </div>
-                <div className='text-muted-foreground mt-0.5 text-xs tabular-nums'>
-                  {prizeWeightPercent(prize, prizePool)}%
-                </div>
+                {showProbability && (
+                  <div className='text-muted-foreground mt-0.5 text-xs tabular-nums'>
+                    {prizeWeightPercent(prize, prizePool)}%
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -185,31 +236,28 @@ export function LotteryDrawPanel({
       </div>
 
       {/* Stats */}
-      <div className='grid grid-cols-3 gap-px'>
-        <div className='bg-card p-4 text-center sm:p-6'>
-          <div className='text-xl font-semibold tracking-tight tabular-nums sm:text-2xl'>
-            {formatQuotaWithCurrency(status.used_quota, { digitsLarge: 0 })}
-          </div>
-          <div className='text-muted-foreground mt-1 text-xs font-medium'>
-            {t('Total consumed')}
-          </div>
-        </div>
-        <div className='bg-card p-4 text-center sm:p-6'>
-          <div className='text-xl font-semibold tracking-tight tabular-nums sm:text-2xl'>
-            {status.drawn_count}
-          </div>
-          <div className='text-muted-foreground mt-1 text-xs font-medium'>
-            {t('Draws made')}
-          </div>
-        </div>
-        <div className='bg-card p-4 text-center sm:p-6'>
-          <div className='text-xl font-semibold tracking-tight tabular-nums sm:text-2xl'>
-            {drawableCount}
-          </div>
-          <div className='text-muted-foreground mt-1 text-xs font-medium'>
-            {t('Draws available')}
-          </div>
-        </div>
+      <div className='grid gap-px sm:grid-cols-3'>
+        {statTiles.map((tile) => {
+          const Icon = tile.icon
+          return (
+            <div
+              key={tile.key}
+              className='bg-card hover:bg-muted/30 flex items-center gap-3 p-4 transition-colors sm:p-5'
+            >
+              <IconBadge tone={tile.tone} size='lg'>
+                <Icon />
+              </IconBadge>
+              <div className='min-w-0'>
+                <div className='text-xl font-semibold tracking-tight tabular-nums sm:text-2xl'>
+                  {tile.value}
+                </div>
+                <div className='text-muted-foreground truncate text-xs font-medium'>
+                  {tile.label}
+                </div>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </Card>
   )

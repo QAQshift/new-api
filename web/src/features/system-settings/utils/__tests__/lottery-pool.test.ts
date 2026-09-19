@@ -29,7 +29,7 @@ import {
 
 /** Drops the editor-only id so assertions read like the persisted value. */
 function bare(pool: LotteryPrizeDraft[]) {
-  return pool.map(({ quota, weight }) => ({ quota, weight }))
+  return pool.map(({ quota, quotaMax, weight }) => ({ quota, quotaMax, weight }))
 }
 
 describe('parseLotteryPool', () => {
@@ -39,8 +39,8 @@ describe('parseLotteryPool', () => {
         parseLotteryPool('[{"quota":100,"weight":70},{"quota":200,"weight":30}]')
       )
     ).toEqual([
-      { quota: 100, weight: 70 },
-      { quota: 200, weight: 30 },
+      { quota: 100, quotaMax: 0, weight: 70 },
+      { quota: 200, quotaMax: 0, weight: 30 },
     ])
   })
 
@@ -70,9 +70,46 @@ describe('parseLotteryPool', () => {
 })
 
 describe('serializeLotteryPool', () => {
-  test('persists only quota and weight', () => {
+  test('persists the amount range and the weight', () => {
     const pool = parseLotteryPool('[{"quota":100,"weight":70}]')
-    expect(serializeLotteryPool(pool)).toBe('[{"quota":100,"weight":70}]')
+    // 固定额度写成 quota_max:0，后端据此走"固定金额"分支
+    expect(serializeLotteryPool(pool)).toBe(
+      '[{"quota":100,"quota_max":0,"weight":70}]'
+    )
+  })
+
+  test('round-trips a ranged tier without losing the upper bound', () => {
+    const source = '[{"quota":100,"quota_max":300,"weight":70}]'
+    expect(serializeLotteryPool(parseLotteryPool(source))).toBe(source)
+  })
+})
+
+describe('amount ranges', () => {
+  test('reads the upper bound the backend stored', () => {
+    const pool = parseLotteryPool('[{"quota":100,"quota_max":300,"weight":70}]')
+
+    expect(pool[0].quota).toBe(100)
+    expect(pool[0].quotaMax).toBe(300)
+  })
+
+  test('degrades a missing upper bound to a fixed amount', () => {
+    expect(parseLotteryPool('[{"quota":100,"weight":70}]')[0].quotaMax).toBe(0)
+  })
+
+  test('treats an upper-bound change as an edit', () => {
+    const before = parseLotteryPool('[{"quota":100,"weight":70}]')
+    const after = parseLotteryPool('[{"quota":100,"quota_max":200,"weight":70}]')
+
+    expect(poolSignature(before)).not.toBe(poolSignature(after))
+  })
+
+  test('keeps a backend round-trip from looking like an edit', () => {
+    // 旧配置里没有 quota_max，保存一次会补上 0；重复保存不应再判定为"有改动"
+    const stored = '[{"quota":100,"weight":70}]'
+    const once = parseLotteryPool(stored)
+    const twice = parseLotteryPool(serializeLotteryPool(once))
+
+    expect(poolSignature(twice)).toBe(poolSignature(once))
   })
 })
 
@@ -80,8 +117,8 @@ describe('totalPrizeWeight', () => {
   test('sums every tier weight', () => {
     expect(
       totalPrizeWeight([
-        { id: 'a', quota: 10, weight: 70 },
-        { id: 'b', quota: 20, weight: 30 },
+        { id: 'a', quota: 10, quotaMax: 0, weight: 70 },
+        { id: 'b', quota: 20, quotaMax: 0, weight: 30 },
       ])
     ).toBe(100)
   })
@@ -100,21 +137,21 @@ describe('poolSignature', () => {
   })
 
   test('ignores key order so a backend round-trip is not a user edit', () => {
-    expect(
-      poolSignature([{ id: 'a', quota: 1, weight: 2 }])
-    ).toBe(poolSignature([{ id: 'b', quota: 1, weight: 2 }]))
+    expect(poolSignature([{ id: 'a', quota: 1, quotaMax: 0, weight: 2 }])).toBe(
+      poolSignature([{ id: 'b', quota: 1, quotaMax: 0, weight: 2 }])
+    )
   })
 
   test('detects an actual edit', () => {
     expect(
-      poolSignature([{ id: 'a', quota: 1, weight: 2 }])
-    ).not.toBe(poolSignature([{ id: 'a', quota: 2, weight: 2 }]))
+      poolSignature([{ id: 'a', quota: 1, quotaMax: 0, weight: 2 }])
+    ).not.toBe(poolSignature([{ id: 'a', quota: 2, quotaMax: 0, weight: 2 }]))
     expect(
-      poolSignature([{ id: 'a', quota: 1, weight: 2 }])
+      poolSignature([{ id: 'a', quota: 1, quotaMax: 0, weight: 2 }])
     ).not.toBe(
       poolSignature([
-        { id: 'a', quota: 1, weight: 2 },
-        { id: 'b', quota: 5, weight: 1 },
+        { id: 'a', quota: 1, quotaMax: 0, weight: 2 },
+        { id: 'b', quota: 5, quotaMax: 0, weight: 1 },
       ])
     )
   })
@@ -125,6 +162,8 @@ describe('createEmptyPrize', () => {
     const prize = createEmptyPrize()
 
     expect(prize.quota).toBe(0)
+    // 新档位默认是固定额度，而不是一个下限为 0 的区间
+    expect(prize.quotaMax).toBe(0)
     expect(prize.weight).toBe(1)
     expect(prize.id).toBeTruthy()
   })

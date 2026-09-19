@@ -282,6 +282,13 @@ export function WelfareActivitySection(props: WelfareActivitySectionProps) {
                   }
                 }}
               />
+              <p className='text-muted-foreground text-xs'>
+                {t('Users see about {{amount}}', {
+                  amount: formatQuotaWithCurrency(form.minConsumeQuota, {
+                    digitsLarge: 0,
+                  }),
+                })}
+              </p>
             </div>
           </div>
 

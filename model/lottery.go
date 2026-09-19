@@ -43,6 +43,9 @@ type LotteryStatus struct {
 	NextThreshold int                               `json:"next_threshold"`
 	NextPrizes    []operation_setting.LotteryPrize  `json:"next_prizes"`
 	Records       []LotteryDraw                     `json:"records"`
+	// ShowProbability 由福利中心的统一开关控制（与限时活动共用），
+	// 用户端据此决定是否展示中奖概率
+	ShowProbability bool `json:"show_probability"`
 }
 
 func countUserLotteryDraws(userId int, mode string) (int, error) {
@@ -101,6 +104,8 @@ func GetUserLotteryStatus(userId int) (*LotteryStatus, error) {
 		NextThreshold: setting.ThresholdQuotaFor(nextIndex),
 		NextPrizes:    setting.PrizePoolFor(nextIndex),
 		Records:       records,
+
+		ShowProbability: operation_setting.GetWelfareSetting().ShowPrizeProbability,
 	}, nil
 }
 

@@ -35,10 +35,12 @@ interface LotteryPrizeEditorProps {
 }
 
 /**
- * Edits one prize pool: a list of {quota, weight} tiers.
+ * Edits one prize pool: a list of {quota, quotaMax, weight} tiers.
  *
- * Quota is entered directly in the internal quota unit — the same unit as
+ * Amounts are entered directly in the internal quota unit — the same unit as
  * `users.quota` — so what the operator types is exactly what gets credited.
+ * A tier whose max is empty or equal to the min pays a fixed amount; otherwise
+ * the payout is drawn uniformly from [min, max].
  */
 export function LotteryPrizeEditor({
   pool,
@@ -63,9 +65,9 @@ export function LotteryPrizeEditor({
             key={prize.id}
             className='flex flex-wrap items-end gap-2 rounded-lg border p-3'
           >
-            <div className='min-w-32 flex-1 space-y-1.5'>
+            <div className='min-w-28 flex-1 space-y-1.5'>
               <label className='text-muted-foreground text-xs'>
-                {t('Prize quota')}
+                {t('Prize quota (min)')}
               </label>
               <Input
                 type='number'
@@ -76,6 +78,24 @@ export function LotteryPrizeEditor({
                   // 忽略 NaN，避免把非法中间态写进配置（见 utils/numeric-field.ts）
                   const next = event.target.valueAsNumber
                   if (Number.isFinite(next)) updateRow(index, { quota: next })
+                }}
+              />
+            </div>
+            <div className='min-w-28 flex-1 space-y-1.5'>
+              <label className='text-muted-foreground text-xs'>
+                {t('Prize quota (max)')}
+              </label>
+              <Input
+                type='number'
+                min={0}
+                value={prize.quotaMax}
+                placeholder={t('Same as min')}
+                disabled={disabled}
+                onChange={(event) => {
+                  const next = event.target.valueAsNumber
+                  if (Number.isFinite(next)) {
+                    updateRow(index, { quotaMax: next })
+                  }
                 }}
               />
             </div>
@@ -109,9 +129,22 @@ export function LotteryPrizeEditor({
               <Trash2 className='h-4 w-4' />
               <span className='sr-only'>{t('Remove tier')}</span>
             </Button>
+            {prize.quotaMax > 0 && prize.quotaMax < prize.quota && (
+              <p className='text-destructive w-full text-xs'>
+                {t('Max must not be lower than min.')}
+              </p>
+            )}
           </div>
         ))}
       </div>
+      <p className='text-muted-foreground text-xs'>
+        {t(
+          'Prize amounts use the internal quota unit, the same unit as the user balance.'
+        )}
+      </p>
+      <p className='text-muted-foreground text-xs'>
+        {t('A max equal to (or lower than) the min awards a fixed amount.')}
+      </p>
       <Button
         type='button'
         variant='outline'

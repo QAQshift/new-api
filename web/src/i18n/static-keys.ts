@@ -572,4 +572,21 @@ export const STATIC_I18N_KEYS = [
   'This user account is disabled.',
   'Telegram binding failed. Please try again.',
   'Verification scope is missing',
+
+  // Welfare hub + activity panel. These are passed into t() through variables
+  // (module metadata and an action-label helper), so the t('...') extractor
+  // cannot see them. Missing here means the UI silently falls back to the raw
+  // English key.
+  'Limited-time Activities',
+  'Daily Check-in',
+  'Lottery',
+  'Check in daily to receive random quota rewards',
+  'Draw prizes with the quota you have already consumed',
+  'Join time-limited activities for a chance at extra quota',
+  'Not started',
+  'Ended',
+  'Threshold not met',
+  'Daily limit reached',
+  'No entries left',
+  'Participate',
 ] as const

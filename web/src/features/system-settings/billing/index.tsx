@@ -127,6 +127,7 @@ const defaultBillingSettings: BillingSettings = {
   'lottery_setting.tier_prizes': DEFAULT_LOTTERY_PRIZES,
   'lottery_setting.tier_prize_step': 10000,
   'lottery_setting.tier_prize_max': 5000000,
+  'welfare_setting.show_prize_probability': true,
   'welfare_setting.activities_enabled': false,
   'affiliate_setting.enabled': false,
   'affiliate_setting.tiers': DEFAULT_AFFILIATE_TIERS,

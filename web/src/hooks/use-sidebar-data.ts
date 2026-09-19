@@ -18,8 +18,10 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import {
   Activity,
+  AppWindow,
   Box,
   CreditCard,
+  ExternalLink,
   FileText,
   FlaskConical,
   Gift,
@@ -30,16 +32,34 @@ import {
   Radio,
   ServerCog,
   Settings,
+  Share2,
   Ticket,
   User,
   Users,
   Wallet,
 } from 'lucide-react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { SidebarData } from '@/components/layout/types'
+import type { NavGroup, SidebarData } from '@/components/layout/types'
 import { useStatus } from '@/hooks/use-status'
+import {
+  isExternalTab,
+  parseSidebarTabs,
+  sidebarTabPath,
+  visibleSidebarTabCategories,
+} from '@/lib/sidebar-tabs'
 import { ROLE } from '@/lib/roles'
+
+/**
+ * 自定义页面的内容形态 → 侧边栏图标。
+ * 放在组件外，避免每次渲染重建这三个分支。
+ */
+function customTabIcon(type: string) {
+  if (type === 'iframe') return AppWindow
+  if (type === 'html') return FileText
+  return ExternalLink
+}
 
 /**
  * Root navigation groups for the application sidebar.
@@ -53,6 +73,29 @@ export function useSidebarData(): SidebarData {
   // The welfare hub aggregates whatever reward modules are switched on
   const welfareEnabled =
     status?.checkin_enabled === true || status?.lottery_enabled === true
+
+  // 管理员配置的自定义 tab：每个分类主题成为侧边栏里的一个独立分组。
+  // 位置在「个人」之后、「管理员」之前 —— 普通用户看不到管理员分组，
+  // 因此对他们而言就是排在最后。
+  const customNavGroups = useMemo<NavGroup[]>(() => {
+    const raw = status?.SidebarCustomTabs
+    const categories = visibleSidebarTabCategories(
+      parseSidebarTabs(typeof raw === 'string' ? raw : '')
+    )
+    return categories.map((category) => ({
+      id: `custom-${category.id}`,
+      title: category.title,
+      items: category.items.map((page) => {
+        const external = isExternalTab(page)
+        return {
+          title: page.title,
+          url: external ? page.content : sidebarTabPath(page.id),
+          icon: customTabIcon(page.type),
+          external,
+        }
+      }),
+    }))
+  }, [status?.SidebarCustomTabs])
 
   return {
     navGroups: [
@@ -125,12 +168,18 @@ export function useSidebarData(): SidebarData {
               ]
             : []),
           {
+            title: t('Referral Program'),
+            url: '/referral',
+            icon: Share2,
+          },
+          {
             title: t('Profile'),
             url: '/profile',
             icon: User,
           },
         ],
       },
+      ...customNavGroups,
       {
         id: 'admin',
         title: t('Admin'),

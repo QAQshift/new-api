@@ -70,6 +70,10 @@ export const SIDEBAR_MODULES_DEFAULT: SidebarModulesAdminConfig = {
   personal: {
     enabled: true,
     topup: true,
+    // welfare 之前漏了：use-sidebar-config.ts 的默认值里有它，这里没有，
+    // 导致「恢复默认」会把福利中心从管理端的配置里抹掉。
+    welfare: true,
+    referral: true,
     personal: true,
   },
   admin: {

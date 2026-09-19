@@ -919,6 +919,74 @@ export function PaymentSettingsSection({
             isSaving={updateOption.isPending || isSubmitting}
             saveLabel='Save all settings'
           />
+          {/*
+            支付方式停用是全局设置（作用于充值页的所有支付方式），必须放在渠道
+            标签页之外。之前它藏在 Epay 标签页内部，几乎不可能被发现。
+          */}
+          <div className='space-y-4 rounded-lg border p-4'>
+            <div>
+              <h3 className='text-lg font-medium'>
+                {t('Payment method control')}
+              </h3>
+              <p className='text-muted-foreground text-sm'>
+                {t(
+                  'Temporarily take a payment method offline across the top-up page without deleting its channel configuration.'
+                )}
+              </p>
+            </div>
+
+            <FormField
+              control={form.control}
+              name='DisabledMethods'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t('Temporarily disabled payment methods')}
+                  </FormLabel>
+                  <FormControl>
+                    <JsonCodeEditor
+                      value={field.value}
+                      onChange={field.onChange}
+                      name={field.name}
+                      onBlur={field.onBlur}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t(
+                      'JSON array of payment method types to hide, for example ["alipay","wxpay"]. Disabled methods disappear from the top-up page and their payment requests are rejected.'
+                    )}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='DisabledNotice'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Disabled methods notice')}</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      rows={3}
+                      placeholder={t(
+                        'Shown on the top-up page while methods are disabled, for example: Alipay and WeChat Pay are under maintenance, please use another method.'
+                      )}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t(
+                      'Explain why these methods are unavailable. Leave blank to show nothing.'
+                    )}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           <Tabs defaultValue='general' className='min-w-0'>
             <div className='overflow-x-auto pb-1'>
               <TabsList className='grid min-w-[44rem] grid-cols-6'>
@@ -1319,56 +1387,6 @@ export function PaymentSettingsSection({
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name='DisabledMethods'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {t('Temporarily disabled payment methods')}
-                        </FormLabel>
-                        <FormControl>
-                          <JsonCodeEditor
-                            value={field.value}
-                            onChange={field.onChange}
-                            name={field.name}
-                            onBlur={field.onBlur}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          {t(
-                            'JSON array of payment method types to hide, for example ["alipay","wxpay"]. Disabled methods disappear from the top-up page and their payment requests are rejected.'
-                          )}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name='DisabledNotice'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('Disabled methods notice')}</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            rows={3}
-                            placeholder={t(
-                              'Shown on the top-up page while methods are disabled, for example: Alipay and WeChat Pay are under maintenance, please use another method.'
-                            )}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          {t(
-                            'Explain why these methods are unavailable. Leave blank to show nothing.'
-                          )}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
               </div>
             </TabsContent>

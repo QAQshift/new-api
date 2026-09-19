@@ -18,12 +18,15 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery } from '@tanstack/react-query'
 import {
+  CalendarCheck,
   CalendarDays,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  Coins,
   Sparkles,
+  type LucideIcon,
 } from 'lucide-react'
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -33,7 +36,7 @@ import { Dialog } from '@/components/dialog'
 import { Turnstile } from '@/components/turnstile'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { IconBadge } from '@/components/ui/icon-badge'
+import { IconBadge, type IconBadgeTone } from '@/components/ui/icon-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Tooltip,
@@ -268,6 +271,38 @@ export function CheckinCalendarCard({
     )
   }
 
+  const statTiles: Array<{
+    key: string
+    label: string
+    value: string
+    icon: LucideIcon
+    tone: IconBadgeTone
+  }> = [
+    {
+      key: 'total',
+      label: t('Total check-ins'),
+      value: String(checkinData?.stats?.total_checkins || 0),
+      icon: CalendarCheck,
+      tone: 'chart-2',
+    },
+    {
+      key: 'month',
+      label: t('This month'),
+      value: formatQuotaWithCurrency(monthlyQuota, { digitsLarge: 0 }),
+      icon: CalendarDays,
+      tone: 'chart-4',
+    },
+    {
+      key: 'earned',
+      label: t('Total earned'),
+      value: formatQuotaWithCurrency(checkinData?.stats?.total_quota || 0, {
+        digitsLarge: 0,
+      }),
+      icon: Coins,
+      tone: 'chart-3',
+    },
+  ]
+
   return (
     <TooltipProvider delay={100}>
       <Dialog
@@ -309,7 +344,7 @@ export function CheckinCalendarCard({
               className='flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left whitespace-normal outline-none'
               onClick={() => setCollapsed((v) => !v)}
             >
-              <IconBadge tone='neutral' size='lg' className='sm:size-11'>
+              <IconBadge tone='chart-2' size='lg' className='sm:size-11'>
                 <CalendarDays
                   className='h-4 w-4 sm:h-5 sm:w-5'
                   strokeWidth={2}
@@ -321,7 +356,7 @@ export function CheckinCalendarCard({
                     {t('Daily Check-in')}
                   </h3>
                   {checkedToday && (
-                    <div className='inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 sm:gap-1.5 sm:px-2.5 sm:text-xs dark:text-emerald-400'>
+                    <div className='bg-success/10 text-success inline-flex items-center gap-1 rounded-4xl px-2 py-0.5 text-[11px] font-medium sm:gap-1.5 sm:px-2.5 sm:text-xs'>
                       <Sparkles className='h-2.5 w-2.5 sm:h-3 sm:w-3' />
                       {t('Checked in')}
                     </div>
@@ -354,35 +389,31 @@ export function CheckinCalendarCard({
           <>
             {/* Stats */}
             <div className='grid grid-cols-3 gap-px border-b'>
-              <div className='bg-card p-3 text-center sm:p-5'>
-                <div className='text-xl font-semibold tracking-tight tabular-nums sm:text-2xl'>
-                  {checkinData?.stats?.total_checkins || 0}
-                </div>
-                <div className='text-muted-foreground mt-0.5 text-[10px] font-medium sm:mt-1 sm:text-xs'>
-                  {t('Total check-ins')}
-                </div>
-              </div>
-              <div className='bg-card p-3 text-center sm:p-5'>
-                <div className='text-xl font-semibold tracking-tight tabular-nums sm:text-2xl'>
-                  {formatQuotaWithCurrency(monthlyQuota, { digitsLarge: 0 })}
-                </div>
-                <div className='text-muted-foreground mt-0.5 text-[10px] font-medium sm:mt-1 sm:text-xs'>
-                  {t('This month')}
-                </div>
-              </div>
-              <div className='bg-card p-3 text-center sm:p-5'>
-                <div className='text-xl font-semibold tracking-tight tabular-nums sm:text-2xl'>
-                  {formatQuotaWithCurrency(
-                    checkinData?.stats?.total_quota || 0,
-                    {
-                      digitsLarge: 0,
-                    }
-                  )}
-                </div>
-                <div className='text-muted-foreground mt-0.5 text-[10px] font-medium sm:mt-1 sm:text-xs'>
-                  {t('Total earned')}
-                </div>
-              </div>
+              {statTiles.map((tile) => {
+                const Icon = tile.icon
+                return (
+                  <div
+                    key={tile.key}
+                    className='bg-card hover:bg-muted/30 flex flex-col items-center gap-1 p-3 text-center transition-colors sm:flex-row sm:gap-3 sm:p-5 sm:text-left'
+                  >
+                    <IconBadge
+                      tone={tile.tone}
+                      size='lg'
+                      className='hidden sm:flex'
+                    >
+                      <Icon />
+                    </IconBadge>
+                    <div className='min-w-0'>
+                      <div className='text-xl font-semibold tracking-tight tabular-nums sm:text-2xl'>
+                        {tile.value}
+                      </div>
+                      <div className='text-muted-foreground truncate text-[10px] font-medium sm:text-xs'>
+                        {tile.label}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
 
             {/* Calendar */}

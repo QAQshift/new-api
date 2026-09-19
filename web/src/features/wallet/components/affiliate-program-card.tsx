@@ -16,20 +16,30 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Megaphone } from 'lucide-react'
+import {
+  Activity,
+  ArrowRight,
+  CreditCard,
+  Megaphone,
+  QrCode,
+  UserPlus,
+  Users,
+  type LucideIcon,
+} from 'lucide-react'
 import { QRCodeCanvas } from 'qrcode.react'
-import { useCallback, useMemo, useRef } from 'react'
+import { Fragment, useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { CopyButton } from '@/components/copy-button'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { IconBadge } from '@/components/ui/icon-badge'
+import { IconBadge, type IconBadgeTone } from '@/components/ui/icon-badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { TitledCard } from '@/components/ui/titled-card'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import dayjs from '@/lib/dayjs'
 import { formatQuota } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 import { downloadAffiliatePoster } from '../lib/affiliate-poster'
 import type {
@@ -46,10 +56,34 @@ const REGISTRATION_MILESTONES = [3, 10, 30, 100, 300, 1000]
 const EMPTY_TIERS: AffiliateTier[] = []
 const EMPTY_INVITEES: AffiliateInvitee[] = []
 
+/** Ready-to-share copy, kept out of the JSX so the layout stays readable. */
+const PROMO_TEMPLATES: Array<[string, string]> = [
+  [
+    'Concise',
+    'I am using {{site}}. One key gives you access to mainstream AI models, with straightforward setup and transparent usage. Sign up here: {{link}}',
+  ],
+  [
+    'Friendly',
+    'If you are looking for a reliable AI API endpoint, give {{site}} a try. Here is my sign-up link: {{link}}',
+  ],
+  [
+    'Rebate first',
+    'Sign up for {{site}} through my referral link and every top-up you make earns me a rebate - at no extra cost to you. Link: {{link}}',
+  ],
+]
+
 interface AffiliateProgramCardProps {
   affiliateLink: string
   overview: AffiliateOverview | null
   loading?: boolean
+}
+
+interface FunnelTile {
+  key: string
+  label: string
+  value: number
+  icon: LucideIcon
+  tone: IconBadgeTone
 }
 
 function percent(value: number): string {
@@ -116,154 +150,231 @@ export function AffiliateProgramCard({
 
   if (loading) {
     return (
-      <Card data-card-hover='false' className='bg-muted/20 py-0'>
-        <CardContent className='space-y-4 p-4'>
-          <Skeleton className='h-5 w-40' />
-          <Skeleton className='h-16 rounded-lg' />
-          <Skeleton className='h-24 rounded-lg' />
-        </CardContent>
-      </Card>
+      <TitledCard
+        disableHoverEffect
+        icon={<Megaphone />}
+        iconTone='chart-5'
+        title={<Skeleton className='h-5 w-48' />}
+        description={<Skeleton className='mt-1.5 h-3 w-64' />}
+      >
+        <div className='space-y-3'>
+          <Skeleton className='h-16 rounded-xl' />
+          <Skeleton className='h-24 rounded-xl' />
+          <Skeleton className='h-20 rounded-xl' />
+        </div>
+      </TitledCard>
     )
   }
 
-  const funnelStats: Array<[string, string]> = [
-    [t('Registered'), String(funnel?.registered ?? 0)],
-    [t('Active'), String(funnel?.active ?? 0)],
-    [t('Topped up'), String(funnel?.topped_up ?? 0)],
-    [t('Invites'), String(overview?.aff_count ?? 0)],
+  const funnelStats: FunnelTile[] = [
+    {
+      key: 'registered',
+      label: t('Registered'),
+      value: funnel?.registered ?? 0,
+      icon: UserPlus,
+      tone: 'chart-1',
+    },
+    {
+      key: 'active',
+      label: t('Active'),
+      value: funnel?.active ?? 0,
+      icon: Activity,
+      tone: 'chart-2',
+    },
+    {
+      key: 'topped-up',
+      label: t('Topped up'),
+      value: funnel?.topped_up ?? 0,
+      icon: CreditCard,
+      tone: 'chart-3',
+    },
+    {
+      key: 'invites',
+      label: t('Invites'),
+      value: overview?.aff_count ?? 0,
+      icon: Users,
+      tone: 'info',
+    },
   ]
 
-  return (
-    <Card data-card-hover='false' className='bg-muted/20 py-0'>
-      <CardContent className='space-y-5 p-3 sm:p-4'>
-        <div className='flex items-center gap-2.5'>
-          <IconBadge tone='chart-5'>
-            <Megaphone />
-          </IconBadge>
-          <div className='min-w-0'>
-            <h3 className='truncate text-sm font-semibold'>
-              {t('Promotion Center')}
-            </h3>
-            <p className='text-muted-foreground text-xs'>
-              {t(
-                'Track how your invitations convert and grab ready-to-share copy.'
-              )}
-            </p>
-          </div>
-        </div>
+  const registered = funnel?.registered ?? 0
 
+  return (
+    <TitledCard
+      disableHoverEffect
+      icon={<Megaphone />}
+      iconTone='chart-5'
+      title={t('Promotion Center')}
+      description={t(
+        'Track how your invitations convert and grab ready-to-share copy.'
+      )}
+      action={
+        <Button
+          type='button'
+          variant='outline'
+          size='sm'
+          onClick={handleDownloadPoster}
+          className='w-full sm:w-auto'
+        >
+          <QrCode className='size-4' />
+          {t('Download poster')}
+        </Button>
+      }
+    >
+      <div className='space-y-5'>
         {/* 返利档位 */}
         {overview?.enabled ? (
-          <div className='bg-background/60 rounded-lg border p-3'>
-            <div className='flex flex-wrap items-center gap-2'>
+          <section className='space-y-2'>
+            <h4 className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>
+              {t('Rebate rules')}
+            </h4>
+            <div className='bg-muted/40 flex flex-wrap items-center gap-2 rounded-xl border p-3'>
               {tiers.map((tier, index) => (
-                <span key={tier.times} className='flex items-center gap-2'>
+                <Fragment key={tier.times}>
                   {index > 0 ? (
-                    <span className='text-muted-foreground text-xs'>→</span>
+                    <ArrowRight className='text-muted-foreground size-3.5 shrink-0' />
                   ) : null}
-                  <span className='bg-primary/10 text-primary rounded-md px-2 py-1 text-sm font-semibold tabular-nums'>
+                  <span className='bg-primary/10 text-primary rounded-lg px-2.5 py-1 text-sm font-semibold tabular-nums'>
                     {tier.rate_percent}%
                   </span>
-                </span>
+                </Fragment>
               ))}
-              <span className='text-muted-foreground text-xs'>
-                {t('Rebate rules')}
-              </span>
             </div>
-            <p className='text-muted-foreground mt-2 text-xs'>{tierSummary}</p>
-            <p className='text-muted-foreground mt-1 text-xs'>
+            <p className='text-muted-foreground text-xs'>{tierSummary}</p>
+            <p className='text-muted-foreground text-xs'>
               {t(
                 'Rebates become transferable after a {{days}}-day cooling-off period.',
                 { days: overview.cooldown_days }
               )}
             </p>
-          </div>
+          </section>
         ) : null}
 
         {/* 转化漏斗 */}
-        <div className='space-y-3'>
-          <div className='grid grid-cols-2 gap-2 text-center sm:grid-cols-4'>
-            {funnelStats.map(([label, value]) => (
-              <div key={label} className='bg-background/60 rounded-lg border py-2'>
-                <div className='text-muted-foreground truncate text-[10px] font-medium tracking-wider uppercase'>
-                  {label}
+        <section className='space-y-3'>
+          <h4 className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>
+            {t('Conversion funnel')}
+          </h4>
+
+          <div className='grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4'>
+            {funnelStats.map((stat) => {
+              const Icon = stat.icon
+              return (
+                <div
+                  key={stat.key}
+                  className='bg-muted/40 hover:bg-muted/60 flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors'
+                >
+                  <IconBadge tone={stat.tone} size='lg'>
+                    <Icon />
+                  </IconBadge>
+                  <div className='min-w-0'>
+                    <div className='text-muted-foreground truncate text-[11px] font-medium tracking-wide uppercase'>
+                      {stat.label}
+                    </div>
+                    <div className='truncate text-base font-semibold tabular-nums'>
+                      {stat.value}
+                    </div>
+                  </div>
                 </div>
-                <div className='mt-0.5 truncate text-sm font-semibold tabular-nums'>
-                  {value}
+              )
+            })}
+          </div>
+
+          <div className='grid gap-2 sm:grid-cols-2 sm:gap-3'>
+            {[
+              [t('Active rate'), funnel?.active_rate ?? 0],
+              [t('Conversion rate'), funnel?.conversion_rate ?? 0],
+            ].map(([label, value]) => (
+              <div key={String(label)} className='space-y-1.5'>
+                <div className='flex items-baseline justify-between text-xs'>
+                  <span className='text-muted-foreground'>{label}</span>
+                  <span className='font-semibold tabular-nums'>
+                    {percent(Number(value))}
+                  </span>
+                </div>
+                <div className='bg-muted h-1.5 w-full overflow-hidden rounded-full'>
+                  <div
+                    className='bg-primary h-full rounded-full transition-[width]'
+                    style={{
+                      width: `${Math.min(100, Math.max(0, Number(value) * 100))}%`,
+                    }}
+                  />
                 </div>
               </div>
             ))}
           </div>
 
-          <div className='text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-xs'>
-            <span>
-              {t('Active rate')}: {percent(funnel?.active_rate ?? 0)}
-            </span>
-            <span>
-              {t('Conversion rate')}: {percent(funnel?.conversion_rate ?? 0)}
-            </span>
-          </div>
-
           {nextMilestone > 0 ? (
             <div className='space-y-1.5'>
-              <div className='text-muted-foreground text-xs'>
-                {t('Next milestone: {{count}} registrations', {
-                  count: nextMilestone,
-                })}
+              <div className='flex items-baseline justify-between text-xs'>
+                <span className='text-muted-foreground'>
+                  {t('Next milestone: {{count}} registrations', {
+                    count: nextMilestone,
+                  })}
+                </span>
+                <span className='font-semibold tabular-nums'>
+                  {registered} / {nextMilestone}
+                </span>
               </div>
               <div className='bg-muted h-1.5 w-full overflow-hidden rounded-full'>
                 <div
                   className='bg-primary h-full rounded-full transition-[width]'
                   style={{
-                    width: `${Math.min(
-                      100,
-                      ((funnel?.registered ?? 0) / nextMilestone) * 100
-                    )}%`,
+                    width: `${Math.min(100, (registered / nextMilestone) * 100)}%`,
                   }}
                 />
               </div>
             </div>
           ) : null}
-        </div>
+        </section>
 
         {/* 邀请名单 */}
-        <div className='space-y-2'>
-          <h4 className='text-xs font-semibold'>{t('Invitees')}</h4>
+        <section className='space-y-2'>
+          <h4 className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>
+            {t('Invitees')}
+          </h4>
           {invitees.length === 0 ? (
-            <p className='text-muted-foreground text-xs'>
+            <p className='text-muted-foreground bg-muted/40 rounded-xl border border-dashed px-3 py-4 text-center text-xs'>
               {t('No invited users yet. Share your referral link to get started.')}
             </p>
           ) : (
             <div className='space-y-1.5'>
-              {invitees.map((invitee) => (
-                <div
-                  key={invitee.user_id}
-                  className='bg-background/60 flex flex-wrap items-center gap-2 rounded-lg border px-2.5 py-2 text-xs'
-                >
-                  <span className='min-w-0 flex-1 truncate font-medium'>
-                    {invitee.username}
-                  </span>
-                  <span className='text-muted-foreground tabular-nums'>
-                    {dayjs.unix(invitee.created_at).format('YYYY-MM-DD HH:mm')}
-                  </span>
-                  <span
-                    className={
-                      invitee.topup_count > 0
-                        ? 'text-primary tabular-nums'
-                        : 'text-muted-foreground'
-                    }
+              {invitees.map((invitee) => {
+                const initial = (invitee.username || '?').slice(0, 1)
+                return (
+                  <div
+                    key={invitee.user_id}
+                    className='bg-muted/40 hover:bg-muted/60 flex flex-wrap items-center gap-2.5 rounded-xl border px-3 py-2 text-xs transition-colors'
                   >
-                    {invitee.topup_count > 0
-                      ? t('Top-ups: {{count}}', { count: invitee.topup_count })
-                      : t('No top-up yet')}
-                  </span>
-                  {invitee.rebate_quota > 0 ? (
-                    <span className='tabular-nums'>
-                      +{formatQuota(invitee.rebate_quota)}
+                    <span className='bg-background text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold uppercase'>
+                      {initial}
                     </span>
-                  ) : null}
-                </div>
-              ))}
+                    <span className='min-w-0 flex-1 truncate text-sm font-medium'>
+                      {invitee.username}
+                    </span>
+                    <span className='text-muted-foreground tabular-nums'>
+                      {dayjs.unix(invitee.created_at).format('YYYY-MM-DD HH:mm')}
+                    </span>
+                    <span
+                      className={cn(
+                        'rounded-md px-1.5 py-0.5 tabular-nums',
+                        invitee.topup_count > 0
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'bg-muted text-muted-foreground'
+                      )}
+                    >
+                      {invitee.topup_count > 0
+                        ? t('Top-ups: {{count}}', { count: invitee.topup_count })
+                        : t('No top-up yet')}
+                    </span>
+                    {invitee.rebate_quota > 0 ? (
+                      <span className='text-success font-semibold tabular-nums'>
+                        +{formatQuota(invitee.rebate_quota)}
+                      </span>
+                    ) : null}
+                  </div>
+                )
+              })}
               {overview?.invitees_truncated ? (
                 <p className='text-muted-foreground text-xs'>
                   {t('Only the most recent invitees are shown.')}
@@ -271,67 +382,48 @@ export function AffiliateProgramCard({
               ) : null}
             </div>
           )}
-        </div>
+        </section>
 
         {/* 推广素材 */}
-        <div className='space-y-2'>
-          <h4 className='text-xs font-semibold'>{t('Promo materials')}</h4>
-          <div className='space-y-1.5'>
-            {[
-              [
-                'Concise',
-                'I am using {{site}}. One key gives you access to mainstream AI models, with straightforward setup and transparent usage. Sign up here: {{link}}',
-              ],
-              [
-                'Friendly',
-                'If you are looking for a reliable AI API endpoint, give {{site}} a try. Here is my sign-up link: {{link}}',
-              ],
-              [
-                'Rebate first',
-                'Sign up for {{site}} through my referral link and every top-up you make earns me a rebate - at no extra cost to you. Link: {{link}}',
-              ],
-            ].map(([label, template]) => {
-              const key = label ?? ''
-              const text = promoText(template ?? '')
+        <section className='space-y-2'>
+          <h4 className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>
+            {t('Promo materials')}
+          </h4>
+          <div className='grid gap-2 sm:grid-cols-2 xl:grid-cols-3'>
+            {PROMO_TEMPLATES.map(([label, template]) => {
+              const text = promoText(template)
               return (
                 <div
-                  key={key}
-                  className='bg-background/60 flex items-start gap-2 rounded-lg border p-2.5'
+                  key={label}
+                  className='bg-muted/40 hover:bg-muted/60 flex flex-col gap-2 rounded-xl border p-3 transition-colors'
                 >
-                  <div className='min-w-0 flex-1'>
-                    <div className='text-muted-foreground text-[10px] font-medium tracking-wider uppercase'>
-                      {t(key)}
-                    </div>
-                    <p className='mt-1 text-xs break-words'>{text}</p>
+                  <div className='flex items-center justify-between gap-2'>
+                    <span className='bg-background text-muted-foreground rounded-md border px-1.5 py-0.5 text-[10px] font-medium tracking-wider uppercase'>
+                      {t(label)}
+                    </span>
+                    <CopyButton
+                      value={text}
+                      variant='ghost'
+                      className='size-7 shrink-0'
+                      iconClassName='size-3.5'
+                      tooltip={t('Copy')}
+                      aria-label={t('Copy')}
+                    />
                   </div>
-                  <CopyButton
-                    value={text}
-                    variant='outline'
-                    className='size-8 shrink-0'
-                    iconClassName='size-3.5'
-                    tooltip={t('Copy')}
-                    aria-label={t('Copy')}
-                  />
+                  <p className='text-muted-foreground text-xs break-words'>
+                    {text}
+                  </p>
                 </div>
               )
             })}
           </div>
+        </section>
+      </div>
 
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            onClick={handleDownloadPoster}
-          >
-            {t('Download poster')}
-          </Button>
-        </div>
-
-        {/* 隐藏的二维码画布，仅用于合成海报 */}
-        <div className='hidden' aria-hidden='true'>
-          <QRCodeCanvas ref={qrRef} value={affiliateLink} size={220} />
-        </div>
-      </CardContent>
-    </Card>
+      {/* 隐藏的二维码画布，仅用于合成海报 */}
+      <div className='hidden' aria-hidden='true'>
+        <QRCodeCanvas ref={qrRef} value={affiliateLink} size={220} />
+      </div>
+    </TitledCard>
   )
 }

@@ -21,7 +21,10 @@ import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
+import { Gift } from 'lucide-react'
+
 import { Card } from '@/components/ui/card'
+import { IconBadge } from '@/components/ui/icon-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatQuotaWithCurrency } from '@/lib/currency'
 
@@ -82,13 +85,18 @@ export function LotteryTab() {
     // The operator may switch the feature off at any time
     body = (
       <Card data-card-hover='false' className='gap-0 py-12'>
-        <div className='text-center'>
-          <h3 className='text-base font-semibold'>
-            {t('Lottery is not available')}
-          </h3>
-          <p className='text-muted-foreground mt-2 text-sm'>
-            {t('The administrator has not enabled the lottery feature.')}
-          </p>
+        <div className='flex flex-col items-center gap-3 px-4 text-center'>
+          <IconBadge tone='neutral' size='lg'>
+            <Gift />
+          </IconBadge>
+          <div>
+            <h3 className='text-base font-semibold'>
+              {t('Lottery is not available')}
+            </h3>
+            <p className='text-muted-foreground mt-1.5 text-sm'>
+              {t('The administrator has not enabled the lottery feature.')}
+            </p>
+          </div>
         </div>
       </Card>
     )

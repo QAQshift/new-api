@@ -16,16 +16,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Share2 } from 'lucide-react'
+import {
+  ArrowRight,
+  Clock3,
+  Share2,
+  TrendingUp,
+  Users,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { CopyButton } from '@/components/copy-button'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { IconBadge } from '@/components/ui/icon-badge'
+import { IconBadge, type IconBadgeTone } from '@/components/ui/icon-badge'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { TitledCard } from '@/components/ui/titled-card'
 import { formatQuota } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 import type { UserWalletData } from '../types'
 
@@ -37,6 +46,18 @@ interface AffiliateRewardsCardProps {
   loading?: boolean
 }
 
+interface RewardTile {
+  key: string
+  label: string
+  value: string
+  icon: LucideIcon
+  tone: IconBadgeTone
+  /** Optional one-line explanation under the number */
+  hint?: string
+  /** Draws attention to a non-zero amount waiting on the cooling-off period */
+  highlight?: boolean
+}
+
 export function AffiliateRewardsCard({
   user,
   affiliateLink,
@@ -45,93 +66,149 @@ export function AffiliateRewardsCard({
   loading,
 }: AffiliateRewardsCardProps) {
   const { t } = useTranslation()
+
   if (loading) {
     return (
-      <Card data-card-hover='false' className='bg-muted/20 py-0'>
-        <CardContent className='grid gap-4 p-3 sm:p-4 lg:grid-cols-[minmax(220px,1fr)_minmax(220px,0.72fr)_minmax(320px,1.15fr)] lg:items-center'>
-          <div>
-            <Skeleton className='h-5 w-32' />
-            <Skeleton className='mt-2 h-4 w-48' />
-          </div>
-          <Skeleton className='h-14 rounded-lg' />
-          <Skeleton className='h-10 rounded-lg' />
-        </CardContent>
-      </Card>
+      <TitledCard
+        disableHoverEffect
+        icon={<Share2 />}
+        iconTone='primary'
+        title={<Skeleton className='h-5 w-40' />}
+        description={<Skeleton className='mt-1.5 h-3 w-60' />}
+      >
+        <div className='grid gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4'>
+          {['a', 'b', 'c', 'd'].map((key) => (
+            <Skeleton key={key} className='h-16 rounded-xl' />
+          ))}
+        </div>
+      </TitledCard>
     )
   }
 
-  const hasRewards = (user?.aff_quota ?? 0) > 0
+  const pendingQuota = user?.aff_pending_quota ?? 0
+  const transferableQuota = user?.aff_quota ?? 0
+  const hasTransferable = transferableQuota > 0
+
+  const tiles: RewardTile[] = [
+    {
+      key: 'pending',
+      label: t('Pending'),
+      value: formatQuota(pendingQuota),
+      icon: Clock3,
+      tone: 'warning',
+      hint:
+        pendingQuota > 0 ? t('Clears the cooling-off period') : undefined,
+      highlight: pendingQuota > 0,
+    },
+    {
+      key: 'transferable',
+      label: t('Transferable'),
+      value: formatQuota(transferableQuota),
+      icon: Wallet,
+      tone: 'success',
+      highlight: hasTransferable,
+    },
+    {
+      key: 'earned',
+      label: t('Total Earned'),
+      value: formatQuota(user?.aff_history_quota ?? 0),
+      icon: TrendingUp,
+      tone: 'chart-3',
+    },
+    {
+      key: 'invites',
+      label: t('Invites'),
+      value: String(user?.aff_count ?? 0),
+      icon: Users,
+      tone: 'info',
+    },
+  ]
 
   return (
-    <Card data-card-hover='false' className='bg-muted/20 py-0'>
-      <CardContent className='grid gap-3 p-3 sm:gap-4 sm:p-4 lg:grid-cols-[minmax(200px,1fr)_minmax(180px,0.65fr)_minmax(280px,1fr)] lg:items-center'>
-        <div className='flex min-w-0 items-center gap-2.5'>
-          <IconBadge tone='chart-3'>
-            <Share2 />
-          </IconBadge>
-          <div className='min-w-0'>
-            <h3 className='truncate text-sm font-semibold'>
-              {t('Referral Program')}
-            </h3>
-            <p className='text-muted-foreground line-clamp-1 text-xs'>
-              {t(
-                'Earn a rebate on every top-up made by users you invite. Rebates clear a cooling-off period before they can be transferred to your balance.'
-              )}
-            </p>
+    <TitledCard
+      disableHoverEffect
+      icon={<Share2 />}
+      iconTone='primary'
+      title={t('Referral Program')}
+      description={t(
+        'Earn a rebate on every top-up made by users you invite. Rebates clear a cooling-off period before they can be transferred to your balance.'
+      )}
+      action={
+        hasTransferable ? (
+          <Button
+            onClick={onTransfer}
+            disabled={!complianceConfirmed}
+            className='w-full sm:w-auto'
+            size='sm'
+          >
+            {t('Transfer to Balance')}
+            <ArrowRight className='size-4' />
+          </Button>
+        ) : undefined
+      }
+    >
+      <div className='space-y-4'>
+        <div className='grid gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4'>
+          {tiles.map((tile) => {
+            const Icon = tile.icon
+            return (
+              <div
+                key={tile.key}
+                className={cn(
+                  'bg-muted/40 hover:bg-muted/60 flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors',
+                  tile.highlight && 'border-primary/20 bg-primary/5'
+                )}
+              >
+                <IconBadge tone={tile.tone} size='lg'>
+                  <Icon />
+                </IconBadge>
+                <div className='min-w-0'>
+                  <div className='text-muted-foreground truncate text-[11px] font-medium tracking-wide uppercase'>
+                    {tile.label}
+                  </div>
+                  <div className='truncate text-base font-semibold tabular-nums'>
+                    {tile.value}
+                  </div>
+                  {tile.hint ? (
+                    <div className='text-muted-foreground truncate text-[11px]'>
+                      {tile.hint}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className='space-y-1.5'>
+          <div className='text-muted-foreground text-xs font-medium'>
+            {t('Your referral link')}
+          </div>
+          <div className='flex items-center gap-2'>
+            <Input
+              value={affiliateLink}
+              readOnly
+              className='bg-background h-10 min-w-0 flex-1 font-mono text-xs'
+            />
+            <CopyButton
+              value={affiliateLink}
+              variant='outline'
+              className='size-10 shrink-0'
+              iconClassName='size-4'
+              tooltip={t('Copy referral link')}
+              aria-label={t('Copy referral link')}
+            />
           </div>
         </div>
 
-        <div className='grid grid-cols-2 gap-2 text-center sm:grid-cols-4 sm:gap-1.5'>
-          {[
-            [t('Pending'), formatQuota(user?.aff_pending_quota ?? 0)],
-            [t('Transferable'), formatQuota(user?.aff_quota ?? 0)],
-            [t('Total Earned'), formatQuota(user?.aff_history_quota ?? 0)],
-            [t('Invites'), String(user?.aff_count ?? 0)],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <div className='text-muted-foreground truncate text-[10px] font-medium tracking-wider uppercase'>
-                {label}
-              </div>
-              <div className='mt-0.5 truncate text-sm font-semibold tabular-nums'>
-                {value}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className='flex items-center gap-2'>
-          <Input
-            value={affiliateLink}
-            readOnly
-            className='border-muted bg-background/70 h-9 min-w-0 flex-1 font-mono text-xs'
-          />
-          <CopyButton
-            value={affiliateLink}
-            variant='outline'
-            className='bg-background size-9 shrink-0'
-            iconClassName='size-4'
-            tooltip={t('Copy referral link')}
-            aria-label={t('Copy referral link')}
-          />
-          {hasRewards && (
-            <Button
-              onClick={onTransfer}
-              disabled={!complianceConfirmed}
-              className='h-9 shrink-0 px-3'
-              size='sm'
-            >
-              {t('Transfer to Balance')}
-            </Button>
-          )}
-        </div>
         {!complianceConfirmed ? (
-          <p className='text-muted-foreground text-xs lg:col-span-3'>
+          <p className='text-warning text-xs'>
             {t(
               'Referral reward transfer is disabled until the administrator confirms compliance terms.'
             )}
           </p>
         ) : null}
-      </CardContent>
-    </Card>
+      </div>
+    </TitledCard>
   )
 }

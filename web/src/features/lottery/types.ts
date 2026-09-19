@@ -30,8 +30,10 @@ export interface ApiResponse<T = unknown> {
  * One tier of a prize pool. Tiers are drawn by relative weight.
  */
 export interface LotteryPrize {
-  /** Quota awarded when this tier is hit */
+  /** Lower bound of the payout when this tier is hit */
   quota: number
+  /** Upper bound of the payout. Absent or <= quota means a fixed amount. */
+  quota_max?: number
   /** Relative weight used by the weighted draw */
   weight: number
 }
@@ -71,6 +73,11 @@ export interface LotteryStatus {
   next_prizes: LotteryPrize[]
   /** Recent draws, newest first */
   records: LotteryDrawRecord[]
+  /**
+   * Whether the admin allows showing each tier's chance.
+   * Absent means "show", matching the behaviour before the toggle existed.
+   */
+  show_probability?: boolean
 }
 
 /**

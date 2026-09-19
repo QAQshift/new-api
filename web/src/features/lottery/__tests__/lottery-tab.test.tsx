@@ -97,6 +97,35 @@ describe('lottery tab', () => {
     expect(screen.getByText('2 draw(s) available')).toBeInTheDocument()
   })
 
+  test('hides the chances when the admin turned the toggle off', async () => {
+    mockedGetLotteryStatus.mockResolvedValue({
+      success: true,
+      data: baseStatus({ drawable_count: 1, show_probability: false }),
+    })
+
+    renderTab()
+
+    expect(await screen.findByText('Next prize pool')).toBeInTheDocument()
+    expect(screen.queryByText('70%')).toBeNull()
+    expect(screen.queryByText('30%')).toBeNull()
+  })
+
+  test('renders a tier with an amount range as a range', async () => {
+    mockedGetLotteryStatus.mockResolvedValue({
+      success: true,
+      data: baseStatus({
+        drawable_count: 1,
+        next_prizes: [{ quota: 100, quota_max: 500, weight: 100 }],
+      }),
+    })
+
+    renderTab()
+
+    expect(await screen.findByText('Next prize pool')).toBeInTheDocument()
+    // 金额格式随货币配置变化，这里只断言区间分隔符，证明走的是区间分支
+    expect(screen.getByText(/~/)).toBeInTheDocument()
+  })
+
   test('collapses identical tiers into one entry whose chance adds up', async () => {
     mockedGetLotteryStatus.mockResolvedValue({
       success: true,

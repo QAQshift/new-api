@@ -23,6 +23,8 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
+import type { IconBadgeTone } from '@/components/ui/icon-badge'
+
 /**
  * Modules the welfare hub can aggregate. Each one is switched on or off
  * independently by the operator, and the hub only shows what is enabled.
@@ -36,6 +38,8 @@ export interface WelfareModuleMeta {
   titleKey: string
   /** i18n source key for the one-line description */
   descriptionKey: string
+  /** Colour used by the module's icon badge, so the three modules stay distinct */
+  tone: IconBadgeTone
 }
 
 export const WELFARE_MODULES: Record<WelfareModuleId, WelfareModuleMeta> = {
@@ -44,17 +48,20 @@ export const WELFARE_MODULES: Record<WelfareModuleId, WelfareModuleMeta> = {
     icon: CalendarClock,
     titleKey: 'Limited-time Activities',
     descriptionKey: 'Join time-limited activities for a chance at extra quota',
+    tone: 'chart-4',
   },
   checkin: {
     id: 'checkin',
     icon: CalendarDays,
     titleKey: 'Daily Check-in',
     descriptionKey: 'Check in daily to receive random quota rewards',
+    tone: 'chart-2',
   },
   lottery: {
     id: 'lottery',
     icon: Gift,
     titleKey: 'Lottery',
     descriptionKey: 'Draw prizes with the quota you have already consumed',
+    tone: 'chart-5',
   },
 }

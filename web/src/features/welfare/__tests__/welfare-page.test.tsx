@@ -105,8 +105,9 @@ describe('welfare hub', () => {
 
     render(<Welfare />)
 
-    // Two module cards, each with a way in
-    expect(screen.getAllByRole('button', { name: 'Open' })).toHaveLength(2)
+    // 两张模块卡：整张卡就是入口，可访问名包含模块标题
+    expect(screen.getByRole('button', { name: /Daily Check-in/ })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Lottery/ })).toBeTruthy()
     expect(screen.queryByText('lottery-module')).toBeNull()
   })
 
@@ -115,8 +116,7 @@ describe('welfare hub', () => {
 
     render(<Welfare />)
 
-    const openButtons = screen.getAllByRole('button', { name: 'Open' })
-    fireEvent.click(openButtons[0])
+    fireEvent.click(screen.getByRole('button', { name: /Daily Check-in/ }))
 
     await waitFor(() =>
       expect(screen.getByText('checkin-module')).toBeTruthy()

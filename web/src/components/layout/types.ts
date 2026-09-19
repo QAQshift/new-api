@@ -34,6 +34,12 @@ type BaseNavItem = {
    * `useSidebarView`). Route-level guards still enforce access independently.
    */
   requiredRole?: number
+  /**
+   * Marks an item that points outside the app (an operator-configured custom
+   * tab). External items render as a plain `<a target="_blank">` because the
+   * router cannot navigate to another origin.
+   */
+  external?: boolean
 }
 
 /**

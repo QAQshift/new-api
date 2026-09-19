@@ -395,6 +395,17 @@ func UpdateOption(c *gin.Context) {
 				}
 			}
 		}
+		if option.Key == sidebarCustomTabsOptionKey {
+			if raw, ok := option.Value.(string); ok {
+				if tabsErr := validateSidebarCustomTabsOption(raw); tabsErr != nil {
+					c.JSON(http.StatusOK, gin.H{
+						"success": false,
+						"message": tabsErr.Error(),
+					})
+					return
+				}
+			}
+		}
 	}
 	switch option.Key {
 	case "GitHubOAuthEnabled":

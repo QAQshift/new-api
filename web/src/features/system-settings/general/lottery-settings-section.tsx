@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { formatQuota } from '@/lib/format'
 
 import { LotteryPrizeEditor } from '../components/lottery-prize-editor'
 import {
@@ -69,6 +70,7 @@ const schema = z.object({
   thresholdStepQuota: z.coerce.number().int().min(0),
   tierPrizeStep: z.coerce.number().int().min(0),
   tierPrizeMax: z.coerce.number().int().min(0),
+  showProbability: z.boolean(),
 })
 
 type Values = z.infer<typeof schema>
@@ -84,6 +86,7 @@ interface LotterySettingsSectionProps {
     tierPrizes: LotteryPrizeDraft[]
     tierPrizeStep: number
     tierPrizeMax: number
+    showProbability: boolean
   }
 }
 
@@ -114,6 +117,7 @@ export function LotterySettingsSection({
       thresholdStepQuota: defaultValues.thresholdStepQuota,
       tierPrizeStep: defaultValues.tierPrizeStep,
       tierPrizeMax: defaultValues.tierPrizeMax,
+      showProbability: defaultValues.showProbability,
     },
   })
 
@@ -150,6 +154,13 @@ export function LotterySettingsSection({
     }
     if (values.tierPrizeMax !== defaultValues.tierPrizeMax) {
       push('tier_prize_max', String(values.tierPrizeMax))
+    }
+    if (values.showProbability !== defaultValues.showProbability) {
+      // 该开关由福利中心统一持有（同时管抽奖与限时活动），因此写的是它的键
+      updates.push({
+        key: 'welfare_setting.show_prize_probability',
+        value: String(values.showProbability),
+      })
     }
     if (
       poolSignature(segmentPrizes) !== poolSignature(defaultValues.segmentPrizes)
@@ -195,6 +206,30 @@ export function LotterySettingsSection({
                   <FormDescription>
                     {t(
                       'Let users spend accumulated consumption to draw random quota prizes'
+                    )}
+                  </FormDescription>
+                </SettingsSwitchContent>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={busy}
+                  />
+                </FormControl>
+              </SettingsSwitchItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='showProbability'
+            render={({ field }) => (
+              <SettingsSwitchItem>
+                <SettingsSwitchContent>
+                  <FormLabel>{t('Show win probability')}</FormLabel>
+                  <FormDescription>
+                    {t(
+                      'Show the chance of each tier on the user side. This single switch covers both the lottery and limited-time activities.'
                     )}
                   </FormDescription>
                 </SettingsSwitchContent>
@@ -271,6 +306,10 @@ export function LotterySettingsSection({
                           {t(
                             'Accumulated consumption needed for one draw. Values use the internal quota unit, the same unit as the user balance.'
                           )}
+                          {' · '}
+                          {t('Users see about {{amount}}', {
+                            amount: formatQuota(field.value),
+                          })}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -312,6 +351,10 @@ export function LotterySettingsSection({
                             {t(
                               'Total consumption required for the first draw.'
                             )}
+                            {' · '}
+                            {t('Users see about {{amount}}', {
+                              amount: formatQuota(field.value),
+                            })}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -336,6 +379,10 @@ export function LotterySettingsSection({
                             {t(
                               'Tier N needs the first threshold plus (N-1) times this step.'
                             )}
+                            {' · '}
+                            {t('Users see about {{amount}}', {
+                              amount: formatQuota(field.value),
+                            })}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -377,6 +424,10 @@ export function LotterySettingsSection({
                             {t(
                               'Added to every prize amount for each higher tier. Set 0 to keep prizes flat across tiers.'
                             )}
+                            {' · '}
+                            {t('Users see about {{amount}}', {
+                              amount: formatQuota(field.value),
+                            })}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -399,6 +450,10 @@ export function LotterySettingsSection({
                             {t(
                               'Upper bound for a single prize. Set 0 for no cap. Must not be lower than any tier amount below.'
                             )}
+                            {' · '}
+                            {t('Users see about {{amount}}', {
+                              amount: formatQuota(field.value),
+                            })}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>

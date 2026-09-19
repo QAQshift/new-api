@@ -19,15 +19,32 @@ For commercial licensing, please contact support@quantumnous.com
 import type { LotteryPrize } from './types'
 
 /**
+ * Upper bound of a tier's payout. A missing, zero or too-small max means the
+ * tier pays a fixed amount, so the lower bound doubles as the upper one.
+ */
+export function prizeMax(prize: LotteryPrize): number {
+  const max = Number(prize.quota_max) || 0
+  return max > prize.quota ? max : prize.quota
+}
+
+/**
+ * True when the tier pays a range rather than a single fixed amount.
+ */
+export function isPrizeRange(prize: LotteryPrize): boolean {
+  return prizeMax(prize) > prize.quota
+}
+
+/**
  * Collapses tiers that award the same amount with the same weight.
  *
  * Identical tiers are the same outcome, so merging them keeps the displayed
- * chance correct and makes "quota-weight" a unique key when rendering.
+ * chance correct and makes "quota-quota_max-weight" a unique key when
+ * rendering. Tiers that differ only in their range stay separate.
  */
 export function mergeIdenticalPrizes(pool: LotteryPrize[]): LotteryPrize[] {
   const merged = new Map<string, LotteryPrize>()
   for (const prize of pool) {
-    const key = `${prize.quota}-${prize.weight}`
+    const key = `${prize.quota}-${prize.quota_max ?? 0}-${prize.weight}`
     const existing = merged.get(key)
     if (existing) {
       existing.weight += prize.weight
@@ -56,6 +73,6 @@ export function prizeWeightPercent(
 export function topPrize(pool: LotteryPrize[]): LotteryPrize | null {
   if (pool.length === 0) return null
   return pool.reduce((best, prize) =>
-    prize.quota > best.quota ? prize : best
+    prizeMax(prize) > prizeMax(best) ? prize : best
   )
 }
