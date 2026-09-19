@@ -50,26 +50,45 @@ function CustomTabBody({ page }: { page: SidebarTabDraft }) {
   const { t } = useTranslation()
 
   if (page.type === 'iframe' && isHttpUrl(page.content)) {
+    /*
+      沙箱按"是否跨域"分两种，这是刻意的，不是随手拼的字符串：
+
+      跨域（第三方站点）：必须给 allow-same-origin。
+        不给的话，被嵌入页面拿到的是不透明来源（Origin: null），后果有两个 ——
+        它读不到自己的 cookie / localStorage（登录态失效），而且**连它自己域名下的
+        模块脚本都会被判成跨域请求**（一条 `null` 来源的模块请求，服务端的 CORS
+        白名单通常只列真实域名、不认 null），于是整个应用白屏。
+        第三方页面本来就不可能访问我们的会话，所以这里放开没有额外风险。
+
+      同源（指向本站自己的页面）：**不给** allow-same-origin。
+        allow-scripts 与 allow-same-origin 同时出现在同源 iframe 上时，页面可以
+        自己解除沙箱并触达父页面 —— 仓库的 lint 规则拦的正是这一条。这里的判断
+        让那种组合在结构上不可能出现，而不是靠注释保证。
+
+      另外 referrerPolicy 不再强制 no-referrer：很多嵌入方靠 Referer 判断"是谁
+      嵌了我"来决定放不放行，抹掉它只会让自己被拒。
+    */
+    let sandbox =
+      'allow-forms allow-popups allow-popups-to-escape-sandbox allow-scripts allow-top-navigation-by-user-activation'
+    let embedIsCrossOrigin = false
+    try {
+      embedIsCrossOrigin =
+        new URL(page.content).host !== window.location.host
+    } catch {
+      // 解析不出主机名时不冒险放宽
+      embedIsCrossOrigin = false
+    }
+    if (embedIsCrossOrigin) {
+      sandbox += ' allow-same-origin'
+    }
+
     return (
       <div className='h-[85vh] min-h-[36rem] overflow-hidden rounded-xl border'>
-        {/*
-          注意这里**故意没有** allow-same-origin：
-          加上它会和 allow-scripts 组成"可自行解除沙箱"的组合（仓库的 lint 规则
-          直接拦下这条），所以被嵌入页面只能拿到不透明来源 —— 也就是请求头里的
-          Origin: null，且浏览器不允许它读写 cookie / localStorage。
-
-          后果要说清楚：**依赖登录态或站内存储的第三方应用，在这种沙箱里无法工作**。
-          这类应用通常提供"嵌入模式"，把身份信息放在 URL 参数里（例如
-          ?user_id=...&token=...&ui_mode=embedded），那种模式才能在沙箱内正常渲染。
-
-          referrerPolicy 不再强制 no-referrer：很多嵌入方靠 Referer 判断"是谁嵌
-          了我"来决定放不放行，把它抹掉只会让自己被拒。
-        */}
         <iframe
           src={page.content}
           title={page.title}
           className='size-full border-none'
-          sandbox='allow-forms allow-popups allow-popups-to-escape-sandbox allow-scripts allow-top-navigation-by-user-activation'
+          sandbox={sandbox}
           referrerPolicy='strict-origin-when-cross-origin'
         />
       </div>
