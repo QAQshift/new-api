@@ -51,13 +51,26 @@ function CustomTabBody({ page }: { page: SidebarTabDraft }) {
 
   if (page.type === 'iframe' && isHttpUrl(page.content)) {
     return (
-      <div className='h-[75vh] min-h-[32rem] overflow-hidden rounded-xl border'>
+      <div className='h-[85vh] min-h-[36rem] overflow-hidden rounded-xl border'>
+        {/*
+          注意这里**故意没有** allow-same-origin：
+          加上它会和 allow-scripts 组成"可自行解除沙箱"的组合（仓库的 lint 规则
+          直接拦下这条），所以被嵌入页面只能拿到不透明来源 —— 也就是请求头里的
+          Origin: null，且浏览器不允许它读写 cookie / localStorage。
+
+          后果要说清楚：**依赖登录态或站内存储的第三方应用，在这种沙箱里无法工作**。
+          这类应用通常提供"嵌入模式"，把身份信息放在 URL 参数里（例如
+          ?user_id=...&token=...&ui_mode=embedded），那种模式才能在沙箱内正常渲染。
+
+          referrerPolicy 不再强制 no-referrer：很多嵌入方靠 Referer 判断"是谁嵌
+          了我"来决定放不放行，把它抹掉只会让自己被拒。
+        */}
         <iframe
           src={page.content}
           title={page.title}
           className='size-full border-none'
           sandbox='allow-forms allow-popups allow-popups-to-escape-sandbox allow-scripts allow-top-navigation-by-user-activation'
-          referrerPolicy='no-referrer'
+          referrerPolicy='strict-origin-when-cross-origin'
         />
       </div>
     )
