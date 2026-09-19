@@ -19,7 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Sparkles } from 'lucide-react'
+import { Megaphone, Sparkles } from 'lucide-react'
 
 import { SectionPageLayout } from '@/components/layout'
 import { RichContent } from '@/components/rich-content'
@@ -154,15 +154,23 @@ export function Welfare() {
           {/* 玩法说明常驻在 Tabs 之上：它在所有模块里都适用。
               没有可用模块时不显示，避免空态页上还挂着一块说明。 */}
           {modules.length > 0 && rulesContent !== '' ? (
-            <Card data-card-hover='false' className='gap-0 py-0'>
-              <div className='p-5 sm:p-6'>
-                <RichContent
-                  mode={isLikelyHtml(rulesContent) ? 'html' : 'markdown'}
-                  htmlVariant='isolated'
-                  content={rulesContent}
-                />
+            /* 说明用柔色提示条而不是描边卡片：它是一句"须知"，不该和下面的功能
+               卡片抢视觉层级。样式与充值页的支付方式提示一致。 */
+            <div className='border-info/40 bg-info/10 flex items-start gap-3 rounded-xl border p-4 sm:p-5'>
+              <span className='bg-info/15 text-info flex size-8 shrink-0 items-center justify-center rounded-full'>
+                <Megaphone className='size-4' />
+              </span>
+              <div className='min-w-0 flex-1 space-y-1'>
+                <p className='text-sm font-semibold'>{t('How it works')}</p>
+                <div className='text-muted-foreground text-xs leading-5'>
+                  <RichContent
+                    mode={isLikelyHtml(rulesContent) ? 'html' : 'markdown'}
+                    htmlVariant='isolated'
+                    content={rulesContent}
+                  />
+                </div>
               </div>
-            </Card>
+            </div>
           ) : null}
           {body}
         </div>
