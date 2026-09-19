@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 
 import {
   SettingsForm,
@@ -54,6 +55,18 @@ import {
 } from '../utils/affiliate-tiers'
 import { safeNumberFieldProps } from '../utils/numeric-field'
 
+/** Mirrors the backend limits so the editor can disable dead-end actions. */
+const MAX_AFFILIATE_PROMO_TEMPLATES = 10
+const MAX_AFFILIATE_PROMO_LABEL_LENGTH = 30
+const MAX_AFFILIATE_PROMO_TEXT_LENGTH = 500
+
+/** One editable promo message. `id` only exists for a stable React key. */
+export interface AffiliatePromoTemplateDraft {
+  id: string
+  label: string
+  text: string
+}
+
 const schema = z.object({
   enabled: z.boolean(),
   tiers: z
@@ -67,6 +80,14 @@ const schema = z.object({
     .min(1),
   cooldownDays: z.coerce.number().int().min(0),
   maxRebatePerInvitee: z.coerce.number().int().min(0),
+  promoTemplates: z.array(
+    z.object({
+      id: z.string(),
+      label: z.string(),
+      text: z.string(),
+    })
+  ),
+  posterBackgroundUrl: z.string(),
 })
 
 type Values = z.infer<typeof schema>
@@ -76,6 +97,8 @@ export interface AffiliateSettingsDefaults {
   tiers: AffiliateTierDraft[]
   cooldownDays: number
   maxRebatePerInvitee: number
+  promoTemplates: AffiliatePromoTemplateDraft[]
+  posterBackgroundUrl: string
 }
 
 export function AffiliateSettingsSection({
@@ -97,12 +120,16 @@ export function AffiliateSettingsSection({
       })),
       cooldownDays: defaultValues.cooldownDays,
       maxRebatePerInvitee: defaultValues.maxRebatePerInvitee,
+      promoTemplates: defaultValues.promoTemplates,
+      posterBackgroundUrl: defaultValues.posterBackgroundUrl,
     },
   })
 
   const { isDirty, isSubmitting } = form.formState
+  const busy = updateOption.isPending || isSubmitting
   const enabled = form.watch('enabled')
   const tiers = form.watch('tiers')
+  const promoTemplates = form.watch('promoTemplates')
 
   const setTiers = (next: Values['tiers']) => {
     form.setValue('tiers', next, { shouldDirty: true })
@@ -110,6 +137,32 @@ export function AffiliateSettingsSection({
 
   const updateTier = (index: number, patch: Partial<Values['tiers'][number]>) => {
     setTiers(tiers.map((tier, i) => (i === index ? { ...tier, ...patch } : tier)))
+  }
+
+  const setPromoTemplates = (next: Values['promoTemplates']) => {
+    form.setValue('promoTemplates', next, { shouldDirty: true })
+  }
+
+  const updatePromo = (
+    index: number,
+    patch: Partial<Values['promoTemplates'][number]>
+  ) => {
+    setPromoTemplates(
+      promoTemplates.map((item, i) =>
+        i === index ? { ...item, ...patch } : item
+      )
+    )
+  }
+
+  const addPromo = () => {
+    setPromoTemplates([
+      ...promoTemplates,
+      { id: nextTierId(), label: '', text: '' },
+    ])
+  }
+
+  const removePromo = (index: number) => {
+    setPromoTemplates(promoTemplates.filter((_, i) => i !== index))
   }
 
   async function onSubmit(values: Values) {
@@ -144,6 +197,25 @@ export function AffiliateSettingsSection({
       updates.push({
         key: 'affiliate_setting.max_rebate_per_invitee',
         value: String(values.maxRebatePerInvitee),
+      })
+    }
+
+    // 比较时剥掉仅供 React key 使用的 id
+    const stripPromo = (list: Array<{ label: string; text: string }>) =>
+      JSON.stringify(list.map(({ label, text }) => ({ label, text })))
+    if (
+      stripPromo(values.promoTemplates) !== stripPromo(defaultValues.promoTemplates)
+    ) {
+      updates.push({
+        key: 'affiliate_setting.promo_templates',
+        value: stripPromo(values.promoTemplates),
+      })
+    }
+
+    if (values.posterBackgroundUrl !== defaultValues.posterBackgroundUrl) {
+      updates.push({
+        key: 'affiliate_setting.poster_background_url',
+        value: values.posterBackgroundUrl.trim(),
       })
     }
 
@@ -191,6 +263,98 @@ export function AffiliateSettingsSection({
                   />
                 </FormControl>
               </SettingsSwitchItem>
+            )}
+          />
+
+          <FormItem>
+            <FormLabel>{t('Promo materials')}</FormLabel>
+            <FormDescription>
+              {t(
+                'Messages users can copy from the referral page. {{site}} and {{link}} are replaced with your site name and the referral link. Leave the list empty to use the built-in messages.'
+              )}
+            </FormDescription>
+
+            <div className='space-y-2'>
+              {promoTemplates.map((template, index) => (
+                <div
+                  key={template.id}
+                  className='bg-muted/30 space-y-2 rounded-lg border p-3'
+                >
+                  <div className='flex items-end gap-2'>
+                    <div className='min-w-32 flex-1 space-y-1.5'>
+                      <label className='text-muted-foreground text-xs'>
+                        {t('Label')}
+                      </label>
+                      <Input
+                        value={template.label}
+                        maxLength={MAX_AFFILIATE_PROMO_LABEL_LENGTH}
+                        disabled={busy}
+                        onChange={(event) =>
+                          updatePromo(index, { label: event.target.value })
+                        }
+                      />
+                    </div>
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      disabled={busy}
+                      aria-label={t('Remove')}
+                      onClick={() => removePromo(index)}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  </div>
+                  <div className='space-y-1.5'>
+                    <label className='text-muted-foreground text-xs'>
+                      {t('Message')}
+                    </label>
+                    <Textarea
+                      value={template.text}
+                      rows={3}
+                      maxLength={MAX_AFFILIATE_PROMO_TEXT_LENGTH}
+                      disabled={busy}
+                      onChange={(event) =>
+                        updatePromo(index, { text: event.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              disabled={busy || promoTemplates.length >= MAX_AFFILIATE_PROMO_TEMPLATES}
+              onClick={addPromo}
+            >
+              <Plus className='size-4' />
+              {t('Add message')}
+            </Button>
+          </FormItem>
+
+          <FormField
+            control={form.control}
+            name='posterBackgroundUrl'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('Poster background image')}</FormLabel>
+                <FormDescription>
+                  {t(
+                    'Optional. A same-site path such as /uploads/poster.png works best — images hosted elsewhere must allow cross-origin access, otherwise the poster falls back to the built-in layout.'
+                  )}
+                </FormDescription>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder='/uploads/poster.png'
+                    disabled={busy}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
 

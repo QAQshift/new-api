@@ -20,6 +20,8 @@ import { describe, expect, test } from 'vitest'
 
 import {
   countSidebarTabPages,
+  createEmptyCategory,
+  createEmptyPage,
   isHttpUrl,
   parseSidebarTabs,
   serializeSidebarTabs,
@@ -34,15 +36,29 @@ const SAMPLE = {
     {
       id: 'cat-1',
       title: '帮助中心',
+      published: true,
       items: [
-        { id: 'pg-1', title: '使用文档', type: 'link', content: 'https://e.com' },
+        {
+          id: 'pg-1',
+          title: '使用文档',
+          type: 'link',
+          content: 'https://e.com',
+          published: true,
+        },
         {
           id: 'pg-2',
           title: '常见问题',
           type: 'iframe',
           content: 'https://e.com/faq',
+          published: true,
         },
-        { id: 'pg-3', title: '公告', type: 'html', content: '<p>hi</p>' },
+        {
+          id: 'pg-3',
+          title: '公告',
+          type: 'html',
+          content: '<p>hi</p>',
+          published: true,
+        },
       ],
     },
   ],
@@ -124,6 +140,63 @@ describe('serializeSidebarTabs', () => {
   })
 })
 
+describe('publish flag', () => {
+  test('treats a missing flag as published so legacy configs keep working', () => {
+    const parsed = parseSidebarTabs(
+      '{"categories":[{"id":"c","title":"T","items":[{"id":"p","title":"P","type":"link","content":"https://e.com"}]}]}'
+    )
+
+    expect(parsed[0].published).toBe(true)
+    expect(parsed[0].items[0].published).toBe(true)
+  })
+
+  test('hides drafts from the sidebar and from the page route', () => {
+    const categories = parseSidebarTabs(
+      JSON.stringify({
+        categories: [
+          {
+            id: 'c1',
+            title: 'Draft category',
+            published: false,
+            items: [
+              { id: 'p1', title: 'P', type: 'link', content: 'https://e.com', published: true },
+            ],
+          },
+          {
+            id: 'c2',
+            title: 'Live category',
+            published: true,
+            items: [
+              { id: 'p2', title: 'Live', type: 'link', content: 'https://e.com', published: true },
+              { id: 'p3', title: 'Draft page', type: 'link', content: 'https://e.com', published: false },
+            ],
+          },
+        ],
+      })
+    )
+
+    const visible = visibleSidebarTabCategories(categories)
+
+    // 未发布的主题整组消失，包括它下面已发布的页面
+    expect(visible.map((category) => category.id)).toEqual(['c2'])
+    // 未发布的页面也不可见 —— 页面路由用的是同一个判定，所以按 URL 也进不去
+    expect(visible[0].items.map((item) => item.id)).toEqual(['p2'])
+  })
+
+  test('treats a publish change as an edit', () => {
+    const before = parseSidebarTabs(JSON.stringify(SAMPLE))
+    const after = parseSidebarTabs(JSON.stringify(SAMPLE))
+    after[0].published = false
+
+    expect(sidebarTabsSignature(before)).not.toBe(sidebarTabsSignature(after))
+  })
+
+  test('creates new entries as drafts so nothing goes live by accident', () => {
+    expect(createEmptyCategory().published).toBe(false)
+    expect(createEmptyPage().published).toBe(false)
+  })
+})
+
 describe('isHttpUrl', () => {
   test('accepts http and https only', () => {
     expect(isHttpUrl('https://example.com')).toBe(true)
@@ -148,10 +221,31 @@ describe('sidebarTabPath', () => {
 describe('visibleSidebarTabCategories', () => {
   test('drops categories and pages that would render as nothing', () => {
     const categories: SidebarTabCategoryDraft[] = [
-      { id: 'c1', title: '  ', items: [{ id: 'p1', title: 'A', type: 'link', content: 'https://e.com' }] },
-      { id: 'c2', title: 'B', items: [{ id: 'p2', title: '  ', type: 'link', content: 'https://e.com' }] },
-      { id: 'c3', title: 'C', items: [] },
-      { id: 'c4', title: 'D', items: [{ id: 'p3', title: '标题', type: 'html', content: '<p>x</p>' }] },
+      {
+        id: 'c1',
+        title: '  ',
+        published: true,
+        items: [
+          { id: 'p1', title: 'A', type: 'link', content: 'https://e.com', published: true },
+        ],
+      },
+      {
+        id: 'c2',
+        title: 'B',
+        published: true,
+        items: [
+          { id: 'p2', title: '  ', type: 'link', content: 'https://e.com', published: true },
+        ],
+      },
+      { id: 'c3', title: 'C', published: true, items: [] },
+      {
+        id: 'c4',
+        title: 'D',
+        published: true,
+        items: [
+          { id: 'p3', title: '标题', type: 'html', content: '<p>x</p>', published: true },
+        ],
+      },
     ]
 
     const visible = visibleSidebarTabCategories(categories)

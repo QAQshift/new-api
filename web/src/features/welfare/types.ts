@@ -74,6 +74,24 @@ export interface WelfareActivity {
   remaining_today: number
   threshold_met: boolean
   can_enter: boolean
+  /**
+   * Recent winners, newest first. Usernames are already masked by the server.
+   * Absent unless the operator turned the winner list on.
+   */
+  recent_winners?: WelfareWinner[]
+}
+
+/**
+ * One winner of an activity. The username is masked server-side, so the
+ * client never sees the full name.
+ */
+export interface WelfareWinner {
+  /** Entry id: unique and stable, so it doubles as the list key */
+  id: number
+  username: string
+  prize_quota: number
+  /** Unix seconds */
+  created_at: number
 }
 
 /**
@@ -112,10 +130,20 @@ export interface AdminWelfareActivity {
 export interface WelfareActivitiesPayload {
   activities: WelfareActivity[]
   /**
+   * Whether the admin allows showing the prize pool at all. Shared with the
+   * lottery; absent means "show", matching the pre-toggle behaviour.
+   */
+  show_prize_pool?: boolean
+  /**
    * Whether the admin allows showing each tier's chance. Shared with the
    * lottery; absent means "show", matching the pre-toggle behaviour.
    */
   show_prize_probability?: boolean
+  /**
+   * Whether the admin allows showing the winner list. Unlike the two switches
+   * above this one defaults to OFF on the server, so absent means "hide".
+   */
+  show_winner_list?: boolean
 }
 
 /**

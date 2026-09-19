@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
 	"github.com/gin-gonic/gin"
@@ -60,14 +62,51 @@ func GetWelfareActivities(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})
 		return
 	}
+	welfare := operation_setting.GetWelfareSetting()
+	// 中奖名单默认关闭：公开他人昵称属于新增的隐私暴露，只有管理员主动开启时
+	// 才查库并填充，关闭状态下连查询都不做。
+	if welfare.ShowWinnerList {
+		attachRecentWinners(c, activities)
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
 			"activities": activities,
-			// 抽奖与限时活动共用同一个概率展示开关
-			"show_prize_probability": operation_setting.GetWelfareSetting().ShowPrizeProbability,
+			// 展示开关由抽奖与限时活动共用，因此整组一起下发
+			"show_prize_pool":        welfare.ShowActivityPrizePool,
+			"show_prize_probability": welfare.ShowActivityProbability,
+			"show_winner_list":       welfare.ShowWinnerList,
 		},
 	})
+}
+
+// attachRecentWinners 给每个活动补上最近的中奖记录，昵称在展示层遮蔽。
+func attachRecentWinners(c *gin.Context, activities []model.WelfareActivityView) {
+	if len(activities) == 0 {
+		return
+	}
+	activityIds := make([]int, 0, len(activities))
+	for _, activity := range activities {
+		activityIds = append(activityIds, activity.Id)
+	}
+	winnerMap, err := model.RecentWelfareActivityWinners(activityIds, model.WinnerListLimit)
+	if err != nil {
+		// 名单只是附加信息，取不到不该让整个活动列表接口失败
+		logger.LogError(c.Request.Context(), fmt.Sprintf("查询活动中奖名单失败: %s", err.Error()))
+		return
+	}
+	for i := range activities {
+		winners := winnerMap[activities[i].Id]
+		if len(winners) == 0 {
+			continue
+		}
+		masked := make([]model.WelfareActivityWinner, 0, len(winners))
+		for _, winner := range winners {
+			winner.Username = maskInviteeName(winner.Username)
+			masked = append(masked, winner)
+		}
+		activities[i].RecentWinners = masked
+	}
 }
 
 // EnterWelfareActivity 参与一次限时活动

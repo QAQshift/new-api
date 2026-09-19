@@ -70,7 +70,9 @@ const schema = z.object({
   thresholdStepQuota: z.coerce.number().int().min(0),
   tierPrizeStep: z.coerce.number().int().min(0),
   tierPrizeMax: z.coerce.number().int().min(0),
+  showPrizePool: z.boolean(),
   showProbability: z.boolean(),
+  showLotteryHistory: z.boolean(),
 })
 
 type Values = z.infer<typeof schema>
@@ -86,7 +88,9 @@ interface LotterySettingsSectionProps {
     tierPrizes: LotteryPrizeDraft[]
     tierPrizeStep: number
     tierPrizeMax: number
+    showPrizePool: boolean
     showProbability: boolean
+    showLotteryHistory: boolean
   }
 }
 
@@ -117,7 +121,9 @@ export function LotterySettingsSection({
       thresholdStepQuota: defaultValues.thresholdStepQuota,
       tierPrizeStep: defaultValues.tierPrizeStep,
       tierPrizeMax: defaultValues.tierPrizeMax,
+      showPrizePool: defaultValues.showPrizePool,
       showProbability: defaultValues.showProbability,
+      showLotteryHistory: defaultValues.showLotteryHistory,
     },
   })
 
@@ -155,11 +161,23 @@ export function LotterySettingsSection({
     if (values.tierPrizeMax !== defaultValues.tierPrizeMax) {
       push('tier_prize_max', String(values.tierPrizeMax))
     }
-    if (values.showProbability !== defaultValues.showProbability) {
-      // 该开关由福利中心统一持有（同时管抽奖与限时活动），因此写的是它的键
+    // 以下三个开关由福利中心统一持有（同时管抽奖与限时活动），因此写的是它的键
+    if (values.showPrizePool !== defaultValues.showPrizePool) {
       updates.push({
-        key: 'welfare_setting.show_prize_probability',
+        key: 'lottery_setting.show_prize_pool',
+        value: String(values.showPrizePool),
+      })
+    }
+    if (values.showProbability !== defaultValues.showProbability) {
+      updates.push({
+        key: 'lottery_setting.show_prize_probability',
         value: String(values.showProbability),
+      })
+    }
+    if (values.showLotteryHistory !== defaultValues.showLotteryHistory) {
+      updates.push({
+        key: 'lottery_setting.show_lottery_history',
+        value: String(values.showLotteryHistory),
       })
     }
     if (
@@ -222,6 +240,30 @@ export function LotterySettingsSection({
 
           <FormField
             control={form.control}
+            name='showPrizePool'
+            render={({ field }) => (
+              <SettingsSwitchItem>
+                <SettingsSwitchContent>
+                  <FormLabel>{t('Show prize pool')}</FormLabel>
+                  <FormDescription>
+                    {t(
+                      'Show the prize tiers and amounts on the user side. This single switch covers both the lottery and limited-time activities.'
+                    )}
+                  </FormDescription>
+                </SettingsSwitchContent>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={busy}
+                  />
+                </FormControl>
+              </SettingsSwitchItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name='showProbability'
             render={({ field }) => (
               <SettingsSwitchItem>
@@ -229,8 +271,30 @@ export function LotterySettingsSection({
                   <FormLabel>{t('Show win probability')}</FormLabel>
                   <FormDescription>
                     {t(
-                      'Show the chance of each tier on the user side. This single switch covers both the lottery and limited-time activities.'
+                      'Show the chance of each tier on the user side. Only meaningful while the prize pool is shown.'
                     )}
+                  </FormDescription>
+                </SettingsSwitchContent>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={busy}
+                  />
+                </FormControl>
+              </SettingsSwitchItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='showLotteryHistory'
+            render={({ field }) => (
+              <SettingsSwitchItem>
+                <SettingsSwitchContent>
+                  <FormLabel>{t('Show draw history')}</FormLabel>
+                  <FormDescription>
+                    {t('Show the record of past draws on the lottery page.')}
                   </FormDescription>
                 </SettingsSwitchContent>
                 <FormControl>

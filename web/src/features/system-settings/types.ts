@@ -356,11 +356,21 @@ export type BillingSettings = {
   'lottery_setting.tier_prizes': string
   'lottery_setting.tier_prize_step': number
   'lottery_setting.tier_prize_max': number
-  // 抽奖与限时活动共用的概率展示开关，归福利中心命名空间
-  'welfare_setting.show_prize_probability': boolean
+  // 抽奖与限时活动共用的展示开关，归福利中心命名空间
+  // 抽奖自己的展示开关（只作用于抽奖）
+  'lottery_setting.show_prize_pool': boolean
+  'lottery_setting.show_prize_probability': boolean
+  'lottery_setting.show_lottery_history': boolean
+  // 活动自己的展示开关（只作用于活动）
+  'welfare_setting.show_activity_prize_pool': boolean
+  'welfare_setting.show_activity_probability': boolean
+  'welfare_setting.show_winner_list': boolean
+  'welfare_setting.rules_content': string
   'welfare_setting.activities_enabled': boolean
   'affiliate_setting.enabled': boolean
   'affiliate_setting.tiers': string
+  'affiliate_setting.promo_templates': string
+  'affiliate_setting.poster_background_url': string
   'affiliate_setting.cooldown_days': number
   'affiliate_setting.max_rebate_per_invitee': number
 }

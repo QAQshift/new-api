@@ -74,10 +74,19 @@ export interface LotteryStatus {
   /** Recent draws, newest first */
   records: LotteryDrawRecord[]
   /**
-   * Whether the admin allows showing each tier's chance.
-   * Absent means "show", matching the behaviour before the toggle existed.
+   * Whether the admin allows showing the prize pool at all (amounts and
+   * chances). Absent means "show", matching the pre-toggle behaviour.
+   */
+  show_prize_pool?: boolean
+  /**
+   * Whether the admin allows showing each tier's chance. Only meaningful while
+   * the prize pool itself is shown.
    */
   show_probability?: boolean
+  /**
+   * Whether the admin allows showing the draw history.
+   */
+  show_history?: boolean
 }
 
 /**

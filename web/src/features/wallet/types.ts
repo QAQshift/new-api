@@ -271,6 +271,15 @@ export interface AffiliateFunnel {
 }
 
 /**
+ * One operator-configured promo message. `text` may contain the `{{site}}` and
+ * `{{link}}` placeholders, which are substituted on the client.
+ */
+export interface AffiliatePromoTemplate {
+  label: string
+  text: string
+}
+
+/**
  * Everything the referral panel needs, fetched in one request.
  */
 export interface AffiliateOverview {
@@ -284,6 +293,10 @@ export interface AffiliateOverview {
   funnel: AffiliateFunnel
   invitees: AffiliateInvitee[]
   invitees_truncated: boolean
+  /** Empty means "use the built-in messages". */
+  promo_templates: AffiliatePromoTemplate[]
+  /** Empty means "use the built-in flat poster layout". */
+  poster_background_url: string
 }
 
 export type AffiliateOverviewResponse = ApiResponse<AffiliateOverview>

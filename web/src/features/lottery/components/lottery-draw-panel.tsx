@@ -27,7 +27,6 @@ import {
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { IconBadge, type IconBadgeTone } from '@/components/ui/icon-badge'
@@ -72,7 +71,8 @@ export function LotteryDrawPanel({
     [status.next_prizes]
   )
   const best = topPrize(prizePool)
-  // 后端缺省该字段时按“展示”处理，保持与加开关之前的行为一致
+  // 后端缺省这些字段时按“展示”处理，保持与加开关之前的行为一致
+  const showPrizePool = status.show_prize_pool !== false
   const showProbability = status.show_probability !== false
 
   const progressPercent =
@@ -147,9 +147,6 @@ export function LotteryDrawPanel({
                 <h3 className='text-lg font-semibold tracking-tight sm:text-xl'>
                   {t('Lottery')}
                 </h3>
-                <Badge variant='outline'>
-                  {isTiered ? t('Tiered mode') : t('Segment mode')}
-                </Badge>
                 {canDraw && (
                   <span className='bg-success/10 text-success inline-flex items-center gap-1 rounded-4xl px-2 py-0.5 text-xs font-medium'>
                     <Sparkles className='size-3' />
@@ -178,41 +175,43 @@ export function LotteryDrawPanel({
       </div>
 
       {/* Prize pool for the next draw */}
-      <div className='border-b p-5 sm:p-7'>
-        <div className='flex flex-wrap items-baseline justify-between gap-2'>
-          <h4 className='text-sm font-semibold'>{t('Next prize pool')}</h4>
-          {best && (
-            <span className='text-muted-foreground text-xs'>
-              {t('Top prize')} {formatQuotaWithCurrency(prizeMax(best))}
-            </span>
+      {showPrizePool && (
+        <div className='border-b p-5 sm:p-7'>
+          <div className='flex flex-wrap items-baseline justify-between gap-2'>
+            <h4 className='text-sm font-semibold'>{t('Next prize pool')}</h4>
+            {best && (
+              <span className='text-muted-foreground text-xs'>
+                {t('Top prize')} {formatQuotaWithCurrency(prizeMax(best))}
+              </span>
+            )}
+          </div>
+          {prizePool.length > 0 ? (
+            <div className='mt-4 flex flex-wrap gap-3'>
+              {prizePool.map((prize) => (
+                <div
+                  key={`${prize.quota}-${prize.quota_max ?? 0}-${prize.weight}`}
+                  className='bg-muted/40 hover:border-primary/30 min-w-28 rounded-xl border px-4 py-3 text-center transition-colors'
+                >
+                  <div className='text-base font-semibold tabular-nums sm:text-lg'>
+                    {isPrizeRange(prize)
+                      ? `${formatQuotaWithCurrency(prize.quota)} ~ ${formatQuotaWithCurrency(prizeMax(prize))}`
+                      : formatQuotaWithCurrency(prize.quota)}
+                  </div>
+                  {showProbability && (
+                    <div className='text-muted-foreground mt-0.5 text-xs tabular-nums'>
+                      {prizeWeightPercent(prize, prizePool)}%
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className='text-muted-foreground mt-3 text-sm'>
+              {t('No prize configured')}
+            </p>
           )}
         </div>
-        {prizePool.length > 0 ? (
-          <div className='mt-4 flex flex-wrap gap-3'>
-            {prizePool.map((prize) => (
-              <div
-                key={`${prize.quota}-${prize.quota_max ?? 0}-${prize.weight}`}
-                className='bg-muted/40 hover:border-primary/30 min-w-28 rounded-xl border px-4 py-3 text-center transition-colors'
-              >
-                <div className='text-base font-semibold tabular-nums sm:text-lg'>
-                  {isPrizeRange(prize)
-                    ? `${formatQuotaWithCurrency(prize.quota)} ~ ${formatQuotaWithCurrency(prizeMax(prize))}`
-                    : formatQuotaWithCurrency(prize.quota)}
-                </div>
-                {showProbability && (
-                  <div className='text-muted-foreground mt-0.5 text-xs tabular-nums'>
-                    {prizeWeightPercent(prize, prizePool)}%
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className='text-muted-foreground mt-3 text-sm'>
-            {t('No prize configured')}
-          </p>
-        )}
-      </div>
+      )}
 
       {/* Progress towards the next draw */}
       <div className='border-b p-5 sm:p-7'>

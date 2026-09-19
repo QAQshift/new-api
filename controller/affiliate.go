@@ -25,7 +25,10 @@ const affiliateOptionPrefix = "affiliate_setting."
 func validateAffiliateOptionUpdate(key string, raw string) error {
 	current := operation_setting.GetAffiliateSetting()
 	draft := *current
+	// 显式复制切片：json.Unmarshal 在容量足够时会复用底层数组，直接解到
+	// draft 上会写坏正在生效的配置。
 	draft.Tiers = append([]operation_setting.AffiliateTier(nil), current.Tiers...)
+	draft.PromoTemplates = append([]operation_setting.AffiliatePromoTemplate(nil), current.PromoTemplates...)
 
 	field := strings.TrimPrefix(key, affiliateOptionPrefix)
 	trimmed := strings.TrimSpace(raw)
@@ -53,6 +56,12 @@ func validateAffiliateOptionUpdate(key string, raw string) error {
 		if err := json.Unmarshal([]byte(trimmed), &draft.Tiers); err != nil {
 			return errors.New(`返利档位必须是 [{"times":次数,"rate_bp":万分比}] 形式的 JSON 数组，例：[{"times":3,"rate_bp":500},{"times":0,"rate_bp":300}]`)
 		}
+	case "promo_templates":
+		if err := json.Unmarshal([]byte(trimmed), &draft.PromoTemplates); err != nil {
+			return errors.New(`推广文案必须是 [{"label":标签,"text":文案}] 形式的 JSON 数组`)
+		}
+	case "poster_background_url":
+		draft.PosterBackgroundUrl = trimmed
 	default:
 		return nil
 	}
@@ -158,12 +167,20 @@ func GetAffiliateOverview(c *gin.Context) {
 		conversionRate = float64(overview.Funnel.ToppedUp) / float64(registered)
 	}
 
+	// 推广文案留空时下发空数组而不是 null，前端据此回落到内置文案
+	promoTemplates := setting.PromoTemplates
+	if promoTemplates == nil {
+		promoTemplates = []operation_setting.AffiliatePromoTemplate{}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
 			"enabled":            setting.Enabled,
 			"cooldown_days":      setting.CooldownDays,
 			"tiers":              buildAffiliateTierViews(setting),
+			"promo_templates":    promoTemplates,
+			"poster_background_url": setting.PosterBackgroundUrl,
 			"pending_quota":      user.AffPendingQuota,
 			"transferable_quota": user.AffQuota,
 			"total_quota":        user.AffHistoryQuota,

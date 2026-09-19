@@ -406,6 +406,17 @@ func UpdateOption(c *gin.Context) {
 				}
 			}
 		}
+		if option.Key == welfareRulesOptionKey {
+			if raw, ok := option.Value.(string); ok {
+				if rulesErr := validateWelfareRulesContentOption(raw); rulesErr != nil {
+					c.JSON(http.StatusOK, gin.H{
+						"success": false,
+						"message": rulesErr.Error(),
+					})
+					return
+				}
+			}
+		}
 	}
 	switch option.Key {
 	case "GitHubOAuthEnabled":

@@ -157,6 +157,9 @@ func GetStatus(c *gin.Context) {
 		"checkin_enabled":             operation_setting.GetCheckinSetting().Enabled,
 		"lottery_enabled":             operation_setting.GetLotterySetting().Enabled,
 		"welfare_activity_enabled":    operation_setting.GetWelfareSetting().ActivitiesEnabled,
+		// 福利中心顶部的玩法说明；留空表示不展示。前端用 RichContent 的
+		// isolated 变体渲染（净化 + Shadow DOM 隔离）。
+		"welfare_rules_content": operation_setting.GetWelfareSetting().RulesContent,
 	}
 
 	// 根据启用状态注入可选内容

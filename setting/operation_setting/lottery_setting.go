@@ -65,6 +65,17 @@ type LotterySetting struct {
 	TierPrizeStep int            `json:"tier_prize_step"`
 	// TierPrizeMax > 0 时，阶梯式的单次奖品额度封顶（0 表示不封顶）。
 	TierPrizeMax int `json:"tier_prize_max"`
+
+	// 以下三个是抽奖在用户端的展示开关，只作用于抽奖。
+	// 限时活动有自己独立的一套（welfare_setting.show_activity_*），
+	// 两个模块各管各的，可以设成不一样。
+	//
+	// ShowPrizePool 关闭后抽奖不再出现奖池区域，只保留进度与抽奖按钮。
+	ShowPrizePool bool `json:"show_prize_pool"`
+	// ShowPrizeProbability 是否展示各档位的中奖概率（仅在展示奖池时有意义）。
+	ShowPrizeProbability bool `json:"show_prize_probability"`
+	// ShowLotteryHistory 是否展示抽奖记录。
+	ShowLotteryHistory bool `json:"show_lottery_history"`
 }
 
 // 默认配置：默认关闭，避免升级后突然对所有站点开放抽奖。
@@ -86,6 +97,11 @@ var lotterySetting = LotterySetting{
 	},
 	TierPrizeStep: 10_000,
 	TierPrizeMax:  5_000_000,
+
+	// 三个展示开关默认开启，保持"加开关之前用户端总是展示"的行为
+	ShowPrizePool:        true,
+	ShowPrizeProbability: true,
+	ShowLotteryHistory:   true,
 }
 
 func init() {

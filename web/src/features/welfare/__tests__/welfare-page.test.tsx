@@ -50,10 +50,16 @@ vi.mock('@/components/layout', () => {
   }
 })
 
+// RichContent 在 html 模式下渲染进 Shadow DOM，RTL 的文本查询穿不进去，
+// 这里降级成普通节点以便断言"内容有没有被渲染出来"。
+vi.mock('@/components/rich-content', () => ({
+  RichContent: ({ content }: { content: string }) => <div>{content}</div>,
+}))
+
 const mockedUseStatus = vi.mocked(useStatus)
 
 function mockModules(
-  flags: { checkin?: boolean; lottery?: boolean },
+  flags: { checkin?: boolean; lottery?: boolean; rules?: string },
   loading = false
 ) {
   mockedUseStatus.mockReturnValue({
@@ -62,6 +68,7 @@ function mockModules(
       lottery_enabled: flags.lottery === true,
       turnstile_check: false,
       turnstile_site_key: '',
+      welfare_rules_content: flags.rules ?? '',
     },
     loading,
     error: null,
@@ -121,6 +128,28 @@ describe('welfare hub', () => {
     await waitFor(() =>
       expect(screen.getByText('checkin-module')).toBeTruthy()
     )
+  })
+
+  test('shows the operator-configured rules above the tabs', () => {
+    mockModules({
+      checkin: true,
+      lottery: true,
+      rules: '<p>每日签到即可领取额度</p>',
+    })
+
+    render(<Welfare />)
+
+    // 说明块常驻在 Tabs 之上，与当前选中的模块无关。
+    // 用正则匹配：mock 把 HTML 当文本渲染，标签会成为字面内容的一部分。
+    expect(screen.getByText(/每日签到即可领取额度/)).toBeTruthy()
+  })
+
+  test('hides the rules block when the operator left it empty', () => {
+    mockModules({ checkin: true, lottery: true })
+
+    render(<Welfare />)
+
+    expect(screen.queryByText(/每日签到即可领取额度/)).toBeNull()
   })
 
   test('explains the situation when nothing is enabled', () => {

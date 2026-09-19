@@ -77,11 +77,20 @@ function renderPanel() {
 
 function mockActivities(
   activities: WelfareActivity[],
-  showPrizeProbability?: boolean
+  flags: {
+    showPrizePool?: boolean
+    showPrizeProbability?: boolean
+    showWinnerList?: boolean
+  } = {}
 ) {
   mockedGetActivities.mockResolvedValue({
     success: true,
-    data: { activities, show_prize_probability: showPrizeProbability },
+    data: {
+      activities,
+      show_prize_pool: flags.showPrizePool,
+      show_prize_probability: flags.showPrizeProbability,
+      show_winner_list: flags.showWinnerList,
+    },
   })
 }
 
@@ -90,6 +99,51 @@ beforeEach(() => {
 })
 
 describe('activity panel', () => {
+  test('hides the winner list when the switch is off', async () => {
+    mockActivities([
+      baseActivity({
+        recent_winners: [
+          {
+            id: 1,
+            username: 'ali***',
+            prize_quota: 500,
+            created_at: 1735689600,
+          },
+        ],
+      }),
+    ])
+
+    renderPanel()
+
+    expect(await screen.findByText('Summer event')).toBeInTheDocument()
+    expect(screen.queryByText('Recent winners')).toBeNull()
+    expect(screen.queryByText('ali***')).toBeNull()
+  })
+
+  test('shows masked winners when the switch is on', async () => {
+    mockActivities(
+      [
+        baseActivity({
+          recent_winners: [
+            {
+              id: 1,
+              username: 'ali***',
+              prize_quota: 500,
+              created_at: 1735689600,
+            },
+          ],
+        }),
+      ],
+      { showWinnerList: true }
+    )
+
+    renderPanel()
+
+    expect(await screen.findByText('Recent winners')).toBeInTheDocument()
+    // 服务端已经遮蔽过，前端原样展示、不再加工
+    expect(screen.getByText('ali***')).toBeInTheDocument()
+  })
+
   test('explains when nothing is running', async () => {
     mockActivities([])
 
@@ -99,13 +153,43 @@ describe('activity panel', () => {
   })
 
   test('hides the chances when the admin turned the toggle off', async () => {
-    mockActivities([baseActivity()], false)
+    mockActivities([baseActivity()], { showPrizeProbability: false })
 
     renderPanel()
 
     expect(await screen.findByText('Summer event')).toBeInTheDocument()
     expect(screen.queryByText('70%')).toBeNull()
     expect(screen.queryByText('30%')).toBeNull()
+  })
+
+  test('hides the whole prize pool when the admin turned it off', async () => {
+    mockActivities([baseActivity()], { showPrizePool: false })
+
+    renderPanel()
+
+    expect(await screen.findByText('Summer event')).toBeInTheDocument()
+    expect(screen.queryByText('Prize pool')).toBeNull()
+    expect(screen.queryByText('70%')).toBeNull()
+  })
+
+  test('keeps the threshold hint while the prize pool is hidden', async () => {
+    mockActivities(
+      [
+        baseActivity({
+          threshold_met: false,
+          min_consume_quota: 100,
+          used_quota: 40,
+        }),
+      ],
+      { showPrizePool: false }
+    )
+
+    renderPanel()
+
+    expect(await screen.findByText('Summer event')).toBeInTheDocument()
+    expect(screen.queryByText('Prize pool')).toBeNull()
+    // 门槛提示不是奖池信息，隐藏奖池后必须保留，否则用户不知道下一步做什么
+    expect(screen.getByText(/Consume .* more to participate/)).toBeTruthy()
   })
 
   test('renders a tier with an amount range as a range', async () => {

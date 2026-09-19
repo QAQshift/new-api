@@ -207,6 +207,113 @@ type WelfareActivityView struct {
 	RemainingToday int `json:"remaining_today"`
 	ThresholdMet   bool `json:"threshold_met"`
 	CanEnter       bool `json:"can_enter"`
+	// RecentWinners 最近的中奖记录（昵称已遮蔽），仅在中奖名单开关打开时填充。
+	// omitempty 让关闭开关时这个字段直接从响应里消失。
+	RecentWinners []WelfareActivityWinner `json:"recent_winners,omitempty"`
+}
+
+// WelfareActivityWinner 是活动的一条中奖记录（含中奖者昵称，未遮蔽）。
+//
+// 昵称的遮蔽属于展示层的事，交给 controller 处理，数据层原样回传。
+type WelfareActivityWinner struct {
+	// Id 是中奖记录自身的 ID，唯一且稳定，前端拿它当列表 key。
+	Id         int    `json:"id"`
+	UserId     int    `json:"-"`
+	Username   string `json:"username"`
+	PrizeQuota int    `json:"prize_quota"`
+	CreatedAt  int64  `json:"created_at"`
+}
+
+// WinnerListLimit 每个活动在用户端展示的中奖记录条数上限。
+//
+// 名单的作用是"有人真的中了"的信任感，不是完整流水，取最近几条即可。
+const WinnerListLimit = 5
+
+// RecentWelfareActivityWinners 取回每个活动最近的中奖记录，按活动 ID 分组。
+//
+// 中奖记录表里没有"未中奖"的行（每次参与必中），所以每一行都是一条中奖记录，
+// 不需要额外的过滤条件。
+//
+// 逐个活动查询而不是一次查全部：单次查询只能给整批记录设一个 LIMIT，热门活动会
+// 把名额占满、冷门活动一条都取不到。活动数量由管理员手工创建（个位数），因此按
+// 活动走几次走索引的小查询是更正确、也更省心的选择。
+func RecentWelfareActivityWinners(activityIds []int, limit int) (map[int][]WelfareActivityWinner, error) {
+	winners := make(map[int][]WelfareActivityWinner, len(activityIds))
+	if len(activityIds) == 0 || limit <= 0 {
+		return winners, nil
+	}
+
+	entriesByActivity := make(map[int][]WelfareActivityEntry, len(activityIds))
+	userIds := make([]int, 0, len(activityIds)*limit)
+	seen := make(map[int]struct{}, len(activityIds)*limit)
+
+	for _, activityId := range activityIds {
+		entries := make([]WelfareActivityEntry, 0, limit)
+		if err := DB.Where("activity_id = ?", activityId).
+			Order("created_at desc").
+			Limit(limit).
+			Find(&entries).Error; err != nil {
+			return nil, err
+		}
+		if len(entries) == 0 {
+			continue
+		}
+		entriesByActivity[activityId] = entries
+		for _, entry := range entries {
+			if _, ok := seen[entry.UserId]; ok {
+				continue
+			}
+			seen[entry.UserId] = struct{}{}
+			userIds = append(userIds, entry.UserId)
+		}
+	}
+	if len(entriesByActivity) == 0 {
+		return winners, nil
+	}
+
+	names, err := usernamesByIds(userIds)
+	if err != nil {
+		return nil, err
+	}
+
+	for activityId, entries := range entriesByActivity {
+		list := make([]WelfareActivityWinner, 0, len(entries))
+		for _, entry := range entries {
+			name, ok := names[entry.UserId]
+			// 用户已注销时跳过：名单是"有人中了"的证明，一个没有昵称的空行
+			// 只会让人困惑。
+			if !ok || name == "" {
+				continue
+			}
+			list = append(list, WelfareActivityWinner{
+				Id:         entry.Id,
+				UserId:     entry.UserId,
+				Username:   name,
+				PrizeQuota: entry.PrizeQuota,
+				CreatedAt:  entry.CreatedAt,
+			})
+		}
+		if len(list) > 0 {
+			winners[activityId] = list
+		}
+	}
+	return winners, nil
+}
+
+// usernamesByIds 批量取回昵称，避免逐个中奖者查一次库。
+func usernamesByIds(ids []int) (map[int]string, error) {
+	names := make(map[int]string, len(ids))
+	if len(ids) == 0 {
+		return names, nil
+	}
+	users := make([]User, 0, len(ids))
+	if err := DB.Select("id, username").Where("id IN ?", ids).Find(&users).Error; err != nil {
+		return nil, err
+	}
+	for _, user := range users {
+		names[user.Id] = user.Username
+	}
+	return names, nil
 }
 
 // ListWelfareActivitiesForUser 返回对所有用户可见的活动（未开启的不返回），

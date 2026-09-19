@@ -59,8 +59,12 @@ function actionLabelKey(activity: WelfareActivity): string {
 interface ActivityCardProps {
   activity: WelfareActivity
   entering: boolean
+  /** Admin-controlled: whether the prize pool may be shown at all */
+  showPrizePool: boolean
   /** Admin-controlled: whether each tier's chance may be shown */
   showProbability: boolean
+  /** Admin-controlled: whether recent winners may be shown (default off) */
+  showWinnerList: boolean
   onEnter: (activityId: number) => void
 }
 
@@ -200,33 +204,70 @@ function ActivityCard(props: ActivityCardProps) {
       </div>
 
       <div className='p-4 sm:p-5'>
-        <div className='text-muted-foreground text-xs'>{t('Prize pool')}</div>
-        <div className='mt-2 flex flex-wrap gap-2'>
-          {prizePool.map((prize) => (
-            <div
-              key={`${prize.quota}-${prize.quota_max ?? 0}-${prize.weight}`}
-              className='bg-muted/40 flex items-center gap-2 rounded-lg border px-2.5 py-1.5'
-            >
-              <span className='text-xs font-semibold tabular-nums sm:text-sm'>
-                {isPrizeRange(prize)
-                  ? `${formatQuotaWithCurrency(prize.quota)} ~ ${formatQuotaWithCurrency(prizeMax(prize))}`
-                  : formatQuotaWithCurrency(prize.quota)}
-              </span>
-              {props.showProbability && (
-                <span className='text-muted-foreground text-[10px] tabular-nums sm:text-xs'>
-                  {prizeWeightPercent(prize, prizePool)}%
-                </span>
-              )}
+        {props.showPrizePool && (
+          <>
+            <div className='text-muted-foreground text-xs'>
+              {t('Prize pool')}
             </div>
-          ))}
-        </div>
+            <div className='mt-2 flex flex-wrap gap-2'>
+              {prizePool.map((prize) => (
+                <div
+                  key={`${prize.quota}-${prize.quota_max ?? 0}-${prize.weight}`}
+                  className='bg-muted/40 flex items-center gap-2 rounded-lg border px-2.5 py-1.5'
+                >
+                  <span className='text-xs font-semibold tabular-nums sm:text-sm'>
+                    {isPrizeRange(prize)
+                      ? `${formatQuotaWithCurrency(prize.quota)} ~ ${formatQuotaWithCurrency(prizeMax(prize))}`
+                      : formatQuotaWithCurrency(prize.quota)}
+                  </span>
+                  {props.showProbability && (
+                    <span className='text-muted-foreground text-[10px] tabular-nums sm:text-xs'>
+                      {prizeWeightPercent(prize, prizePool)}%
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
+        {/* 门槛提示不属于奖池信息，奖池隐藏时依然保留 */}
         {activity.status === 'active' && !activity.threshold_met && (
-          <p className='text-muted-foreground mt-3 text-xs'>
+          <p
+            className={cn(
+              'text-muted-foreground text-xs',
+              props.showPrizePool && 'mt-3'
+            )}
+          >
             {t('Consume {{quota}} more to participate', {
               quota: formatQuotaWithCurrency(missingQuota, { digitsLarge: 0 }),
             })}
           </p>
+        )}
+
+        {/* 中奖名单同样不属于奖池信息：奖池隐藏时它照常展示。
+            昵称已由服务端遮蔽，这里拿不到完整用户名。 */}
+        {props.showWinnerList && (activity.recent_winners?.length ?? 0) > 0 && (
+          <div className='mt-3 border-t pt-3'>
+            <div className='text-muted-foreground mb-1.5 text-xs font-medium'>
+              {t('Recent winners')}
+            </div>
+            <div className='space-y-1'>
+              {activity.recent_winners?.map((winner) => (
+                <div
+                  key={winner.id}
+                  className='flex items-center justify-between gap-3 text-xs'
+                >
+                  <span className='text-muted-foreground truncate'>
+                    {winner.username}
+                  </span>
+                  <span className='font-semibold tabular-nums'>
+                    {formatQuotaWithCurrency(winner.prize_quota)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </Card>
@@ -285,8 +326,11 @@ export function ActivityPanel() {
   }
 
   const activities = data?.activities ?? []
-  // 后端缺省该字段时按“展示”处理，保持与加开关之前的行为一致
+  // 后端缺省这些字段时按“展示”处理，保持与加开关之前的行为一致
+  const showPrizePool = data?.show_prize_pool !== false
   const showProbability = data?.show_prize_probability !== false
+  // 与前两个相反：中奖名单默认关闭，字段缺省即隐藏（公开他人昵称属于隐私暴露）
+  const showWinnerList = data?.show_winner_list === true
   if (activities.length === 0) {
     return (
       <Card data-card-hover='false' className='gap-0 py-12'>
@@ -307,7 +351,9 @@ export function ActivityPanel() {
           key={activity.id}
           activity={activity}
           entering={enteringId === activity.id}
+          showPrizePool={showPrizePool}
           showProbability={showProbability}
+          showWinnerList={showWinnerList}
           onEnter={handleEnter}
         />
       ))}

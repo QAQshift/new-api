@@ -19,10 +19,14 @@ For commercial licensing, please contact support@quantumnous.com
 import { parseCurrencyDisplayType } from '@/lib/currency'
 
 import { CheckinSettingsSection } from '../general/checkin-settings-section'
-import { AffiliateSettingsSection } from '../general/affiliate-settings-section'
+import {
+  AffiliateSettingsSection,
+  type AffiliatePromoTemplateDraft,
+} from '../general/affiliate-settings-section'
 import { LotterySettingsSection } from '../general/lottery-settings-section'
 import { PricingSection } from '../general/pricing-section'
 import { WelfareActivitySection } from '../general/welfare-activity-section'
+import { WelfareCenterSection } from '../general/welfare-center-section'
 import { QuotaSettingsSection } from '../general/quota-settings-section'
 import { PaymentSettingsSection } from '../integrations/payment-settings-section'
 import { RatioSettingsCard } from '../models/ratio-settings-card'
@@ -30,6 +34,33 @@ import type { BillingSettings } from '../types'
 import { parseAffiliateTiers } from '../utils/affiliate-tiers'
 import { parseLotteryPool } from '../utils/lottery-pool'
 import { createSectionRegistry } from '../utils/section-registry'
+
+/**
+ * Parses the stored promo templates into editable drafts.
+ * Malformed input degrades to an empty list, which means "use the built-in
+ * messages" — a bad stored value must not break the settings page.
+ */
+const parsePromoTemplates = (
+  raw: string | undefined
+): AffiliatePromoTemplateDraft[] => {
+  if (!raw) return []
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter(
+        (item): item is Record<string, unknown> =>
+          typeof item === 'object' && item !== null
+      )
+      .map((item, index) => ({
+        id: `promo-${index}`,
+        label: String(item.label ?? ''),
+        text: String(item.text ?? ''),
+      }))
+  } catch {
+    return []
+  }
+}
 
 const getModelDefaults = (settings: BillingSettings) => ({
   ModelPrice: settings.ModelPrice,
@@ -212,6 +243,17 @@ const BILLING_SECTIONS = [
     ),
   },
   {
+    // 福利中心自己的设置（不属于任何子模块）。放在三个子模块之前：它是容器
+    // 这一层的东西。
+    id: 'welfare-center',
+    titleKey: 'Welfare Center',
+    build: (settings: BillingSettings) => (
+      <WelfareCenterSection
+        rulesContent={settings['welfare_setting.rules_content'] ?? ''}
+      />
+    ),
+  },
+  {
     id: 'welfare-activity',
     titleKey: 'Limited-time Activities',
     build: (settings: BillingSettings) => (
@@ -219,6 +261,14 @@ const BILLING_SECTIONS = [
         activitiesEnabled={
           settings['welfare_setting.activities_enabled'] ?? false
         }
+        // 活动自己的展示开关，与抽奖的同名开关互相独立
+        showPrizePool={
+          settings['welfare_setting.show_activity_prize_pool'] ?? true
+        }
+        showProbability={
+          settings['welfare_setting.show_activity_probability'] ?? true
+        }
+        showWinnerList={settings['welfare_setting.show_winner_list'] ?? false}
       />
     ),
   },
@@ -242,9 +292,12 @@ const BILLING_SECTIONS = [
           tierPrizes: parseLotteryPool(settings['lottery_setting.tier_prizes']),
           tierPrizeStep: settings['lottery_setting.tier_prize_step'],
           tierPrizeMax: settings['lottery_setting.tier_prize_max'],
-          // 抽奖与限时活动共用的开关；缺省视为开启，与后端默认值一致
+          // 以下三个开关只作用于抽奖；缺省视为开启，与后端默认值一致
+          showPrizePool: settings['lottery_setting.show_prize_pool'] ?? true,
           showProbability:
-            settings['welfare_setting.show_prize_probability'] ?? true,
+            settings['lottery_setting.show_prize_probability'] ?? true,
+          showLotteryHistory:
+            settings['lottery_setting.show_lottery_history'] ?? true,
         }}
       />
     ),
@@ -260,6 +313,11 @@ const BILLING_SECTIONS = [
           cooldownDays: settings['affiliate_setting.cooldown_days'],
           maxRebatePerInvitee:
             settings['affiliate_setting.max_rebate_per_invitee'],
+          promoTemplates: parsePromoTemplates(
+            settings['affiliate_setting.promo_templates']
+          ),
+          posterBackgroundUrl:
+            settings['affiliate_setting.poster_background_url'] ?? '',
         }}
       />
     ),

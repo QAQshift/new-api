@@ -20,14 +20,14 @@ import {
   Activity,
   ArrowRight,
   CreditCard,
+  Download,
   Megaphone,
-  QrCode,
   UserPlus,
   Users,
   type LucideIcon,
 } from 'lucide-react'
 import { QRCodeCanvas } from 'qrcode.react'
-import { Fragment, useCallback, useMemo, useRef } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -41,10 +41,17 @@ import dayjs from '@/lib/dayjs'
 import { formatQuota } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
-import { downloadAffiliatePoster } from '../lib/affiliate-poster'
+import {
+  POSTER_HEIGHT,
+  POSTER_WIDTH,
+  buildPosterFilename,
+  downloadCanvasAsPng,
+  renderAffiliatePoster,
+} from '../lib/affiliate-poster'
 import type {
   AffiliateInvitee,
   AffiliateOverview,
+  AffiliatePromoTemplate,
   AffiliateTier,
 } from '../types'
 
@@ -56,20 +63,23 @@ const REGISTRATION_MILESTONES = [3, 10, 30, 100, 300, 1000]
 const EMPTY_TIERS: AffiliateTier[] = []
 const EMPTY_INVITEES: AffiliateInvitee[] = []
 
-/** Ready-to-share copy, kept out of the JSX so the layout stays readable. */
-const PROMO_TEMPLATES: Array<[string, string]> = [
-  [
-    'Concise',
-    'I am using {{site}}. One key gives you access to mainstream AI models, with straightforward setup and transparent usage. Sign up here: {{link}}',
-  ],
-  [
-    'Friendly',
-    'If you are looking for a reliable AI API endpoint, give {{site}} a try. Here is my sign-up link: {{link}}',
-  ],
-  [
-    'Rebate first',
-    'Sign up for {{site}} through my referral link and every top-up you make earns me a rebate - at no extra cost to you. Link: {{link}}',
-  ],
+/**
+ * Used until the operator configures their own messages, so an unconfigured
+ * site still has something to share.
+ */
+const DEFAULT_PROMO_TEMPLATES: AffiliatePromoTemplate[] = [
+  {
+    label: 'Concise',
+    text: 'I am using {{site}}. One key gives you access to mainstream AI models, with straightforward setup and transparent usage. Sign up here: {{link}}',
+  },
+  {
+    label: 'Friendly',
+    text: 'If you are looking for a reliable AI API endpoint, give {{site}} a try. Here is my sign-up link: {{link}}',
+  },
+  {
+    label: 'Rebate first',
+    text: 'Sign up for {{site}} through my referral link and every top-up you make earns me a rebate - at no extra cost to you. Link: {{link}}',
+  },
 ]
 
 interface AffiliateProgramCardProps {
@@ -99,10 +109,16 @@ export function AffiliateProgramCard({
   const { t } = useTranslation()
   const { systemName } = useSystemConfig()
   const qrRef = useRef<HTMLCanvasElement>(null)
+  const posterRef = useRef<HTMLCanvasElement>(null)
 
   const tiers = overview?.tiers ?? EMPTY_TIERS
   const funnel = overview?.funnel
   const invitees = overview?.invitees ?? EMPTY_INVITEES
+  const posterBackgroundUrl = overview?.poster_background_url ?? ''
+  const promoTemplates =
+    overview?.promo_templates && overview.promo_templates.length > 0
+      ? overview.promo_templates
+      : DEFAULT_PROMO_TEMPLATES
 
   // 档位的可读描述，例如「第 1-3 次充值返 5% · 第 4 次起返 3%」
   const tierSummary = useMemo(() => {
@@ -130,19 +146,49 @@ export function AffiliateProgramCard({
     [t, systemName, affiliateLink]
   )
 
-  const handleDownloadPoster = useCallback(async () => {
+  /**
+   * Draws the poster into the visible canvas.
+   *
+   * The preview and the download share one canvas, so what the operator sees on
+   * the page is exactly what gets saved.
+   */
+  useEffect(() => {
+    const canvas = posterRef.current
     const qrCanvas = qrRef.current
-    if (!qrCanvas || affiliateLink === '') {
+    if (!canvas || !qrCanvas || affiliateLink === '') return
+
+    let cancelled = false
+    const draw = async () => {
+      try {
+        await renderAffiliatePoster(
+          {
+            siteName: systemName,
+            headline: t('Join {{site}}', { site: systemName }),
+            referralLink: affiliateLink,
+            qrCanvas,
+            scanHint: t('Scan to sign up'),
+            backgroundImageUrl: posterBackgroundUrl || undefined,
+          },
+          canvas
+        )
+      } catch {
+        // 海报渲染失败不能影响页面其它部分
+      }
+    }
+    if (!cancelled) void draw()
+    return () => {
+      cancelled = true
+    }
+  }, [affiliateLink, systemName, t, posterBackgroundUrl, loading])
+
+  const handleDownloadPoster = useCallback(async () => {
+    const canvas = posterRef.current
+    if (!canvas || affiliateLink === '') {
       toast.error(t('Referral link is not ready yet'))
       return
     }
     try {
-      await downloadAffiliatePoster({
-        siteName: systemName,
-        headline: t('Join {{site}}', { site: systemName }),
-        referralLink: affiliateLink,
-        qrCanvas,
-      })
+      await downloadCanvasAsPng(canvas, buildPosterFilename(systemName))
     } catch {
       toast.error(t('Failed to generate the poster'))
     }
@@ -208,18 +254,6 @@ export function AffiliateProgramCard({
       description={t(
         'Track how your invitations convert and grab ready-to-share copy.'
       )}
-      action={
-        <Button
-          type='button'
-          variant='outline'
-          size='sm'
-          onClick={handleDownloadPoster}
-          className='w-full sm:w-auto'
-        >
-          <QrCode className='size-4' />
-          {t('Download poster')}
-        </Button>
-      }
     >
       <div className='space-y-5'>
         {/* 返利档位 */}
@@ -390,16 +424,16 @@ export function AffiliateProgramCard({
             {t('Promo materials')}
           </h4>
           <div className='grid gap-2 sm:grid-cols-2 xl:grid-cols-3'>
-            {PROMO_TEMPLATES.map(([label, template]) => {
-              const text = promoText(template)
+            {promoTemplates.map((template) => {
+              const text = promoText(template.text)
               return (
                 <div
-                  key={label}
+                  key={`${template.label}-${template.text}`}
                   className='bg-muted/40 hover:bg-muted/60 flex flex-col gap-2 rounded-xl border p-3 transition-colors'
                 >
                   <div className='flex items-center justify-between gap-2'>
                     <span className='bg-background text-muted-foreground rounded-md border px-1.5 py-0.5 text-[10px] font-medium tracking-wider uppercase'>
-                      {t(label)}
+                      {t(template.label)}
                     </span>
                     <CopyButton
                       value={text}
@@ -416,6 +450,36 @@ export function AffiliateProgramCard({
                 </div>
               )
             })}
+          </div>
+        </section>
+
+        {/* 海报预览：与下载用的是同一张画布 */}
+        <section className='space-y-2'>
+          <div className='flex flex-wrap items-center justify-between gap-2'>
+            <h4 className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>
+              {t('Poster')}
+            </h4>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              onClick={handleDownloadPoster}
+            >
+              <Download className='size-4' />
+              {t('Download poster')}
+            </Button>
+          </div>
+          <div className='flex flex-wrap items-start gap-4'>
+            <canvas
+              ref={posterRef}
+              className='border-border w-40 shrink-0 rounded-xl border shadow-sm'
+              style={{ aspectRatio: `${POSTER_WIDTH} / ${POSTER_HEIGHT}` }}
+            />
+            <p className='text-muted-foreground max-w-xs text-xs'>
+              {t(
+                'This preview is exactly what the downloaded image looks like.'
+              )}
+            </p>
           </div>
         </section>
       </div>

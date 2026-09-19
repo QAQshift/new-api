@@ -42,6 +42,32 @@ func TestParseSidebarCustomTabsSettingReadsCategories(t *testing.T) {
 	assert.NoError(t, ValidateSidebarCustomTabs(setting))
 }
 
+// 发布标记必须能区分"缺省"与"显式 false"：前者是老配置的形态，必须按已发布
+// 处理，否则升级后所有既有条目会一起消失。
+func TestParseSidebarCustomTabsSettingKeepsPublishFlagTriState(t *testing.T) {
+	// 缺省：Published 为 nil
+	legacy, err := ParseSidebarCustomTabsSetting(
+		`{"categories":[{"id":"cat-1","title":"AI 工具","items":[{"id":"pg-1","title":"画布","type":"iframe","content":"https://example.com"}]}]}`,
+	)
+	require.NoError(t, err)
+	require.Len(t, legacy.Categories, 1)
+	assert.Nil(t, legacy.Categories[0].Published, "缺省必须是 nil，调用方据此按已发布处理")
+	assert.Nil(t, legacy.Categories[0].Items[0].Published)
+
+	// 显式 false：草稿
+	draft, err := ParseSidebarCustomTabsSetting(
+		`{"categories":[{"id":"cat-1","title":"AI 工具","published":false,"items":[{"id":"pg-1","title":"画布","type":"html","content":"<p>x</p>","published":false}]}]}`,
+	)
+	require.NoError(t, err)
+	require.NotNil(t, draft.Categories[0].Published)
+	assert.False(t, *draft.Categories[0].Published)
+	require.NotNil(t, draft.Categories[0].Items[0].Published)
+	assert.False(t, *draft.Categories[0].Items[0].Published)
+
+	// 草稿同样是合法配置：校验只关心内容是否可用，不关心是否发布
+	assert.NoError(t, ValidateSidebarCustomTabs(draft))
+}
+
 func TestValidateSidebarCustomTabsAcceptsEmpty(t *testing.T) {
 	assert.NoError(t, ValidateSidebarCustomTabs(nil))
 	assert.NoError(t, ValidateSidebarCustomTabs(tabsSetting()))

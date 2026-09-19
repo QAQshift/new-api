@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import {
   MAX_SIDEBAR_TAB_CATEGORIES,
@@ -170,6 +171,11 @@ export function SidebarTabsSection({
             'Every signed-in user sees these entries in the sidebar. Each category becomes its own group.'
           )}
         </p>
+        <p className='text-muted-foreground text-sm'>
+          {t(
+            'Drafts are only visible here: users do not see them, and their pages are not reachable by URL.'
+          )}
+        </p>
 
         {categories.length === 0 ? (
           <div className='text-muted-foreground rounded-xl border border-dashed px-4 py-8 text-center text-sm'>
@@ -198,6 +204,24 @@ export function SidebarTabsSection({
                   }
                 />
               </div>
+              <label className='flex items-center gap-2 pb-2.5'>
+                <Switch
+                  checked={category.published}
+                  disabled={saving}
+                  onCheckedChange={(checked) =>
+                    patchCategory(categoryIndex, { published: checked })
+                  }
+                />
+                <span
+                  className={
+                    category.published
+                      ? 'text-muted-foreground text-xs'
+                      : 'text-warning text-xs font-medium'
+                  }
+                >
+                  {category.published ? t('Published') : t('Draft')}
+                </span>
+              </label>
               <span className='text-muted-foreground pb-2 text-xs tabular-nums'>
                 {category.items.length} / {MAX_SIDEBAR_TAB_ITEMS_PER_CATEGORY}
               </span>
@@ -282,6 +306,26 @@ export function SidebarTabsSection({
                         </SelectContent>
                       </Select>
                     </div>
+                    <label className='flex items-center gap-2 pb-2.5'>
+                      <Switch
+                        checked={page.published}
+                        disabled={saving}
+                        onCheckedChange={(checked) =>
+                          patchPage(categoryIndex, pageIndex, {
+                            published: checked,
+                          })
+                        }
+                      />
+                      <span
+                        className={
+                          page.published
+                            ? 'text-muted-foreground text-xs'
+                            : 'text-warning text-xs font-medium'
+                        }
+                      >
+                        {page.published ? t('Published') : t('Draft')}
+                      </span>
+                    </label>
                     <Button
                       type='button'
                       variant='ghost'

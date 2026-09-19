@@ -47,6 +47,11 @@ type SidebarTabItem struct {
 	Type string `json:"type"`
 	// Content 外链与 iframe 时是网址；html 时是一段 HTML。
 	Content string `json:"content"`
+	// Published 控制这一条是否对用户可见。
+	//
+	// 用指针而不是 bool：字段缺省（老配置、或调用方没写）必须与显式的 false
+	// 区分开 —— 缺省视为已发布，否则升级后所有既有条目会一起消失。
+	Published *bool `json:"published,omitempty"`
 }
 
 // SidebarTabCategory 一个分类主题，对应侧边栏里的一组条目。
@@ -54,6 +59,8 @@ type SidebarTabCategory struct {
 	Id    string           `json:"id"`
 	Title string           `json:"title"`
 	Items []SidebarTabItem `json:"items"`
+	// Published 控制整个主题是否对用户可见；为 false 时其下条目一并隐藏。
+	Published *bool `json:"published,omitempty"`
 }
 
 // SidebarCustomTabsSetting 自定义侧边栏 tab 的完整配置。

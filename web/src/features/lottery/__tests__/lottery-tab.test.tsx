@@ -97,6 +97,31 @@ describe('lottery tab', () => {
     expect(screen.getByText('2 draw(s) available')).toBeInTheDocument()
   })
 
+  test('hides the whole prize pool when the admin turned it off', async () => {
+    mockedGetLotteryStatus.mockResolvedValue({
+      success: true,
+      data: baseStatus({ drawable_count: 1, show_prize_pool: false }),
+    })
+
+    renderTab()
+
+    expect(await screen.findByText('Total consumed')).toBeInTheDocument()
+    expect(screen.queryByText('Next prize pool')).toBeNull()
+    expect(screen.queryByText('70%')).toBeNull()
+  })
+
+  test('hides the draw history when the admin turned it off', async () => {
+    mockedGetLotteryStatus.mockResolvedValue({
+      success: true,
+      data: baseStatus({ drawable_count: 1, show_history: false }),
+    })
+
+    renderTab()
+
+    expect(await screen.findByText('Total consumed')).toBeInTheDocument()
+    expect(screen.queryByText('Draw history')).toBeNull()
+  })
+
   test('hides the chances when the admin turned the toggle off', async () => {
     mockedGetLotteryStatus.mockResolvedValue({
       success: true,

@@ -102,6 +102,10 @@ function toFormState(activity: AdminWelfareActivity): ActivityFormState {
 
 interface WelfareActivitySectionProps {
   activitiesEnabled: boolean
+  /** 活动自己的展示开关：与抽奖的同名开关互相独立，各写各的配置 */
+  showPrizePool: boolean
+  showProbability: boolean
+  showWinnerList: boolean
 }
 
 /**
@@ -208,15 +212,17 @@ export function WelfareActivitySection(props: WelfareActivitySectionProps) {
     }
   }
 
-  async function handleToggleModule(next: boolean) {
+  // 这一卡里的开关都是"拨一下立刻存"，没有统一的保存按钮
+  async function handleToggleOption(key: string, next: boolean) {
     try {
-      await updateOption.mutateAsync({
-        key: ACTIVITIES_ENABLED_KEY,
-        value: String(next),
-      })
+      await updateOption.mutateAsync({ key, value: String(next) })
     } catch {
       toast.error(t('Failed to update the setting'))
     }
+  }
+
+  async function handleToggleModule(next: boolean) {
+    await handleToggleOption(ACTIVITIES_ENABLED_KEY, next)
   }
 
   const activities = activitiesQuery.data ?? []
@@ -238,6 +244,69 @@ export function WelfareActivitySection(props: WelfareActivitySectionProps) {
           checked={props.activitiesEnabled}
           disabled={updateOption.isPending}
           onCheckedChange={handleToggleModule}
+        />
+      </div>
+
+      {/* 以下三个开关只作用于活动。抽奖有各自的一套（在"抽奖"卡里），
+          两个模块可以设成不一样。 */}
+      <div className='flex items-start justify-between gap-4 rounded-xl border p-4'>
+        <div className='min-w-0'>
+          <div className='text-sm font-medium'>
+            {t('Show the activity prize pool')}
+          </div>
+          <p className='text-muted-foreground mt-1 text-xs'>
+            {t(
+              'Show what each activity can pay out. Turning this off hides the amounts but keeps the threshold progress and the participate button.'
+            )}
+          </p>
+        </div>
+        <Switch
+          checked={props.showPrizePool}
+          disabled={updateOption.isPending}
+          onCheckedChange={(next) =>
+            handleToggleOption(
+              'welfare_setting.show_activity_prize_pool',
+              next
+            )
+          }
+        />
+      </div>
+
+      <div className='flex items-start justify-between gap-4 rounded-xl border p-4'>
+        <div className='min-w-0'>
+          <div className='text-sm font-medium'>
+            {t('Show the activity win probability')}
+          </div>
+          <p className='text-muted-foreground mt-1 text-xs'>
+            {t(
+              'Show the chance of each tier. Only meaningful while the prize pool is visible.'
+            )}
+          </p>
+        </div>
+        <Switch
+          checked={props.showProbability}
+          disabled={updateOption.isPending}
+          onCheckedChange={(next) =>
+            handleToggleOption('welfare_setting.show_activity_probability', next)
+          }
+        />
+      </div>
+
+      <div className='flex items-start justify-between gap-4 rounded-xl border p-4'>
+        <div className='min-w-0'>
+          <div className='text-sm font-medium'>{t('Show recent winners')}</div>
+          <p className='text-muted-foreground mt-1 text-xs'>
+            {t(
+              'Show recent winners of each activity on the user side, with names partially masked. Off by default, because it exposes users to each other.'
+            )}
+          </p>
+        </div>
+        <Switch
+          checked={props.showWinnerList}
+          disabled={updateOption.isPending}
+          onCheckedChange={(next) =>
+            handleToggleOption('welfare_setting.show_winner_list', next)
+          }
         />
       </div>
 

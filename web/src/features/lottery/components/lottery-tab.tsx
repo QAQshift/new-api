@@ -108,7 +108,9 @@ export function LotteryTab() {
           drawing={drawing}
           onDraw={handleDraw}
         />
-        <LotteryHistory records={data.records ?? []} />
+        {data.show_history !== false && (
+          <LotteryHistory records={data.records ?? []} />
+        )}
       </>
     )
   }

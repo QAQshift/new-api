@@ -38,12 +38,16 @@ export interface SidebarTabDraft {
   type: SidebarTabType
   /** A URL for `link`/`iframe`, raw HTML for `html`. */
   content: string
+  /** false keeps this page out of the sidebar for everyone. */
+  published: boolean
 }
 
 export interface SidebarTabCategoryDraft {
   id: string
   title: string
   items: SidebarTabDraft[]
+  /** false hides the whole category, including its published pages. */
+  published: boolean
 }
 
 export const MAX_SIDEBAR_TAB_CATEGORIES = 20
@@ -72,12 +76,24 @@ export function createPageId(): string {
   return nextId('pg')
 }
 
+/**
+ * New entries start as drafts.
+ *
+ * The whole point of the publish flag is to avoid exposing half-finished work,
+ * so the safe default is "not visible until switched on" — the operator has to
+ * make a deliberate choice to publish.
+ */
 export function createEmptyPage(type: SidebarTabType = 'link'): SidebarTabDraft {
-  return { id: createPageId(), title: '', type, content: '' }
+  return { id: createPageId(), title: '', type, content: '', published: false }
 }
 
 export function createEmptyCategory(): SidebarTabCategoryDraft {
-  return { id: createCategoryId(), title: '', items: [createEmptyPage()] }
+  return {
+    id: createCategoryId(),
+    title: '',
+    items: [createEmptyPage()],
+    published: false,
+  }
 }
 
 /** In-app route for a page that renders content (iframe / html). */
@@ -134,11 +150,13 @@ export function parseSidebarTabs(
         return {
           id: String(category.id ?? createCategoryId()),
           title: String(category.title ?? ''),
+          published: category.published !== false,
           items: items.filter(isRecord).map((item) => ({
             id: String(item.id ?? createPageId()),
             title: String(item.title ?? ''),
             type: normalizeType(item.type),
             content: String(item.content ?? ''),
+            published: item.published !== false,
           })),
         }
       })
@@ -155,11 +173,13 @@ export function serializeSidebarTabs(
     categories: categories.map((category) => ({
       id: category.id,
       title: category.title,
+      published: category.published,
       items: category.items.map((item) => ({
         id: item.id,
         title: item.title,
         type: item.type,
         content: item.content,
+        published: item.published,
       })),
     })),
   })
@@ -176,7 +196,14 @@ export function sidebarTabsSignature(
     categories.map((category) => [
       category.id,
       category.title,
-      category.items.map((item) => [item.id, item.title, item.type, item.content]),
+      category.published,
+      category.items.map((item) => [
+        item.id,
+        item.title,
+        item.type,
+        item.content,
+        item.published,
+      ]),
     ])
   )
 }
@@ -189,17 +216,34 @@ export function countSidebarTabPages(
 }
 
 /**
- * Categories that will actually render: a category with no usable page would
- * produce an empty sidebar group, which the sidebar drops anyway. Keeping this
- * shared means the editor and the sidebar agree on what "empty" means.
+ * Whether an entry is visible to users.
+ *
+ * A missing flag means published: configurations saved before the publish
+ * toggle existed have no such field, and treating them as drafts would make
+ * every existing entry vanish at once.
+ */
+export function isPublished(entry: { published?: boolean }): boolean {
+  return entry.published !== false
+}
+
+/**
+ * Entries that will actually render.
+ *
+ * Filters drafts, empty titles, and categories left without any usable page —
+ * an empty sidebar group would be dropped by the sidebar anyway. Keeping this
+ * shared means the editor, the sidebar and the custom page route all agree on
+ * what "visible" means, so an unpublished page is also unreachable by URL.
  */
 export function visibleSidebarTabCategories(
   categories: SidebarTabCategoryDraft[]
 ): SidebarTabCategoryDraft[] {
   return categories
+    .filter(isPublished)
     .map((category) => ({
       ...category,
-      items: category.items.filter((item) => item.title.trim() !== ''),
+      items: category.items.filter(
+        (item) => isPublished(item) && item.title.trim() !== ''
+      ),
     }))
     .filter((category) => category.title.trim() !== '' && category.items.length > 0)
 }

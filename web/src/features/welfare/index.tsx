@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next'
 import { Sparkles } from 'lucide-react'
 
 import { SectionPageLayout } from '@/components/layout'
+import { RichContent } from '@/components/rich-content'
 import { Card } from '@/components/ui/card'
 import { IconBadge } from '@/components/ui/icon-badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -29,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LotteryTab } from '@/features/lottery/components/lottery-tab'
 import { CheckinCalendarCard } from '@/features/profile/components/checkin-calendar-card'
 import { useStatus } from '@/hooks/use-status'
+import { isLikelyHtml } from '@/lib/content-format'
 
 import { ActivityPanel } from './components/activity-panel'
 import { WelfareOverview } from './components/welfare-overview'
@@ -67,6 +69,10 @@ export function Welfare() {
   // With a single module the overview would just be an extra click
   const activeTab =
     selectedTab ?? (modules.length === 1 ? modules[0].id : OVERVIEW_TAB)
+
+  // 管理员配置的玩法说明。留空即不展示 —— 所以不需要额外的开关。
+  const rawRules = status?.welfare_rules_content
+  const rulesContent = typeof rawRules === 'string' ? rawRules.trim() : ''
 
   let body
   if (modules.length === 0) {
@@ -144,7 +150,22 @@ export function Welfare() {
         </div>
       </SectionPageLayout.Title>
       <SectionPageLayout.Content>
-        <div className='mx-auto w-full max-w-5xl'>{body}</div>
+        <div className='mx-auto w-full max-w-5xl space-y-4'>
+          {/* 玩法说明常驻在 Tabs 之上：它在所有模块里都适用。
+              没有可用模块时不显示，避免空态页上还挂着一块说明。 */}
+          {modules.length > 0 && rulesContent !== '' ? (
+            <Card data-card-hover='false' className='gap-0 py-0'>
+              <div className='p-5 sm:p-6'>
+                <RichContent
+                  mode={isLikelyHtml(rulesContent) ? 'html' : 'markdown'}
+                  htmlVariant='isolated'
+                  content={rulesContent}
+                />
+              </div>
+            </Card>
+          ) : null}
+          {body}
+        </div>
       </SectionPageLayout.Content>
     </SectionPageLayout>
   )

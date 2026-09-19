@@ -3,6 +3,8 @@ package operation_setting
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/setting/config"
@@ -28,6 +30,26 @@ type AffiliateTier struct {
 	RateBp int `json:"rate_bp"`
 }
 
+// AffiliatePromoTemplate 推广页上一条可复制的文案。
+// Text 支持 {{site}} 与 {{link}} 两个占位符，由前端替换成实际站点名与邀请链接。
+type AffiliatePromoTemplate struct {
+	Label string `json:"label"`
+	Text  string `json:"text"`
+}
+
+// 推广素材与海报的规模上限。这些值会随接口下发给每个用户，因此必须在写入时
+// 就限制住，而不是等渲染时兜底。
+const (
+	// MaxAffiliatePromoTemplates 推广文案条数上限。
+	MaxAffiliatePromoTemplates = 10
+	// MaxAffiliatePromoLabelLength 文案标签长度上限。
+	MaxAffiliatePromoLabelLength = 30
+	// MaxAffiliatePromoTextLength 单条文案长度上限。
+	MaxAffiliatePromoTextLength = 500
+	// MaxAffiliatePosterUrlLength 海报背景图地址长度上限。
+	MaxAffiliatePosterUrlLength = 2000
+)
+
 // AffiliateSetting 邀请充值返利配置。
 //
 // 返利额度不直接进入可转移池，而是先进「待确认」池，冷却期结束才释放。
@@ -41,6 +63,15 @@ type AffiliateSetting struct {
 	CooldownDays int `json:"cooldown_days"`
 	// MaxRebatePerInvitee 单个被邀请人累计可产生的返利上限，0 表示不限制。
 	MaxRebatePerInvitee int `json:"max_rebate_per_invitee"`
+	// PromoTemplates 推广页的可复制文案。留空时前端使用内置的三条默认文案，
+	// 因此不配置也不会让推广页变空。
+	PromoTemplates []AffiliatePromoTemplate `json:"promo_templates"`
+	// PosterBackgroundUrl 海报背景图。
+	//
+	// 留空时使用内置的纯色版式。图片建议放站内相对路径（如 /uploads/x.png）：
+	// 同源图片不会被跨域污染，导出一定成功；跨域图片需要对方返回 CORS 头，
+	// 否则前端会自动退回内置版式。
+	PosterBackgroundUrl string `json:"poster_background_url"`
 }
 
 // 默认档位与 bblabu 对齐：前 3 次 5%，第 4 次起 3%。
@@ -131,6 +162,53 @@ func (s *AffiliateSetting) CalcRebateQuota(baseQuota int, topupOrdinal int) int 
 	return int(rebate)
 }
 
+// validateAffiliatePromoTemplates 校验推广文案列表。
+func validateAffiliatePromoTemplates(templates []AffiliatePromoTemplate) error {
+	if len(templates) > MaxAffiliatePromoTemplates {
+		return fmt.Errorf("推广文案最多 %d 条", MaxAffiliatePromoTemplates)
+	}
+	for i, template := range templates {
+		label := strings.TrimSpace(template.Label)
+		if label == "" {
+			return fmt.Errorf("第 %d 条推广文案的标签不能为空", i+1)
+		}
+		if len([]rune(label)) > MaxAffiliatePromoLabelLength {
+			return fmt.Errorf("第 %d 条推广文案的标签超过 %d 个字", i+1, MaxAffiliatePromoLabelLength)
+		}
+		text := strings.TrimSpace(template.Text)
+		if text == "" {
+			return fmt.Errorf("第 %d 条推广文案的内容不能为空", i+1)
+		}
+		if len([]rune(text)) > MaxAffiliatePromoTextLength {
+			return fmt.Errorf("第 %d 条推广文案超过 %d 个字", i+1, MaxAffiliatePromoTextLength)
+		}
+	}
+	return nil
+}
+
+// validateAffiliatePosterUrl 校验海报背景图地址。
+//
+// 允许站内相对路径（以 / 开头），因为同源图片不会被跨域污染，导出必定成功；
+// 跨域图片需要对方返回 CORS 头，前端加载失败时会自动退回内置版式。
+func validateAffiliatePosterUrl(raw string) error {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return nil
+	}
+	if len(trimmed) > MaxAffiliatePosterUrlLength {
+		return errors.New("海报背景图地址过长")
+	}
+	// 排除 "//evil.com" 这种协议相对地址：它不是站内路径
+	if strings.HasPrefix(trimmed, "/") && !strings.HasPrefix(trimmed, "//") {
+		return nil
+	}
+	parsed, err := url.Parse(trimmed)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+		return errors.New("海报背景图地址必须是 http(s) 链接或以 / 开头的站内路径")
+	}
+	return nil
+}
+
 // ValidateAffiliateSetting 校验配置整体一致性，供管理端保存时调用。
 //
 // 关闭状态下允许保存不完整配置，避免管理员必须先把配置填完整才能关闭入口。
@@ -140,6 +218,12 @@ func ValidateAffiliateSetting(s AffiliateSetting) error {
 	}
 	if s.MaxRebatePerInvitee < 0 {
 		return errors.New("单个被邀请人返利上限不能为负数")
+	}
+	if err := validateAffiliatePromoTemplates(s.PromoTemplates); err != nil {
+		return err
+	}
+	if err := validateAffiliatePosterUrl(s.PosterBackgroundUrl); err != nil {
+		return err
 	}
 	if len(s.Tiers) == 0 {
 		if s.Enabled {
@@ -173,6 +257,15 @@ func ValidateAffiliateSetting(s AffiliateSetting) error {
 }
 
 // ValidateAffiliateTiersJSON 解析并校验档位 JSON，供管理端单个字段保存时使用。
+// ValidateAffiliatePromoTemplatesJSON 解析并校验推广文案 JSON，供管理端单字段保存时使用。
+func ValidateAffiliatePromoTemplatesJSON(raw string) error {
+	var templates []AffiliatePromoTemplate
+	if err := common.UnmarshalJsonStr(raw, &templates); err != nil {
+		return fmt.Errorf("推广文案不是合法的 JSON：%v", err)
+	}
+	return validateAffiliatePromoTemplates(templates)
+}
+
 func ValidateAffiliateTiersJSON(raw string) error {
 	var tiers []AffiliateTier
 	if err := common.UnmarshalJsonStr(raw, &tiers); err != nil {
