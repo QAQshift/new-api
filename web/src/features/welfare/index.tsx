@@ -160,15 +160,15 @@ export function Welfare() {
               <span className='bg-info/15 text-info flex size-8 shrink-0 items-center justify-center rounded-full'>
                 <Megaphone className='size-4' />
               </span>
-              <div className='min-w-0 flex-1 space-y-1'>
-                <p className='text-sm font-semibold'>{t('How it works')}</p>
-                <div className='text-muted-foreground text-xs leading-5'>
-                  <RichContent
-                    mode={isLikelyHtml(rulesContent) ? 'html' : 'markdown'}
-                    htmlVariant='isolated'
-                    content={rulesContent}
-                  />
-                </div>
+              {/* 不在这里放固定标题：标题由管理员在内容里自己写（Markdown 与
+                  HTML 都支持）。两边同时有标题就会打架，运营也已经习惯在内容里
+                  写标题了，所以标题权完全交给内容。 */}
+              <div className='text-muted-foreground min-w-0 flex-1 text-xs leading-5'>
+                <RichContent
+                  mode={isLikelyHtml(rulesContent) ? 'html' : 'markdown'}
+                  htmlVariant='isolated'
+                  content={rulesContent}
+                />
               </div>
             </div>
           ) : null}
