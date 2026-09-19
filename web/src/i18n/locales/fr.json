@@ -5941,6 +5941,19 @@
     "Show the activity prize pool": "Afficher la cagnotte des activités",
     "Show what each activity can pay out. Turning this off hides the amounts but keeps the threshold progress and the participate button.": "Affiche ce que chaque activité peut rapporter. Désactiver masque les montants mais conserve la progression du seuil et le bouton de participation.",
     "Show the activity win probability": "Afficher la probabilité de gain des activités",
-    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "Affiche la chance de chaque palier. Pertinent uniquement lorsque la cagnotte est visible."
+    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "Affiche la chance de chaque palier. Pertinent uniquement lorsque la cagnotte est visible.",
+    "Amounts in": "Montants en",
+    "Chance in": "Chance en",
+    "Prize amount (min)": "Montant du lot (min)",
+    "Prize amount (max)": "Montant du lot (max)",
+    "Chance (%)": "Chance (%)",
+    "Amounts are entered in {{currency}} and stored as internal quota.": "Les montants sont saisis en {{currency}} et enregistrés en quota interne.",
+    "Weights are whole numbers, so a very small chance cannot be represented exactly.": "Les poids sont des nombres entiers : une probabilité très faible ne peut pas être représentée exactement.",
+    "Consumption per draw": "Consommation par tirage",
+    "First tier threshold": "Seuil du premier palier",
+    "Threshold step per tier": "Incrément du seuil par palier",
+    "Prize step per tier": "Incrément du lot par palier",
+    "Prize cap": "Plafond du lot",
+    "Consumption requirement": "Seuil de consommation"
   }
 }

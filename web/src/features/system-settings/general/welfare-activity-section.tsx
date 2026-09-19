@@ -40,6 +40,11 @@ import type {
 } from '@/features/welfare/types'
 
 import { LotteryPrizeEditor } from '../components/lottery-prize-editor'
+import {
+  QuotaInput,
+  QuotaUnitSwitch,
+  type QuotaUnitMode,
+} from '../components/quota-field'
 import { SettingsSection } from '../components/settings-section'
 import { useUpdateOption } from '../hooks/use-update-option'
 import {
@@ -116,6 +121,9 @@ interface WelfareActivitySectionProps {
  */
 export function WelfareActivitySection(props: WelfareActivitySectionProps) {
   const { t } = useTranslation()
+  // 金额输入单位：管住这个表单里两处金额（消费门槛 + 奖池）。
+  // 表单状态里存的始终是内部配额。
+  const [unitMode, setUnitMode] = useState<QuotaUnitMode>('quota')
   const updateOption = useUpdateOption()
   const queryClient = useQueryClient()
 
@@ -320,6 +328,13 @@ export function WelfareActivitySection(props: WelfareActivitySectionProps) {
 
       {formOpen && (
         <div className='space-y-4 rounded-xl border p-4'>
+          {/* 放在表单顶部：下面两处金额（消费门槛、奖池）都听它的 */}
+          <QuotaUnitSwitch
+            mode={unitMode}
+            onChange={setUnitMode}
+            disabled={saving}
+          />
+
           <div className='text-sm font-semibold'>
             {editingId === null ? t('New activity') : t('Edit activity')}
           </div>
@@ -338,18 +353,16 @@ export function WelfareActivitySection(props: WelfareActivitySectionProps) {
             </div>
             <div className='space-y-1.5'>
               <label className='text-muted-foreground text-xs'>
-                {t('Consumption requirement (quota)')}
+                {t('Consumption requirement')}
               </label>
-              <Input
-                type='number'
-                min={0}
+              <QuotaInput
                 value={form.minConsumeQuota}
-                onChange={(event) => {
-                  const next = event.target.valueAsNumber
-                  if (Number.isFinite(next)) {
-                    setForm((prev) => ({ ...prev, minConsumeQuota: next }))
-                  }
-                }}
+                mode={unitMode}
+                min={0}
+                disabled={saving}
+                onChange={(quota) =>
+                  setForm((prev) => ({ ...prev, minConsumeQuota: quota }))
+                }
               />
               <p className='text-muted-foreground text-xs'>
                 {t('Users see about {{amount}}', {
@@ -451,6 +464,7 @@ export function WelfareActivitySection(props: WelfareActivitySectionProps) {
               pool={prizes}
               onChange={setPrizes}
               disabled={saving}
+              unitMode={unitMode}
             />
           </div>
 

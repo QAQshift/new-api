@@ -5941,6 +5941,19 @@
     "Show the activity prize pool": "展示活动奖品池",
     "Show what each activity can pay out. Turning this off hides the amounts but keeps the threshold progress and the participate button.": "展示每个活动可能发放的奖励。关闭后隐藏具体金额，但保留门槛进度与参与按钮。",
     "Show the activity win probability": "展示活动中奖概率",
-    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "展示各档位的中奖概率。仅在奖品池可见时才有意义。"
+    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "展示各档位的中奖概率。仅在奖品池可见时才有意义。",
+    "Amounts in": "金额单位",
+    "Chance in": "概率单位",
+    "Prize amount (min)": "奖品金额（下限）",
+    "Prize amount (max)": "奖品金额（上限）",
+    "Chance (%)": "中奖概率（%）",
+    "Amounts are entered in {{currency}} and stored as internal quota.": "金额按 {{currency}} 输入，存储时仍换算为内部配额。",
+    "Weights are whole numbers, so a very small chance cannot be represented exactly.": "权重是整数，因此极小的概率无法精确表达。",
+    "Consumption per draw": "单次抽奖所需消费",
+    "First tier threshold": "首档门槛",
+    "Threshold step per tier": "每档门槛增量",
+    "Prize step per tier": "每档奖励增量",
+    "Prize cap": "单次奖励封顶",
+    "Consumption requirement": "消费门槛"
   }
 }

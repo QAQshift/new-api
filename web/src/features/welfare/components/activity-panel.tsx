@@ -29,6 +29,7 @@ import { formatQuotaWithCurrency } from '@/lib/currency'
 import dayjs from '@/lib/dayjs'
 import { cn } from '@/lib/utils'
 import {
+  formatPrizePercent,
   isPrizeRange,
   mergeIdenticalPrizes,
   prizeMax,
@@ -222,7 +223,7 @@ function ActivityCard(props: ActivityCardProps) {
                   </span>
                   {props.showProbability && (
                     <span className='text-muted-foreground text-[10px] tabular-nums sm:text-xs'>
-                      {prizeWeightPercent(prize, prizePool)}%
+                      {formatPrizePercent(prizeWeightPercent(prize, prizePool))}%
                     </span>
                   )}
                 </div>

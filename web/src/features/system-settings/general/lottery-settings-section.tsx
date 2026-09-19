@@ -32,7 +32,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -41,9 +40,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { formatQuota } from '@/lib/format'
 
 import { LotteryPrizeEditor } from '../components/lottery-prize-editor'
+import {
+  QuotaField,
+  QuotaUnitSwitch,
+  type QuotaUnitMode,
+} from '../components/quota-field'
 import {
   SettingsForm,
   SettingsSwitchContent,
@@ -57,7 +60,6 @@ import {
   serializeLotteryPool,
   type LotteryPrizeDraft,
 } from '../utils/lottery-pool'
-import { safeNumberFieldProps } from '../utils/numeric-field'
 
 const LOTTERY_MODE_SEGMENT = 'segment'
 const LOTTERY_MODE_TIERED = 'tiered'
@@ -98,6 +100,8 @@ export function LotterySettingsSection({
   defaultValues,
 }: LotterySettingsSectionProps) {
   const { t } = useTranslation()
+  // 整卡统一的金额输入单位：切换只改变"怎么写"，表单里存的始终是内部配额
+  const [unitMode, setUnitMode] = useState<QuotaUnitMode>('quota')
   const updateOption = useUpdateOption()
 
   const [segmentPrizes, setSegmentPrizes] = useState<LotteryPrizeDraft[]>(
@@ -349,35 +353,22 @@ export function LotterySettingsSection({
                 )}
               />
 
+              <QuotaUnitSwitch
+                mode={unitMode}
+                onChange={setUnitMode}
+                disabled={busy}
+              />
+
               {mode === LOTTERY_MODE_SEGMENT ? (
                 <div className='space-y-6'>
-                  <FormField
-                    control={form.control}
+                  <QuotaField
                     name='segmentConsumeQuota'
-                    render={({ field }) => (
-                      <FormItem className='sm:max-w-72'>
-                        <FormLabel>
-                          {t('Consumption per draw (quota)')}
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type='number'
-                            min={1}
-                            {...safeNumberFieldProps(field)}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          {t(
-                            'Accumulated consumption needed for one draw. Values use the internal quota unit, the same unit as the user balance.'
-                          )}
-                          {' · '}
-                          {t('Users see about {{amount}}', {
-                            amount: formatQuota(field.value),
-                          })}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
+                    label={t('Consumption per draw')}
+                    description={t(
+                      'Accumulated consumption needed for one draw. Values use the internal quota unit, the same unit as the user balance.'
                     )}
+                    itemClassName='sm:max-w-72'
+                    mode={unitMode}
                   />
                   <div className='space-y-2'>
                     <FormLabel>{t('Segment prize pool')}</FormLabel>
@@ -390,67 +381,28 @@ export function LotterySettingsSection({
                       pool={segmentPrizes}
                       onChange={setSegmentPrizes}
                       disabled={busy}
+                      unitMode={unitMode}
                     />
                   </div>
                 </div>
               ) : (
                 <div className='space-y-6'>
                   <div className='grid gap-6 sm:grid-cols-2'>
-                    <FormField
-                      control={form.control}
+                    <QuotaField
                       name='firstThresholdQuota'
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            {t('First tier threshold (quota)')}
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type='number'
-                              min={1}
-                              {...safeNumberFieldProps(field)}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            {t(
-                              'Total consumption required for the first draw.'
-                            )}
-                            {' · '}
-                            {t('Users see about {{amount}}', {
-                              amount: formatQuota(field.value),
-                            })}
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
+                      label={t('First tier threshold')}
+                      description={t(
+                        'Total consumption required for the first draw.'
                       )}
+                      mode={unitMode}
                     />
-                    <FormField
-                      control={form.control}
+                    <QuotaField
                       name='thresholdStepQuota'
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            {t('Threshold step per tier (quota)')}
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type='number'
-                              min={1}
-                              {...safeNumberFieldProps(field)}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            {t(
-                              'Tier N needs the first threshold plus (N-1) times this step.'
-                            )}
-                            {' · '}
-                            {t('Users see about {{amount}}', {
-                              amount: formatQuota(field.value),
-                            })}
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
+                      label={t('Threshold step per tier')}
+                      description={t(
+                        'Tier N needs the first threshold plus (N-1) times this step.'
                       )}
+                      mode={unitMode}
                     />
                   </div>
 
@@ -465,63 +417,28 @@ export function LotterySettingsSection({
                       pool={tierPrizes}
                       onChange={setTierPrizes}
                       disabled={busy}
+                      unitMode={unitMode}
                     />
                   </div>
 
                   <div className='grid gap-6 sm:grid-cols-2'>
-                    <FormField
-                      control={form.control}
+                    <QuotaField
                       name='tierPrizeStep'
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            {t('Prize step per tier (quota)')}
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type='number'
-                              min={0}
-                              {...safeNumberFieldProps(field)}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            {t(
-                              'Added to every prize amount for each higher tier. Set 0 to keep prizes flat across tiers.'
-                            )}
-                            {' · '}
-                            {t('Users see about {{amount}}', {
-                              amount: formatQuota(field.value),
-                            })}
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
+                      label={t('Prize step per tier')}
+                      description={t(
+                        'Added to every prize amount for each higher tier. Set 0 to keep prizes flat across tiers.'
                       )}
+                      min={0}
+                      mode={unitMode}
                     />
-                    <FormField
-                      control={form.control}
+                    <QuotaField
                       name='tierPrizeMax'
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t('Prize cap (quota)')}</FormLabel>
-                          <FormControl>
-                            <Input
-                              type='number'
-                              min={0}
-                              {...safeNumberFieldProps(field)}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            {t(
-                              'Upper bound for a single prize. Set 0 for no cap. Must not be lower than any tier amount below.'
-                            )}
-                            {' · '}
-                            {t('Users see about {{amount}}', {
-                              amount: formatQuota(field.value),
-                            })}
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
+                      label={t('Prize cap')}
+                      description={t(
+                        'Upper bound for a single prize. Set 0 for no cap. Must not be lower than any tier amount below.'
                       )}
+                      min={0}
+                      mode={unitMode}
                     />
                   </div>
                 </div>

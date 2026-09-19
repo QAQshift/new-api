@@ -5941,6 +5941,19 @@
     "Show the activity prize pool": "Show the activity prize pool",
     "Show what each activity can pay out. Turning this off hides the amounts but keeps the threshold progress and the participate button.": "Show what each activity can pay out. Turning this off hides the amounts but keeps the threshold progress and the participate button.",
     "Show the activity win probability": "Show the activity win probability",
-    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "Show the chance of each tier. Only meaningful while the prize pool is visible."
+    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "Show the chance of each tier. Only meaningful while the prize pool is visible.",
+    "Amounts in": "Amounts in",
+    "Chance in": "Chance in",
+    "Prize amount (min)": "Prize amount (min)",
+    "Prize amount (max)": "Prize amount (max)",
+    "Chance (%)": "Chance (%)",
+    "Amounts are entered in {{currency}} and stored as internal quota.": "Amounts are entered in {{currency}} and stored as internal quota.",
+    "Weights are whole numbers, so a very small chance cannot be represented exactly.": "Weights are whole numbers, so a very small chance cannot be represented exactly.",
+    "Consumption per draw": "Consumption per draw",
+    "First tier threshold": "First tier threshold",
+    "Threshold step per tier": "Threshold step per tier",
+    "Prize step per tier": "Prize step per tier",
+    "Prize cap": "Prize cap",
+    "Consumption requirement": "Consumption requirement"
   }
 }

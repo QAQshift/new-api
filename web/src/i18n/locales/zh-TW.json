@@ -5941,6 +5941,19 @@
     "Show the activity prize pool": "顯示活動獎品池",
     "Show what each activity can pay out. Turning this off hides the amounts but keeps the threshold progress and the participate button.": "顯示每個活動可能發放的獎勵。關閉後隱藏具體金額，但保留門檻進度與參與按鈕。",
     "Show the activity win probability": "顯示活動中獎機率",
-    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "顯示各獎項的中獎機率。僅在獎品池可見時才有意義。"
+    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "顯示各獎項的中獎機率。僅在獎品池可見時才有意義。",
+    "Amounts in": "金額單位",
+    "Chance in": "機率單位",
+    "Prize amount (min)": "獎品金額（下限）",
+    "Prize amount (max)": "獎品金額（上限）",
+    "Chance (%)": "中獎機率（%）",
+    "Amounts are entered in {{currency}} and stored as internal quota.": "金額按 {{currency}} 輸入，儲存時仍換算為內部配額。",
+    "Weights are whole numbers, so a very small chance cannot be represented exactly.": "權重是整數，因此極小的機率無法精確表達。",
+    "Consumption per draw": "單次抽獎所需消費",
+    "First tier threshold": "首檔門檻",
+    "Threshold step per tier": "每檔門檻增量",
+    "Prize step per tier": "每檔獎勵增量",
+    "Prize cap": "單次獎勵封頂",
+    "Consumption requirement": "消費門檻"
   }
 }

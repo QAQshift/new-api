@@ -5941,6 +5941,19 @@
     "Show the activity prize pool": "Показывать призовой фонд мероприятий",
     "Show what each activity can pay out. Turning this off hides the amounts but keeps the threshold progress and the participate button.": "Показывает, сколько может выдать каждое мероприятие. При выключении суммы скрываются, но прогресс порога и кнопка участия остаются.",
     "Show the activity win probability": "Показывать вероятность выигрыша в мероприятиях",
-    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "Показывает шанс каждого уровня. Имеет смысл только при видимом призовом фонде."
+    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "Показывает шанс каждого уровня. Имеет смысл только при видимом призовом фонде.",
+    "Amounts in": "Суммы в",
+    "Chance in": "Шанс в",
+    "Prize amount (min)": "Сумма приза (мин)",
+    "Prize amount (max)": "Сумма приза (макс)",
+    "Chance (%)": "Шанс (%)",
+    "Amounts are entered in {{currency}} and stored as internal quota.": "Суммы вводятся в {{currency}}, а сохраняются во внутренней квоте.",
+    "Weights are whole numbers, so a very small chance cannot be represented exactly.": "Веса — целые числа, поэтому очень малый шанс нельзя задать точно.",
+    "Consumption per draw": "Расход на одну попытку",
+    "First tier threshold": "Порог первого уровня",
+    "Threshold step per tier": "Шаг порога на уровень",
+    "Prize step per tier": "Шаг приза на уровень",
+    "Prize cap": "Потолок приза",
+    "Consumption requirement": "Требуемый расход"
   }
 }

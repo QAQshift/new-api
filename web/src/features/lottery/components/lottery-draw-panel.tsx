@@ -33,6 +33,7 @@ import { IconBadge, type IconBadgeTone } from '@/components/ui/icon-badge'
 import { formatQuotaWithCurrency } from '@/lib/currency'
 
 import {
+  formatPrizePercent,
   isPrizeRange,
   mergeIdenticalPrizes,
   prizeMax,
@@ -199,7 +200,7 @@ export function LotteryDrawPanel({
                   </div>
                   {showProbability && (
                     <div className='text-muted-foreground mt-0.5 text-xs tabular-nums'>
-                      {prizeWeightPercent(prize, prizePool)}%
+                      {formatPrizePercent(prizeWeightPercent(prize, prizePool))}%
                     </div>
                   )}
                 </div>

@@ -56,7 +56,11 @@ export function mergeIdenticalPrizes(pool: LotteryPrize[]): LotteryPrize[] {
 }
 
 /**
- * Relative weight of one prize tier, as a whole percentage.
+ * Relative weight of one prize tier, as a percentage.
+ *
+ * Deliberately unrounded: the caller decides how much precision to show. A tier
+ * with weight 1 out of 200 is 0.5%, and rounding that to "1%" before anyone
+ * looks at it hides a real difference of a factor of two.
  */
 export function prizeWeightPercent(
   prize: LotteryPrize,
@@ -64,7 +68,22 @@ export function prizeWeightPercent(
 ): number {
   const total = pool.reduce((sum, item) => sum + (Number(item.weight) || 0), 0)
   if (total <= 0) return 0
-  return Math.round(((Number(prize.weight) || 0) / total) * 100)
+  return ((Number(prize.weight) || 0) / total) * 100
+}
+
+/**
+ * Formats a percentage for display: at most two decimals, trailing zeros
+ * dropped, so 70 stays "70", 0.5 stays "0.5" and 33.3333 becomes "33.33".
+ *
+ * A chance that is real but smaller than the displayed precision reports
+ * "<0.01" rather than "0" — showing a flat zero for a non-zero chance would be
+ * a lie, and the whole point of the extra precision is to tell those apart.
+ */
+export function formatPrizePercent(percent: number): string {
+  if (!Number.isFinite(percent) || percent <= 0) return '0'
+  const rounded = Math.round(percent * 100) / 100
+  if (rounded === 0) return '<0.01'
+  return String(rounded)
 }
 
 /**

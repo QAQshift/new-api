@@ -418,70 +418,74 @@ export function AffiliateProgramCard({
           )}
         </section>
 
-        {/* 推广素材 */}
-        <section className='space-y-2'>
-          <h4 className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>
-            {t('Promo materials')}
-          </h4>
-          <div className='grid gap-2 sm:grid-cols-2 xl:grid-cols-3'>
-            {promoTemplates.map((template) => {
-              const text = promoText(template.text)
-              return (
-                <div
-                  key={`${template.label}-${template.text}`}
-                  className='bg-muted/40 hover:bg-muted/60 flex flex-col gap-2 rounded-xl border p-3 transition-colors'
-                >
-                  <div className='flex items-center justify-between gap-2'>
-                    <span className='bg-background text-muted-foreground rounded-md border px-1.5 py-0.5 text-[10px] font-medium tracking-wider uppercase'>
-                      {t(template.label)}
-                    </span>
-                    <CopyButton
-                      value={text}
-                      variant='ghost'
-                      className='size-7 shrink-0'
-                      iconClassName='size-3.5'
-                      tooltip={t('Copy')}
-                      aria-label={t('Copy')}
-                    />
-                  </div>
-                  <p className='text-muted-foreground text-xs break-words'>
-                    {text}
-                  </p>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-
-        {/* 海报预览：与下载用的是同一张画布 */}
-        <section className='space-y-2'>
-          <div className='flex flex-wrap items-center justify-between gap-2'>
+        {/* 推广素材与海报并排：素材在左、海报在右；窄屏自动堆成一列 */}
+        <div className='grid gap-5 lg:grid-cols-2'>
+          {/* 推广素材 */}
+          <section className='space-y-2'>
             <h4 className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>
-              {t('Poster')}
+              {t('Promo materials')}
             </h4>
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              onClick={handleDownloadPoster}
-            >
-              <Download className='size-4' />
-              {t('Download poster')}
-            </Button>
-          </div>
-          <div className='flex flex-wrap items-start gap-4'>
-            <canvas
-              ref={posterRef}
-              className='border-border w-40 shrink-0 rounded-xl border shadow-sm'
-              style={{ aspectRatio: `${POSTER_WIDTH} / ${POSTER_HEIGHT}` }}
-            />
-            <p className='text-muted-foreground max-w-xs text-xs'>
-              {t(
-                'This preview is exactly what the downloaded image looks like.'
-              )}
-            </p>
-          </div>
-        </section>
+            {/* 半宽下素材保持单列：并成两列会把文案挤成竖条 */}
+            <div className='grid gap-2'>
+              {promoTemplates.map((template) => {
+                const text = promoText(template.text)
+                return (
+                  <div
+                    key={`${template.label}-${template.text}`}
+                    className='bg-muted/40 hover:bg-muted/60 flex flex-col gap-2 rounded-xl border p-3 transition-colors'
+                  >
+                    <div className='flex items-center justify-between gap-2'>
+                      <span className='bg-background text-muted-foreground rounded-md border px-1.5 py-0.5 text-[10px] font-medium tracking-wider uppercase'>
+                        {t(template.label)}
+                      </span>
+                      <CopyButton
+                        value={text}
+                        variant='ghost'
+                        className='size-7 shrink-0'
+                        iconClassName='size-3.5'
+                        tooltip={t('Copy')}
+                        aria-label={t('Copy')}
+                      />
+                    </div>
+                    <p className='text-muted-foreground text-xs break-words'>
+                      {text}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+
+          {/* 海报预览：与下载用的是同一张画布 */}
+          <section className='space-y-2'>
+            <div className='flex flex-wrap items-center justify-between gap-2'>
+              <h4 className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>
+                {t('Poster')}
+              </h4>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={handleDownloadPoster}
+              >
+                <Download className='size-4' />
+                {t('Download poster')}
+              </Button>
+            </div>
+            <div className='flex flex-wrap items-start gap-4'>
+              <canvas
+                ref={posterRef}
+                className='border-border w-40 shrink-0 rounded-xl border shadow-sm'
+                style={{ aspectRatio: `${POSTER_WIDTH} / ${POSTER_HEIGHT}` }}
+              />
+              <p className='text-muted-foreground max-w-xs text-xs'>
+                {t(
+                  'This preview is exactly what the downloaded image looks like.'
+                )}
+              </p>
+            </div>
+          </section>
+        </div>
       </div>
 
       {/* 隐藏的二维码画布，仅用于合成海报 */}

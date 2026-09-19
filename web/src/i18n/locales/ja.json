@@ -5941,6 +5941,19 @@
     "Show the activity prize pool": "活動の賞品プールを表示",
     "Show what each activity can pay out. Turning this off hides the amounts but keeps the threshold progress and the participate button.": "各活動で当たる可能性のある報酬を表示します。オフにすると金額は隠れますが、しきい値の進捗と参加ボタンは残ります。",
     "Show the activity win probability": "活動の当選確率を表示",
-    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "各賞の当選確率を表示します。賞品プールが表示されているときのみ意味があります。"
+    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "各賞の当選確率を表示します。賞品プールが表示されているときのみ意味があります。",
+    "Amounts in": "金額の単位",
+    "Chance in": "確率の単位",
+    "Prize amount (min)": "賞品金額（下限）",
+    "Prize amount (max)": "賞品金額（上限）",
+    "Chance (%)": "当選確率（%）",
+    "Amounts are entered in {{currency}} and stored as internal quota.": "金額は {{currency}} で入力し、保存時は内部クォータに換算されます。",
+    "Weights are whole numbers, so a very small chance cannot be represented exactly.": "重みは整数のため、極端に小さい確率は正確に表現できません。",
+    "Consumption per draw": "1回の抽選に必要な消費",
+    "First tier threshold": "最初のしきい値",
+    "Threshold step per tier": "しきい値の増分",
+    "Prize step per tier": "賞金の増分",
+    "Prize cap": "賞金の上限",
+    "Consumption requirement": "消費のしきい値"
   }
 }

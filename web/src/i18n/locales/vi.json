@@ -5941,6 +5941,19 @@
     "Show the activity prize pool": "Hiển thị giải thưởng của hoạt động",
     "Show what each activity can pay out. Turning this off hides the amounts but keeps the threshold progress and the participate button.": "Hiển thị phần thưởng có thể nhận của mỗi hoạt động. Tắt sẽ ẩn số tiền nhưng vẫn giữ tiến độ điều kiện và nút tham gia.",
     "Show the activity win probability": "Hiển thị xác suất trúng của hoạt động",
-    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "Hiển thị xác suất của từng mức. Chỉ có ý nghĩa khi giải thưởng đang hiển thị."
+    "Show the chance of each tier. Only meaningful while the prize pool is visible.": "Hiển thị xác suất của từng mức. Chỉ có ý nghĩa khi giải thưởng đang hiển thị.",
+    "Amounts in": "Đơn vị số tiền",
+    "Chance in": "Đơn vị xác suất",
+    "Prize amount (min)": "Số tiền thưởng (tối thiểu)",
+    "Prize amount (max)": "Số tiền thưởng (tối đa)",
+    "Chance (%)": "Xác suất (%)",
+    "Amounts are entered in {{currency}} and stored as internal quota.": "Số tiền được nhập theo {{currency}} và lưu dưới dạng hạn mức nội bộ.",
+    "Weights are whole numbers, so a very small chance cannot be represented exactly.": "Trọng số là số nguyên, nên xác suất rất nhỏ không thể biểu diễn chính xác.",
+    "Consumption per draw": "Mức tiêu thụ mỗi lượt",
+    "First tier threshold": "Ngưỡng mức đầu tiên",
+    "Threshold step per tier": "Bước ngưỡng mỗi mức",
+    "Prize step per tier": "Bước thưởng mỗi mức",
+    "Prize cap": "Giới hạn thưởng",
+    "Consumption requirement": "Ngưỡng tiêu thụ"
   }
 }
