@@ -319,6 +319,22 @@ func validateManagedDocs(value string) error {
 	return nil
 }
 
+// isValidHexColor reports whether value is a "#RRGGBB" colour literal.
+func isValidHexColor(value string) bool {
+	if len(value) != 7 || value[0] != '#' {
+		return false
+	}
+	for _, char := range value[1:] {
+		isDigit := char >= '0' && char <= '9'
+		isLower := char >= 'a' && char <= 'f'
+		isUpper := char >= 'A' && char <= 'F'
+		if !isDigit && !isLower && !isUpper {
+			return false
+		}
+	}
+	return true
+}
+
 func isValidImageOption(value string, maxDataBytes int) bool {
 	if value == "" {
 		return true
@@ -524,6 +540,39 @@ func UpdateOption(c *gin.Context) {
 			common.ApiErrorMsg(c, "无效的内容宽度设置")
 			return
 		}
+	case "UIThemeSidebarVariant":
+		if option.Value != "inset" && option.Value != "sidebar" && option.Value != "floating" {
+			common.ApiErrorMsg(c, "无效的侧边栏样式设置")
+			return
+		}
+	case "UIThemeSidebarCollapsible":
+		if option.Value != "offcanvas" && option.Value != "icon" && option.Value != "none" {
+			common.ApiErrorMsg(c, "无效的侧边栏折叠方式设置")
+			return
+		}
+	case "UIThemeSidebarWidth":
+		if option.Value != "compact" && option.Value != "default" && option.Value != "wide" {
+			common.ApiErrorMsg(c, "无效的侧边栏宽度设置")
+			return
+		}
+	case "UIThemeGlass":
+		if option.Value != "soft" && option.Value != "default" && option.Value != "heavy" {
+			common.ApiErrorMsg(c, "无效的玻璃强度设置")
+			return
+		}
+	case "UIThemeContentWidth":
+		if option.Value != "default" && option.Value != "wide" && option.Value != "ultra" {
+			common.ApiErrorMsg(c, "无效的内容宽度设置")
+			return
+		}
+	case "UIThemePrimary":
+		value := strings.TrimSpace(option.Value.(string))
+		// Empty means "follow whatever the selected preset defines".
+		if value != "" && !isValidHexColor(value) {
+			common.ApiErrorMsg(c, "无效的主题色，需为 #RRGGBB 格式")
+			return
+		}
+		option.Value = value
 	case "UIThemeBackground":
 		value := strings.TrimSpace(option.Value.(string))
 		if len(value) > 2048 && !strings.HasPrefix(value, "data:image/") {

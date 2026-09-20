@@ -91,11 +91,33 @@ For commercial licensing, please contact support@quantumnous.com
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Type scale, routed through `--ui-text-*` so the density axis can move it.
+   * Tailwind resolves `text-sm` to this token at build time, so a preset
+   * cannot simply redefine `--text-sm` at runtime — the token has to point at
+   * a variable that resolves later. The `--ui-text-*` defaults mirror
+   * Tailwind's own scale, so nothing shifts unless a density is chosen. */
+  --text-xs: var(--ui-text-xs);
+  --text-sm: var(--ui-text-sm);
+  --text-base: var(--ui-text-base);
+  --text-lg: var(--ui-text-lg);
+  --text-xl: var(--ui-text-xl);
+  --text-2xl: var(--ui-text-2xl);
+  --text-3xl: var(--ui-text-3xl);
 }
 
 :root {
   --radius: 1rem;
   --app-header-height: 3rem;
+
+  /* Base type scale — keep in step with Tailwind's defaults. */
+  --ui-text-xs: 0.75rem;
+  --ui-text-sm: 0.875rem;
+  --ui-text-base: 1rem;
+  --ui-text-lg: 1.125rem;
+  --ui-text-xl: 1.25rem;
+  --ui-text-2xl: 1.5rem;
+  --ui-text-3xl: 1.875rem;
   /* Static build-channel fallback consumed when JS hasn't booted yet. */
   --app-rev: '2k6e8r7p';
   /* Currently active body font. The font axis swaps this between

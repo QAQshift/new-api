@@ -16,8 +16,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect } from 'react'
 
+import { useThemeCustomization } from '@/context/theme-customization-provider'
 import { removeCookie } from '@/lib/cookies'
 
 export type Collapsible = 'offcanvas' | 'icon' | 'none'
@@ -32,15 +33,11 @@ const DEFAULT_VARIANT = 'inset'
 const DEFAULT_COLLAPSIBLE = 'icon'
 
 type LayoutContextType = {
-  resetLayout: () => void
-
   defaultCollapsible: Collapsible
   collapsible: Collapsible
-  setCollapsible: (collapsible: Collapsible) => void
 
   defaultVariant: Variant
   variant: Variant
-  setVariant: (variant: Variant) => void
 }
 
 const LayoutContext = createContext<LayoutContextType | null>(null)
@@ -49,40 +46,28 @@ type LayoutProviderProps = {
   children: React.ReactNode
 }
 
+/**
+ * Sidebar shell shape.
+ *
+ * These used to be per-user preferences persisted in a layout cookie. Shell
+ * geometry is now part of the administrator-controlled appearance settings, so
+ * the provider simply mirrors the resolved theme customization and the tree
+ * re-renders when an administrator changes it. Cookies left over from the old
+ * per-user flow are cleared on mount.
+ */
 export function LayoutProvider({ children }: LayoutProviderProps) {
-  const [collapsible, _setCollapsible] =
-    useState<Collapsible>(DEFAULT_COLLAPSIBLE)
-
-  const [variant, _setVariant] = useState<Variant>(DEFAULT_VARIANT)
+  const { customization } = useThemeCustomization()
 
   useEffect(() => {
     removeCookie(LAYOUT_COLLAPSIBLE_COOKIE_NAME)
     removeCookie(LAYOUT_VARIANT_COOKIE_NAME)
   }, [])
 
-  const setCollapsible = (newCollapsible: Collapsible) => {
-    _setCollapsible(newCollapsible)
-    removeCookie(LAYOUT_COLLAPSIBLE_COOKIE_NAME)
-  }
-
-  const setVariant = (newVariant: Variant) => {
-    _setVariant(newVariant)
-    removeCookie(LAYOUT_VARIANT_COOKIE_NAME)
-  }
-
-  const resetLayout = () => {
-    setCollapsible(DEFAULT_COLLAPSIBLE)
-    setVariant(DEFAULT_VARIANT)
-  }
-
   const contextValue: LayoutContextType = {
-    resetLayout,
     defaultCollapsible: DEFAULT_COLLAPSIBLE,
-    collapsible,
-    setCollapsible,
+    collapsible: customization.sidebarCollapsible,
     defaultVariant: DEFAULT_VARIANT,
-    variant,
-    setVariant,
+    variant: customization.sidebarVariant,
   }
 
   return <LayoutContext value={contextValue}>{children}</LayoutContext>

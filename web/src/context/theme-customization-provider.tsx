@@ -23,6 +23,7 @@ import { removeCookie } from '@/lib/cookies'
 import { isImageDataUrl } from '@/lib/image-data-url'
 import {
   DEFAULT_THEME_CUSTOMIZATION,
+  resolvePrimaryForeground,
   resolveThemeCustomization,
   resolveThemeFont,
   THEME_COOKIE_KEYS,
@@ -60,6 +61,30 @@ function applyBackground(background: string) {
   } catch {
     body.removeAttribute('data-theme-background')
     body.style.removeProperty('--site-background-image')
+  }
+}
+
+/**
+ * Brand accent override.
+ *
+ * Written as an inline custom property rather than a data attribute because
+ * the value is a free-form colour: inline style is the only place that can
+ * outrank the preset's own `--primary` declaration. The matching foreground is
+ * derived from the accent's luminance so button and badge text stays legible
+ * even on a light accent.
+ */
+function applyAccent(primary: string) {
+  const body = document.body
+  if (!primary) {
+    body.style.removeProperty('--primary')
+    body.style.removeProperty('--primary-foreground')
+    return
+  }
+
+  body.style.setProperty('--primary', primary)
+  const foreground = resolvePrimaryForeground(primary)
+  if (foreground) {
+    body.style.setProperty('--primary-foreground', foreground)
   }
 }
 
@@ -108,6 +133,9 @@ export function ThemeCustomizationProvider(props: {
         : customization.scale
     )
     applyAttribute('data-theme-content-layout', customization.contentLayout)
+    applyAttribute('data-theme-content-width', customization.contentWidth)
+    applyAttribute('data-theme-glass', customization.glassIntensity)
+    applyAccent(customization.primary)
     applyBackground(customization.background)
   }, [customization])
 

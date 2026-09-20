@@ -71,6 +71,27 @@ func GetStatus(c *gin.Context) {
 		themeContentLayout = "full"
 	}
 	themeBackground := common.OptionMap["UIThemeBackground"]
+	themeSidebarVariant := common.OptionMap["UIThemeSidebarVariant"]
+	if themeSidebarVariant == "" {
+		themeSidebarVariant = "inset"
+	}
+	themeSidebarCollapsible := common.OptionMap["UIThemeSidebarCollapsible"]
+	if themeSidebarCollapsible == "" {
+		themeSidebarCollapsible = "icon"
+	}
+	themeSidebarWidth := common.OptionMap["UIThemeSidebarWidth"]
+	if themeSidebarWidth == "" {
+		themeSidebarWidth = "default"
+	}
+	themeGlass := common.OptionMap["UIThemeGlass"]
+	if themeGlass == "" {
+		themeGlass = "default"
+	}
+	themeContentWidth := common.OptionMap["UIThemeContentWidth"]
+	if themeContentWidth == "" {
+		themeContentWidth = "default"
+	}
+	themePrimary := common.OptionMap["UIThemePrimary"]
 
 	data := gin.H{
 		"version":                     common.Version,
@@ -87,12 +108,18 @@ func GetStatus(c *gin.Context) {
 		"telegram_bot_name":           common.TelegramBotName,
 		"theme":                       "default",
 		"theme_customization": gin.H{
-			"preset":         themePreset,
-			"font":           themeFont,
-			"radius":         themeRadius,
-			"scale":          themeScale,
-			"content_layout": themeContentLayout,
-			"background":     themeBackground,
+			"preset":              themePreset,
+			"font":                themeFont,
+			"radius":              themeRadius,
+			"scale":               themeScale,
+			"content_layout":      themeContentLayout,
+			"content_width":       themeContentWidth,
+			"background":          themeBackground,
+			"sidebar_variant":     themeSidebarVariant,
+			"sidebar_collapsible": themeSidebarCollapsible,
+			"sidebar_width":       themeSidebarWidth,
+			"glass_intensity":     themeGlass,
+			"primary":             themePrimary,
 		},
 		"system_name":                 common.SystemName,
 		"logo":                        common.Logo,

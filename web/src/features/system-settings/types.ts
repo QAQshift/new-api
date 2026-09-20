@@ -125,6 +125,12 @@ export type SiteSettings = {
   UIThemeScale: string
   UIThemeContentLayout: string
   UIThemeBackground: string
+  UIThemeSidebarVariant: string
+  UIThemeSidebarCollapsible: string
+  UIThemeSidebarWidth: string
+  UIThemeGlass: string
+  UIThemeContentWidth: string
+  UIThemePrimary: string
 }
 
 export type AuthSettings = {

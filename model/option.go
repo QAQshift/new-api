@@ -90,6 +90,12 @@ func InitOptionMap() {
 	common.OptionMap["UIThemeScale"] = "default"
 	common.OptionMap["UIThemeContentLayout"] = "full"
 	common.OptionMap["UIThemeBackground"] = ""
+	common.OptionMap["UIThemeSidebarVariant"] = "inset"
+	common.OptionMap["UIThemeSidebarCollapsible"] = "icon"
+	common.OptionMap["UIThemeSidebarWidth"] = "default"
+	common.OptionMap["UIThemePrimary"] = ""
+	common.OptionMap["UIThemeGlass"] = "default"
+	common.OptionMap["UIThemeContentWidth"] = "default"
 	common.OptionMap["WorkerUrl"] = system_setting.WorkerUrl
 	common.OptionMap["WorkerValidKey"] = system_setting.WorkerValidKey
 	common.OptionMap["WorkerAllowHttpImageRequestEnabled"] = strconv.FormatBool(system_setting.WorkerAllowHttpImageRequestEnabled)

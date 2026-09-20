@@ -90,6 +90,53 @@ export type ThemeScale = 'default' | 'sm' | 'lg' | 'xl'
 export type ContentLayout = 'full' | 'centered'
 
 /**
+ * Sidebar shell shape and collapse behaviour. These used to be per-user
+ * preferences kept in a layout cookie; when appearance became an
+ * administrator-controlled setting they moved here and travel with the rest
+ * of the theme so the whole site renders one shell.
+ */
+export type SidebarVariant = 'inset' | 'sidebar' | 'floating'
+export type SidebarCollapsible = 'offcanvas' | 'icon' | 'none'
+
+/**
+ * Sidebar rail width. `SIDEBAR_WIDTHS` resolves the choice to the CSS custom
+ * property the sidebar layout already reads.
+ */
+export type SidebarWidth = 'compact' | 'default' | 'wide'
+
+export const SIDEBAR_WIDTHS: Record<SidebarWidth, string> = {
+  compact: '11.5rem',
+  default: '13rem',
+  wide: '15rem',
+}
+
+/**
+ * Upper bound for centered content (`--max-content-width`). Only meaningful
+ * together with `contentLayout: 'centered'`.
+ */
+export type ContentWidth = 'default' | 'wide' | 'ultra'
+
+export const CONTENT_WIDTHS: Record<ContentWidth, string> = {
+  default: '1280px',
+  wide: '1536px',
+  ultra: '1792px',
+}
+
+/**
+ * Glass recipe strength. `default` is the tuned preset; the other two trade
+ * how much of the aurora shows through the panes against how solid they read.
+ */
+export type GlassIntensity = 'soft' | 'default' | 'heavy'
+
+/**
+ * Brand accent override. Empty string means "follow the selected preset" —
+ * anything else must be a `#RRGGBB` literal. When set, the provider also
+ * derives a readable `--primary-foreground` from its luminance so buttons and
+ * badges stay legible on a light accent.
+ */
+export type ThemePrimary = string
+
+/**
  * Font axis for the theme.
  *
  * - `default` — resolve at runtime from the active preset
@@ -118,6 +165,12 @@ export type ThemeCustomization = {
   radius: ThemeRadius
   scale: ThemeScale
   contentLayout: ContentLayout
+  contentWidth: ContentWidth
+  sidebarVariant: SidebarVariant
+  sidebarCollapsible: SidebarCollapsible
+  sidebarWidth: SidebarWidth
+  glassIntensity: GlassIntensity
+  primary: ThemePrimary
   background: string
 }
 
@@ -127,6 +180,12 @@ export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
   radius: 'default',
   scale: 'default',
   contentLayout: 'full',
+  contentWidth: 'default',
+  sidebarVariant: 'inset',
+  sidebarCollapsible: 'icon',
+  sidebarWidth: 'default',
+  glassIntensity: 'default',
+  primary: '',
   background: '',
 }
 
@@ -161,6 +220,61 @@ export const CONTENT_LAYOUT_VALUES: ReadonlySet<ContentLayout> = new Set([
   'centered',
 ])
 
+export const SIDEBAR_VARIANT_VALUES: ReadonlySet<SidebarVariant> = new Set([
+  'inset',
+  'sidebar',
+  'floating',
+])
+
+export const SIDEBAR_COLLAPSIBLE_VALUES: ReadonlySet<SidebarCollapsible> =
+  new Set(['offcanvas', 'icon', 'none'])
+
+export const SIDEBAR_WIDTH_VALUES: ReadonlySet<SidebarWidth> = new Set([
+  'compact',
+  'default',
+  'wide',
+])
+
+export const CONTENT_WIDTH_VALUES: ReadonlySet<ContentWidth> = new Set([
+  'default',
+  'wide',
+  'ultra',
+])
+
+export const GLASS_INTENSITY_VALUES: ReadonlySet<GlassIntensity> = new Set([
+  'soft',
+  'default',
+  'heavy',
+])
+
+/**
+ * Normalise an administrator-supplied accent. Anything that is not a
+ * `#RRGGBB` literal collapses to `''`, which means "follow the preset".
+ */
+export function resolveThemePrimary(raw: unknown): ThemePrimary {
+  if (typeof raw !== 'string') return ''
+  const value = raw.trim()
+  return /^#[0-9a-fA-F]{6}$/.test(value) ? value.toLowerCase() : ''
+}
+
+/**
+ * Pick a readable foreground for a `#RRGGBB` fill using its relative
+ * luminance (WCAG formula). Without this a light accent would render white
+ * button text on a near-white fill.
+ */
+export function resolvePrimaryForeground(
+  primary: ThemePrimary
+): string | null {
+  if (!primary) return null
+  const channel = (offset: number) => {
+    const value = Number.parseInt(primary.slice(offset, offset + 2), 16) / 255
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+  }
+  const luminance =
+    0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5)
+  return luminance > 0.55 ? '#111111' : '#ffffff'
+}
+
 export const THEME_COOKIE_KEYS = {
   preset: 'theme_preset',
   font: 'theme_font',
@@ -193,9 +307,46 @@ export function resolveThemeCustomization(raw: unknown): ThemeCustomization {
     ? (value.content_layout as ContentLayout)
     : DEFAULT_THEME_CUSTOMIZATION.contentLayout
 
+  const sidebarVariant = SIDEBAR_VARIANT_VALUES.has(
+    value.sidebar_variant as SidebarVariant
+  )
+    ? (value.sidebar_variant as SidebarVariant)
+    : DEFAULT_THEME_CUSTOMIZATION.sidebarVariant
+  const sidebarCollapsible = SIDEBAR_COLLAPSIBLE_VALUES.has(
+    value.sidebar_collapsible as SidebarCollapsible
+  )
+    ? (value.sidebar_collapsible as SidebarCollapsible)
+    : DEFAULT_THEME_CUSTOMIZATION.sidebarCollapsible
+  const sidebarWidth = SIDEBAR_WIDTH_VALUES.has(value.sidebar_width as SidebarWidth)
+    ? (value.sidebar_width as SidebarWidth)
+    : DEFAULT_THEME_CUSTOMIZATION.sidebarWidth
+  const contentWidth = CONTENT_WIDTH_VALUES.has(
+    value.content_width as ContentWidth
+  )
+    ? (value.content_width as ContentWidth)
+    : DEFAULT_THEME_CUSTOMIZATION.contentWidth
+  const glassIntensity = GLASS_INTENSITY_VALUES.has(
+    value.glass_intensity as GlassIntensity
+  )
+    ? (value.glass_intensity as GlassIntensity)
+    : DEFAULT_THEME_CUSTOMIZATION.glassIntensity
+
   const background =
     typeof value.background === 'string' ? value.background.trim() : ''
-  return { preset, font, radius, scale, contentLayout, background }
+  return {
+    preset,
+    font,
+    radius,
+    scale,
+    contentLayout,
+    contentWidth,
+    sidebarVariant,
+    sidebarCollapsible,
+    sidebarWidth,
+    glassIntensity,
+    primary: resolveThemePrimary(value.primary),
+    background,
+  }
 }
 
 /**

@@ -1,3 +1,10 @@
 {
+  "Collapse to icons": "Collapse to icons",
+  "Controls how much of the background shows through glass panels. Only affects the Glass preset.": "Controls how much of the background shows through glass panels. Only affects the Glass preset.",
+  "Follow the preset": "Follow the preset",
+  "Overrides the accent defined by the color preset. Leave empty to follow the preset.": "Overrides the accent defined by the color preset. Leave empty to follow the preset.",
+  "Sets how the sidebar folds away on desktop, for every user.": "Sets how the sidebar folds away on desktop, for every user.",
+  "Sets the sidebar rail width for every user.": "Sets the sidebar rail width for every user.",
+  "Sets the sidebar shell for every user.": "Sets the sidebar shell for every user.",
   "Allow users to enter any recharge amount. When disabled, users can only pick from the preset amounts above.": "Allow users to enter any recharge amount. When disabled, users can only pick from the preset amounts above."
 }

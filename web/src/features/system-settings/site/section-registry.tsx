@@ -1,11 +1,22 @@
 import {
   CONTENT_LAYOUT_VALUES,
+  CONTENT_WIDTH_VALUES,
   DEFAULT_THEME_CUSTOMIZATION,
+  GLASS_INTENSITY_VALUES,
+  resolveThemePrimary,
+  SIDEBAR_COLLAPSIBLE_VALUES,
+  SIDEBAR_VARIANT_VALUES,
+  SIDEBAR_WIDTH_VALUES,
   THEME_FONT_VALUES,
   THEME_PRESET_VALUES,
   THEME_RADIUS_VALUES,
   THEME_SCALE_VALUES,
   type ContentLayout,
+  type ContentWidth,
+  type GlassIntensity,
+  type SidebarCollapsible,
+  type SidebarVariant,
+  type SidebarWidth,
   type ThemeFont,
   type ThemePreset,
   type ThemeRadius,
@@ -98,6 +109,32 @@ const SITE_SECTIONS = [
           ? (settings.UIThemeContentLayout as ContentLayout)
           : DEFAULT_THEME_CUSTOMIZATION.contentLayout,
         UIThemeBackground: settings.UIThemeBackground ?? '',
+        UIThemeSidebarVariant: SIDEBAR_VARIANT_VALUES.has(
+          settings.UIThemeSidebarVariant as SidebarVariant
+        )
+          ? (settings.UIThemeSidebarVariant as SidebarVariant)
+          : DEFAULT_THEME_CUSTOMIZATION.sidebarVariant,
+        UIThemeSidebarCollapsible: SIDEBAR_COLLAPSIBLE_VALUES.has(
+          settings.UIThemeSidebarCollapsible as SidebarCollapsible
+        )
+          ? (settings.UIThemeSidebarCollapsible as SidebarCollapsible)
+          : DEFAULT_THEME_CUSTOMIZATION.sidebarCollapsible,
+        UIThemeSidebarWidth: SIDEBAR_WIDTH_VALUES.has(
+          settings.UIThemeSidebarWidth as SidebarWidth
+        )
+          ? (settings.UIThemeSidebarWidth as SidebarWidth)
+          : DEFAULT_THEME_CUSTOMIZATION.sidebarWidth,
+        UIThemeGlass: GLASS_INTENSITY_VALUES.has(
+          settings.UIThemeGlass as GlassIntensity
+        )
+          ? (settings.UIThemeGlass as GlassIntensity)
+          : DEFAULT_THEME_CUSTOMIZATION.glassIntensity,
+        UIThemeContentWidth: CONTENT_WIDTH_VALUES.has(
+          settings.UIThemeContentWidth as ContentWidth
+        )
+          ? (settings.UIThemeContentWidth as ContentWidth)
+          : DEFAULT_THEME_CUSTOMIZATION.contentWidth,
+        UIThemePrimary: resolveThemePrimary(settings.UIThemePrimary),
       }
       return <AppearanceSection defaultValues={defaultValues} />
     },

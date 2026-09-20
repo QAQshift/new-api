@@ -43,6 +43,12 @@ const defaultSiteSettings: SiteSettings = {
   UIThemeScale: 'default',
   UIThemeContentLayout: 'full',
   UIThemeBackground: '',
+  UIThemeSidebarVariant: 'inset',
+  UIThemeSidebarCollapsible: 'icon',
+  UIThemeSidebarWidth: 'default',
+  UIThemeGlass: 'default',
+  UIThemeContentWidth: 'default',
+  UIThemePrimary: '',
 }
 
 export function SiteSettings() {

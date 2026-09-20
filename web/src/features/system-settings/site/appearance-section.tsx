@@ -20,7 +20,9 @@ import { Check, ImagePlus } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
+import { Button } from '@/components/ui/button'
 import { ImageUrlField } from '@/components/image-url-field'
+import { Input } from '@/components/ui/input'
 import {
   Form,
   FormControl,
@@ -42,8 +44,14 @@ import { isImageDataUrl } from '@/lib/image-data-url'
 import {
   THEME_PRESETS,
   type ContentLayout,
+  type ContentWidth,
+  type GlassIntensity,
+  type SidebarCollapsible,
+  type SidebarVariant,
+  type SidebarWidth,
   type ThemeFont,
   type ThemePreset,
+  type ThemePrimary,
   type ThemeRadius,
   type ThemeScale,
 } from '@/lib/theme-customization'
@@ -65,6 +73,12 @@ export type AppearanceSettings = {
   UIThemeRadius: ThemeRadius
   UIThemeScale: ThemeScale
   UIThemeContentLayout: ContentLayout
+  UIThemeContentWidth: ContentWidth
+  UIThemeSidebarVariant: SidebarVariant
+  UIThemeSidebarCollapsible: SidebarCollapsible
+  UIThemeSidebarWidth: SidebarWidth
+  UIThemeGlass: GlassIntensity
+  UIThemePrimary: ThemePrimary
   UIThemeBackground: string
 }
 
@@ -87,10 +101,6 @@ export function AppearanceSection(props: AppearanceSectionProps) {
       },
     })
 
-  const presetOptions: SelectOption[] = THEME_PRESETS.map((preset) => ({
-    value: preset.value,
-    label: t(`preset.${preset.value}`),
-  }))
   const fontOptions: SelectOption[] = [
     { value: 'default', label: t('Automatic') },
     { value: 'sans', label: t('Sans') },
@@ -114,22 +124,39 @@ export function AppearanceSection(props: AppearanceSectionProps) {
     { value: 'full', label: t('Full width') },
     { value: 'centered', label: t('Centered') },
   ]
+  const sidebarVariantOptions: SelectOption[] = [
+    { value: 'inset', label: t('Inset') },
+    { value: 'sidebar', label: t('Standard') },
+    { value: 'floating', label: t('Floating') },
+  ]
+  const sidebarCollapsibleOptions: SelectOption[] = [
+    { value: 'icon', label: t('Collapse to icons') },
+    { value: 'offcanvas', label: t('Hide completely') },
+    { value: 'none', label: t('Always expanded') },
+  ]
+  const sidebarWidthOptions: SelectOption[] = [
+    { value: 'compact', label: t('Compact') },
+    { value: 'default', label: t('Default') },
+    { value: 'wide', label: t('Wide') },
+  ]
+  const contentWidthOptions: SelectOption[] = [
+    { value: 'default', label: t('Default') },
+    { value: 'wide', label: t('Wide') },
+    { value: 'ultra', label: t('Extra wide') },
+  ]
+  const glassOptions: SelectOption[] = [
+    { value: 'soft', label: t('More transparent') },
+    { value: 'default', label: t('Default') },
+    { value: 'heavy', label: t('More solid') },
+  ]
   const selectedPreset = form.watch('UIThemePreset')
   const selectedFont = form.watch('UIThemeFont')
   const selectedRadius = form.watch('UIThemeRadius')
+  const selectedScale = form.watch('UIThemeScale')
   const selectedBackground = form.watch('UIThemeBackground')
   const selectedPresetMeta =
     THEME_PRESETS.find((preset) => preset.value === selectedPreset) ??
     THEME_PRESETS[0]
-  const previewRadiusMap: Record<string, string> = {
-    default: '10px',
-    none: '0px',
-    sm: '5px',
-    md: '8px',
-    lg: '12px',
-    xl: '16px',
-  }
-  const previewRadius = previewRadiusMap[selectedRadius] ?? '10px'
   const previewBackground =
     /^https?:\/\//i.test(selectedBackground) ||
     isImageDataUrl(selectedBackground)
@@ -193,10 +220,14 @@ export function AppearanceSection(props: AppearanceSectionProps) {
                     )
                   })}
                 </div>
+                {/* The preview carries the real theme attributes rather than
+                    hard-coded stand-ins, so radius and density tokens resolve
+                    inside it exactly as they will on the live site. */}
                 <div
+                  data-theme-radius={selectedRadius}
+                  data-theme-scale={selectedScale}
                   className='relative overflow-hidden rounded-2xl border p-5'
                   style={{
-                    borderRadius: previewRadius,
                     backgroundColor:
                       'color-mix(in oklch, var(--card) 72%, transparent)',
                     backgroundImage: previewBackground,
@@ -236,7 +267,6 @@ export function AppearanceSection(props: AppearanceSectionProps) {
                           <div
                             key={label}
                             className='bg-card/70 rounded-lg border p-2.5'
-                            style={{ borderRadius: previewRadius }}
                           >
                             <div className='text-primary text-sm font-semibold'>
                               {['98ms', '99.9%', '24/7'][index]}
@@ -251,13 +281,6 @@ export function AppearanceSection(props: AppearanceSectionProps) {
                   </div>
                 </div>
               </div>
-              <AppearanceSelect
-                form={form}
-                name='UIThemePreset'
-                label={t('Color preset')}
-                description={t('Sets the global color palette for every user.')}
-                options={presetOptions}
-              />
               <AppearanceSelect
                 form={form}
                 name='UIThemeFont'
@@ -293,6 +316,93 @@ export function AppearanceSection(props: AppearanceSectionProps) {
                   'Sets whether application content is full width or centered.'
                 )}
                 options={layoutOptions}
+              />
+              <AppearanceSelect
+                form={form}
+                name='UIThemeContentWidth'
+                label={t('Content max width')}
+                description={t(
+                  'Caps how wide centered content may grow. Only applies when content width is centered.'
+                )}
+                options={contentWidthOptions}
+              />
+              <AppearanceSelect
+                form={form}
+                name='UIThemeSidebarVariant'
+                label={t('Sidebar style')}
+                description={t('Sets the sidebar shell for every user.')}
+                options={sidebarVariantOptions}
+              />
+              <AppearanceSelect
+                form={form}
+                name='UIThemeSidebarCollapsible'
+                label={t('Sidebar collapse')}
+                description={t(
+                  'Sets how the sidebar folds away on desktop, for every user.'
+                )}
+                options={sidebarCollapsibleOptions}
+              />
+              <AppearanceSelect
+                form={form}
+                name='UIThemeSidebarWidth'
+                label={t('Sidebar width')}
+                description={t('Sets the sidebar rail width for every user.')}
+                options={sidebarWidthOptions}
+              />
+              <AppearanceSelect
+                form={form}
+                name='UIThemeGlass'
+                label={t('Glass intensity')}
+                description={t(
+                  'Controls how much of the background shows through glass panels. Only affects the Glass preset.'
+                )}
+                options={glassOptions}
+              />
+              <FormField
+                control={form.control}
+                name='UIThemePrimary'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Accent color')}</FormLabel>
+                    <FormControl>
+                      <div className='flex items-center gap-2'>
+                        <input
+                          type='color'
+                          aria-label={t('Accent color')}
+                          value={field.value || '#6366f1'}
+                          onChange={(event) =>
+                            field.onChange(event.target.value)
+                          }
+                          className='border-input h-8 w-12 cursor-pointer rounded-lg border bg-transparent p-0.5'
+                        />
+                        <Input
+                          value={field.value}
+                          placeholder={t('Follow the preset')}
+                          onChange={(event) =>
+                            field.onChange(event.target.value.trim())
+                          }
+                          className='font-mono'
+                        />
+                        {field.value ? (
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='sm'
+                            onClick={() => field.onChange('')}
+                          >
+                            {t('Reset')}
+                          </Button>
+                        ) : null}
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      {t(
+                        'Overrides the accent defined by the color preset. Leave empty to follow the preset.'
+                      )}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
               <FormField
                 control={form.control}
