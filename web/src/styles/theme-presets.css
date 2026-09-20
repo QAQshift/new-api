@@ -407,16 +407,32 @@ For commercial licensing, please contact support@quantumnous.com
 /*
  * Administrator-controlled glassmorphism preset.
  *
- * Two deliberate finishes share one recipe:
- *   - light: soft frosted glass — a translucent near-white tint over a faint
- *     violet/blue/cyan bloom, a hairline top edge, an interior top glow and
- *     a soft double shadow, so the blur is readable against a light canvas.
- *   - dark:  deep glass — a violet/blue ambient field, a pane brighter than
- *     the canvas, bright top reflections and grain.
+ * DESIGN RULE — depth comes from LAYERING, not from blur.
  *
- * The finish is composed from the `--glass-*` recipe variables below. Retune
- * the look there rather than per component: every surface in the app reads
- * the same five ingredients (tint, blur, edge, sheen, shadow).
+ * A translucent pane is invisible unless the canvas behind it is measurably
+ * darker. White-tinted glass stacked on a near-white page reads as "nothing
+ * happened", no matter how much blur is applied — which is exactly what the
+ * first version of this preset suffered from. So the finish is built on a
+ * deliberate value ladder:
+ *
+ *   canvas    oklch(0.932)  ← the room, held clearly below the panes
+ *   shell     40% white     ← the app frame; most aurora shows through here
+ *   pane      72% white     ← cards and tables resting on the frame
+ *   floating  92% white     ← popovers and dialogs, near solid for legibility
+ *
+ * Every panel then adds a bright top hairline, an interior top glow and a
+ * soft double shadow. That trio — not the blur — is what reads as glass.
+ *
+ * ON BLUR: over a smooth gradient a backdrop-filter resolves to nothing you
+ * can see, while costing a compositing layer per element. Panels therefore
+ * ship with NO blur, and it is switched on only where there is genuinely
+ * something to resolve: floating layers over live content, the sticky header
+ * and footer, and anywhere a photographic background is configured.
+ *
+ * The two colour finishes:
+ *   - light: soft frosted panes over one wide violet aurora.
+ *   - dark:  deep glass — a violet ambient field, panes brighter than the
+ *     canvas, bright top reflections and grain.
  *
  * The layers, in paint order:
  *   - optics     — ambient light + grain painted once on <body>
@@ -426,32 +442,33 @@ For commercial licensing, please contact support@quantumnous.com
  *   - control    — inputs, selects, segmented switchers
  *   - navigation — sidebar rows
  *   - scrim      — modal backdrops
- * Blur stacks along that order, so inner layers frost whatever is already
- * frosted behind them. The shell is the only full-viewport blur.
  *
  * Glass is opted OUT of the semantic surface bridge further down (see the
  * `:not()` list) so these translucent tokens are not flattened into opaque
  * primary-tinted colours.
  */
 [data-theme-preset='glass'] {
-  --background: oklch(0.968 0.004 265);
-  --foreground: oklch(0.21 0.014 268);
+  /* The canvas sits visibly BELOW the panes. This is the single most
+   * important number in the light finish: at the old near-white 0.968 the
+   * panes were white-on-white and no amount of blur could read. */
+  --background: oklch(0.932 0.014 282);
+  --foreground: oklch(0.23 0.022 282);
 
-  --card: oklch(1 0 0 / 58%);
+  --card: oklch(1 0 0 / 72%);
   --card-foreground: var(--foreground);
-  --popover: oklch(1 0 0 / 80%);
+  --popover: oklch(1 0 0 / 92%);
   --popover-foreground: var(--foreground);
 
-  --primary: oklch(0.56 0.26 264);
+  --primary: oklch(0.55 0.22 278);
   --primary-foreground: oklch(1 0 0);
 
-  --secondary: oklch(0.955 0.004 265 / 78%);
-  --secondary-foreground: oklch(0.28 0.016 268);
+  --secondary: oklch(1 0 0 / 46%);
+  --secondary-foreground: oklch(0.3 0.022 282);
 
-  --muted: oklch(0.95 0.004 265 / 72%);
-  --muted-foreground: oklch(0.52 0.02 268);
+  --muted: oklch(0.98 0.006 282 / 52%);
+  --muted-foreground: oklch(0.5 0.028 282);
 
-  --accent: oklch(0.925 0.012 264 / 74%);
+  --accent: oklch(0.97 0.022 282 / 62%);
   --accent-foreground: var(--foreground);
 
   --destructive: oklch(0.577 0.245 27.3);
@@ -460,32 +477,32 @@ For commercial licensing, please contact support@quantumnous.com
   --success-foreground: oklch(1 0 0);
   --warning: oklch(0.666 0.179 58.3);
   --warning-foreground: oklch(1 0 0);
-  --info: oklch(0.56 0.26 264);
+  --info: oklch(0.55 0.22 278);
   --info-foreground: oklch(1 0 0);
-  --neutral: oklch(0.52 0.02 268);
+  --neutral: oklch(0.5 0.028 282);
   --neutral-foreground: var(--foreground);
 
-  --border: oklch(0.62 0.014 268 / 22%);
-  --input: oklch(0.62 0.014 268 / 30%);
-  --ring: oklch(0.56 0.26 264);
+  --border: oklch(0.55 0.035 282 / 18%);
+  --input: oklch(0.55 0.035 282 / 26%);
+  --ring: oklch(0.55 0.22 278);
 
-  --chart-1: oklch(0.56 0.26 264);
-  --chart-2: oklch(0.68 0.12 200);
-  --chart-3: oklch(0.545 0.28 292);
+  --chart-1: oklch(0.55 0.22 278);
+  --chart-2: oklch(0.62 0.15 224);
+  --chart-3: oklch(0.57 0.24 305);
   --chart-4: oklch(0.666 0.179 58.3);
   --chart-5: oklch(0.527 0.154 150);
 
-  --sidebar: oklch(0.975 0.004 265 / 80%);
+  --sidebar: oklch(0.975 0.01 282 / 62%);
   --sidebar-foreground: var(--foreground);
-  --sidebar-primary: oklch(0.56 0.26 264);
+  --sidebar-primary: oklch(0.55 0.22 278);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.925 0.014 264 / 76%);
+  --sidebar-accent: oklch(0.97 0.022 282 / 72%);
   --sidebar-accent-foreground: var(--foreground);
-  --sidebar-border: oklch(0.62 0.014 268 / 20%);
-  --sidebar-ring: oklch(0.56 0.26 264);
+  --sidebar-border: oklch(0.55 0.035 282 / 18%);
+  --sidebar-ring: oklch(0.55 0.22 278);
 
-  --skeleton-base: oklch(0.925 0.004 265);
-  --skeleton-highlight: oklch(0.965 0.003 265);
+  --skeleton-base: oklch(0.9 0.012 282);
+  --skeleton-highlight: oklch(0.95 0.008 282);
 
   --radius: 1.25rem;
 
@@ -494,63 +511,70 @@ For commercial licensing, please contact support@quantumnous.com
    * shadow. Tuned for a clean, minimal "frosted pane" look — a
    * near-white fill, a crisp top hairline, a soft double shadow and a
    * barely-there diagonal sweep. Retune here, never per component. */
-  --glass-tint: oklch(1 0 0 / 62%);
-  --glass-tint-raised: oklch(1 0 0 / 86%);
-  --glass-field-tint: oklch(1 0 0 / 46%);
-  --glass-blur: 24px;
-  --glass-blur-raised: 34px;
-  --glass-saturate: 170%;
+  /* Three tint levels, because in a light theme the layers can only be told
+   * apart by how much of the aurora each one lets through:
+   *   shell  — the app frame; most transparent, carries the most colour
+   *   tint   — panes sitting on the frame; lighter, so they lift off it
+   *   raised — floating layers; nearly solid so text stays legible */
+  --glass-shell-tint: oklch(1 0 0 / 40%);
+  --glass-tint: oklch(1 0 0 / 72%);
+  --glass-tint-raised: oklch(1 0 0 / 92%);
+  --glass-field-tint: oklch(1 0 0 / 58%);
+  --glass-blur: 16px;
+  --glass-blur-raised: 26px;
+  --glass-saturate: 130%;
 
-  --glass-edge-top: oklch(1 0 0 / 96%);
-  --glass-edge-mid: oklch(0.5 0.02 268 / 8%);
-  --glass-edge-bottom: oklch(0.24 0.02 268 / 16%);
+  --glass-edge-top: oklch(1 0 0 / 100%);
+  --glass-edge-mid: oklch(0.6 0.04 282 / 10%);
+  --glass-edge-bottom: oklch(0.42 0.06 282 / 20%);
   --glass-sheen: linear-gradient(
-    152deg,
-    oklch(1 0 0 / 72%) 0%,
-    oklch(1 0 0 / 0%) 46%
+    150deg,
+    oklch(1 0 0 / 88%) 0%,
+    oklch(1 0 0 / 0%) 52%
   );
 
-  --glass-shadow-ambient: 0 1px 2px oklch(0.28 0.03 268 / 5%);
+  --glass-shadow-ambient: 0 1px 2px oklch(0.42 0.07 282 / 8%);
   /* The leading layer of each key shadow is an interior top glow — light
    * entering the sheet from above and diffusing inside it. That inner
    * bloom is what separates a pane from a flat translucent rectangle. */
   --glass-shadow-key:
-    inset 0 16px 32px -26px oklch(1 0 0 / 90%),
-    0 2px 6px oklch(0.28 0.03 268 / 5%),
-    0 14px 36px oklch(0.3 0.05 268 / 10%);
+    inset 0 20px 40px -30px oklch(1 0 0 / 100%),
+    0 4px 10px oklch(0.42 0.07 282 / 8%),
+    0 20px 48px oklch(0.44 0.1 282 / 18%);
   --glass-shadow-key-hover:
-    inset 0 16px 32px -26px oklch(1 0 0 / 90%),
-    0 4px 12px oklch(0.28 0.03 268 / 7%),
-    0 22px 54px oklch(0.3 0.06 268 / 16%);
+    inset 0 20px 40px -30px oklch(1 0 0 / 100%),
+    0 6px 16px oklch(0.42 0.07 282 / 10%),
+    0 30px 66px oklch(0.44 0.11 282 / 24%);
 
-  /* Ambient light the glass has something to refract. A restrained
-   * violet/blue/cyan bloom so the frosted blur reads against a light
-   * canvas instead of flattening into plain white cards. */
-  --glass-glow-1: oklch(1 0 0 / 84%);
-  --glass-glow-2: oklch(0.85 0.082 288 / 68%);
-  --glass-glow-3: oklch(0.87 0.065 262 / 58%);
-  --glass-glow-4: oklch(0.9 0.052 205 / 50%);
-  --glass-noise-opacity: 0.03;
+  /* Aurora. One violet family — almost no hue spread — thrown wide and slow,
+   * so it reads as light filling the room rather than as coloured patches
+   * stuck to the page. Alpha stays at 100% on purpose: a tint that is
+   * already half-transparent washes out to nothing over a light canvas. */
+  --glass-glow-1: oklch(0.975 0.05 292);
+  --glass-glow-2: oklch(0.9 0.105 276);
+  --glass-glow-3: oklch(0.945 0.075 308);
+  --glass-glow-4: oklch(0.885 0.085 258);
+  --glass-noise-opacity: 0.035;
   --glass-glow-layers: radial-gradient(
-      58rem 38rem at 12% -14%,
-      var(--glass-glow-1),
-      transparent 62%
+      74rem 48rem at 4% -14%,
+      var(--glass-glow-2),
+      transparent 70%
     ),
-    radial-gradient(50rem 36rem at 88% 0%, var(--glass-glow-2), transparent 66%),
-    radial-gradient(46rem 32rem at 4% 64%, var(--glass-glow-3), transparent 62%),
+    radial-gradient(62rem 44rem at 96% 0%, var(--glass-glow-3), transparent 68%),
+    radial-gradient(56rem 40rem at 0% 74%, var(--glass-glow-4), transparent 66%),
     radial-gradient(
-      48rem 34rem at 54% 108%,
-      var(--glass-glow-4),
-      transparent 60%
+      70rem 46rem at 64% 116%,
+      var(--glass-glow-1),
+      transparent 68%
     );
 }
 .dark [data-theme-preset='glass'] {
-  --background: oklch(0.163 0.012 265);
-  --foreground: oklch(0.955 0.004 265);
+  --background: oklch(0.168 0.018 284);
+  --foreground: oklch(0.955 0.006 284);
 
-  --card: oklch(0.215 0.016 268 / 66%);
+  --card: oklch(0.28 0.024 285 / 74%);
   --card-foreground: var(--foreground);
-  --popover: oklch(0.215 0.016 268 / 84%);
+  --popover: oklch(0.31 0.026 285 / 92%);
   --popover-foreground: var(--foreground);
 
   --primary: oklch(0.72 0.15 262);
@@ -598,40 +622,40 @@ For commercial licensing, please contact support@quantumnous.com
   --skeleton-base: oklch(0.26 0.012 268);
   --skeleton-highlight: oklch(0.32 0.014 268);
 
-  /* Deep glass: the card sits clearly above the canvas, edges catch a
-   * bright top reflection and a dark bottom edge, and the specular sweep
-   * is warmer than in light mode. */
-  --glass-tint: oklch(0.235 0.018 268 / 64%);
-  --glass-tint-raised: oklch(0.25 0.02 268 / 88%);
-  --glass-field-tint: oklch(0.3 0.016 268 / 48%);
-  --glass-blur: 28px;
-  --glass-blur-raised: 38px;
-  --glass-saturate: 175%;
+  /* Deep glass keeps the same three tint levels. Here the pane is brighter
+   * than the canvas, which is what makes it read as lit from above. */
+  --glass-shell-tint: oklch(0.24 0.022 285 / 48%);
+  --glass-tint: oklch(0.28 0.024 285 / 74%);
+  --glass-tint-raised: oklch(0.31 0.026 285 / 92%);
+  --glass-field-tint: oklch(0.34 0.022 285 / 56%);
+  --glass-blur: 18px;
+  --glass-blur-raised: 30px;
+  --glass-saturate: 135%;
 
-  --glass-edge-top: oklch(1 0 0 / 22%);
-  --glass-edge-mid: oklch(0.72 0.03 268 / 10%);
+  --glass-edge-top: oklch(1 0 0 / 24%);
+  --glass-edge-mid: oklch(0.75 0.04 285 / 10%);
   --glass-edge-bottom: oklch(0 0 0 / 52%);
   --glass-sheen: linear-gradient(
-    152deg,
-    oklch(1 0 0 / 14%) 0%,
-    oklch(1 0 0 / 0%) 42%
+    150deg,
+    oklch(1 0 0 / 15%) 0%,
+    oklch(1 0 0 / 0%) 46%
   );
 
-  --glass-shadow-ambient: 0 1px 2px oklch(0 0 0 / 30%);
+  --glass-shadow-ambient: 0 1px 2px oklch(0 0 0 / 32%);
   --glass-shadow-key:
-    inset 0 16px 34px -24px oklch(1 0 0 / 16%),
-    0 2px 8px oklch(0 0 0 / 30%),
-    0 20px 50px oklch(0 0 0 / 42%);
+    inset 0 20px 40px -26px oklch(1 0 0 / 18%),
+    0 4px 12px oklch(0 0 0 / 32%),
+    0 24px 56px oklch(0 0 0 / 46%);
   --glass-shadow-key-hover:
-    inset 0 16px 34px -24px oklch(1 0 0 / 16%),
-    0 4px 14px oklch(0 0 0 / 34%),
-    0 30px 72px oklch(0 0 0 / 54%);
+    inset 0 20px 40px -26px oklch(1 0 0 / 18%),
+    0 6px 18px oklch(0 0 0 / 36%),
+    0 34px 78px oklch(0 0 0 / 58%);
 
-  --glass-glow-1: oklch(0.54 0.25 268 / 28%);
-  --glass-glow-2: oklch(0.5 0.26 296 / 22%);
-  --glass-glow-3: oklch(0.56 0.2 250 / 18%);
-  --glass-glow-4: oklch(0.62 0.13 200 / 16%);
-  --glass-noise-opacity: 0.036;
+  --glass-glow-1: oklch(0.56 0.26 286 / 30%);
+  --glass-glow-2: oklch(0.5 0.25 302 / 24%);
+  --glass-glow-3: oklch(0.58 0.21 268 / 20%);
+  --glass-glow-4: oklch(0.62 0.17 252 / 18%);
+  --glass-noise-opacity: 0.04;
 }
 
 /* ── Optics layer ─────────────────────────────────────────────────────── */
@@ -729,14 +753,11 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
       [data-slot='sidebar'][data-variant='inset']
     )
     [data-slot='sidebar-inset'] {
-    background-color: var(--glass-tint);
+    background-color: var(--glass-shell-tint);
     background-image: var(--glass-sheen);
     box-shadow: inset 0 1px 0 var(--glass-edge-top),
       inset 0 -1px 0 var(--glass-edge-bottom), var(--glass-shadow-ambient),
       var(--glass-shadow-key);
-    -webkit-backdrop-filter: blur(var(--glass-blur))
-      saturate(var(--glass-saturate));
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   }
 }
 
@@ -803,9 +824,6 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
   box-shadow: inset 0 1px 0 var(--glass-edge-top),
     inset 0 -1px 0 var(--glass-edge-bottom), var(--glass-shadow-ambient),
     var(--glass-shadow-key);
-  -webkit-backdrop-filter: blur(var(--glass-blur))
-    saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
 }
 
 /* The `bg-card` utility is written directly by feature panels all over the app
@@ -821,6 +839,23 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
  * elements that opt in via `data-slot`, `<Card>` or `.glass-panel`. */
 [data-theme-preset='glass'] [class*='bg-card'] {
   background-image: var(--glass-sheen);
+}
+
+/* Frost only earns its compositing cost when something detailed sits behind
+ * the pane. Over the gradient aurora a blur resolves to nothing you can
+ * actually see, so the panels — and `bg-card` with them — ship WITHOUT a
+ * backdrop-filter. That is what took the app from dozens of live backdrop
+ * layers per screen down to a handful. The moment an administrator sets a
+ * photographic background the blur switches back on, because a photo is the
+ * only backdrop where it is genuinely visible. */
+body[data-theme-preset='glass'][data-theme-background='custom'] :is(
+    [data-slot='card'],
+    [data-slot='table-container'],
+    [data-slot='sidebar-inner'],
+    [data-slot='sidebar']:not([data-state]),
+    .glass-panel,
+    [class*='bg-card']
+  ) {
   -webkit-backdrop-filter: blur(var(--glass-blur))
     saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
@@ -866,6 +901,12 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
   ) {
   background-color: var(--glass-tint-raised);
   --glass-blur: var(--glass-blur-raised);
+  /* Floating layers always frost: they sit directly over live page content,
+   * which is the one case where the blur is genuinely visible. */
+  -webkit-backdrop-filter: blur(var(--glass-blur-raised))
+    saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur-raised))
+    saturate(var(--glass-saturate));
 }
 /* The app header is a full-width bar rather than a panel: it only needs a
  * blur and a bottom edge, never a perimeter ring. */
@@ -958,8 +999,6 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
     [data-slot='tabs-list'][data-variant='default']
   ) {
   background-color: var(--glass-field-tint);
-  -webkit-backdrop-filter: blur(10px) saturate(150%);
-  backdrop-filter: blur(10px) saturate(150%);
 }
 
 /* NOTE: this block deliberately sets no `box-shadow`. Tailwind renders both
@@ -992,9 +1031,7 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
   )[data-active] {
   background-color: var(--glass-tint-raised);
   box-shadow: inset 0 1px 0 var(--glass-edge-top),
-    0 2px 8px oklch(0.28 0.03 268 / 10%);
-  -webkit-backdrop-filter: blur(12px) saturate(150%);
-  backdrop-filter: blur(12px) saturate(150%);
+    0 2px 8px oklch(0.42 0.07 282 / 12%);
 }
 
 /* ── Scrim ────────────────────────────────────────────────────────────── */
@@ -1040,6 +1077,15 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
     saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-blur-raised))
     saturate(var(--glass-saturate));
+}
+
+/* The marketing hero paints its own aurora orbs. They exist to give the
+ * default preset's flat canvas some colour, but under this preset they land
+ * on top of `--glass-glow-layers` and the two readings fight — that is what
+ * made the landing page look heavier and more saturated than the app. Dimming
+ * them keeps the hero's local depth while letting one aurora own the mood. */
+[data-theme-preset='glass'] [data-slot='home-aurora'] {
+  opacity: 0.38;
 }
 
 /* `outline` buttons otherwise stay fully opaque `--background` on a
@@ -1092,18 +1138,19 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
  * layered shadows — just no blur, no grain and near-opaque surfaces. */
 @media (prefers-reduced-transparency: reduce) {
   [data-theme-preset='glass'] {
+    --glass-shell-tint: oklch(1 0 0 / 94%);
     --glass-tint: oklch(1 0 0 / 96%);
     --glass-tint-raised: oklch(1 0 0 / 98%);
     --glass-field-tint: oklch(1 0 0 / 94%);
     --glass-noise-opacity: 0;
   }
   .dark [data-theme-preset='glass'] {
-    --glass-tint: oklch(0.235 0.018 268 / 96%);
-    --glass-tint-raised: oklch(0.235 0.018 268 / 98%);
-    --glass-field-tint: oklch(0.3 0.016 268 / 96%);
+    --glass-shell-tint: oklch(0.28 0.024 285 / 94%);
+    --glass-tint: oklch(0.28 0.024 285 / 96%);
+    --glass-tint-raised: oklch(0.31 0.026 285 / 98%);
+    --glass-field-tint: oklch(0.34 0.022 285 / 96%);
   }
   [data-theme-preset='glass'] :is(
-      [data-slot='card'],
       [data-slot='popover-content'],
       [data-slot='dialog-content'],
       [data-slot='sheet-content'],
@@ -1116,21 +1163,24 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
       [data-slot='alert-dialog-content'],
       [data-slot='navigation-menu-content'],
       [data-slot='menubar-content'],
+      [data-slot='app-header'],
+      [data-slot='page-footer'],
+      [data-slot='chart-tooltip'],
+      [data-slot='mobile-drawer'],
+      [data-slot='mobile-drawer-overlay'],
+      [data-slot='dialog-overlay'],
+      [data-slot='sheet-overlay'],
+      [data-slot='drawer-overlay'],
+      [data-slot='alert-dialog-overlay']
+    ),
+  body[data-theme-preset='glass'][data-theme-background='custom'] :is(
+      [data-slot='card'],
       [data-slot='table-container'],
       [data-slot='sidebar-inner'],
-      [data-slot='sidebar'][data-mobile='true'],
       [data-slot='sidebar']:not([data-state]),
-      [data-slot='input'],
-      [data-slot='textarea'],
-      [data-slot='select-trigger'],
-      [data-slot='combobox-input'],
-      [data-slot='input-group'],
-      [data-slot='tabs-list'][data-variant='default'],
-      [data-sidebar='menu-button'][data-active],
       .glass-panel,
       [class*='bg-card']
-    ),
-  [data-theme-preset='glass'] [data-slot='app-header'] {
+    ) {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }

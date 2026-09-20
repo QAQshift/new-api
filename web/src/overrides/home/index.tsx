@@ -293,6 +293,7 @@ export function BrandHome() {
            * glass panels once the glass preset is active. */}
           <div
             aria-hidden
+            data-slot='home-aurora'
             className='pointer-events-none absolute inset-0 -z-10 overflow-hidden'
           >
             <div className='bg-chart-1/45 dark:bg-chart-1/30 absolute -top-40 -left-32 size-[34rem] rounded-full blur-3xl' />
