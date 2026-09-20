@@ -126,7 +126,6 @@ export type SiteSettings = {
   UIThemeContentLayout: string
   UIThemeBackground: string
   UIThemeSidebarVariant: string
-  UIThemeSidebarCollapsible: string
   UIThemeSidebarWidth: string
   UIThemeGlass: string
   UIThemeContentWidth: string

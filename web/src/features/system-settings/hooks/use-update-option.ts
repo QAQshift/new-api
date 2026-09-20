@@ -48,7 +48,6 @@ const STATUS_RELATED_KEYS = new Set([
   'UIThemeContentLayout',
   'UIThemeBackground',
   'UIThemeSidebarVariant',
-  'UIThemeSidebarCollapsible',
   'UIThemeSidebarWidth',
   'UIThemeGlass',
   'UIThemeContentWidth',

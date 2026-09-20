@@ -65,7 +65,9 @@ export function LayoutProvider({ children }: LayoutProviderProps) {
 
   const contextValue: LayoutContextType = {
     defaultCollapsible: DEFAULT_COLLAPSIBLE,
-    collapsible: customization.sidebarCollapsible,
+    // Collapsing is always available to the user (header trigger, Cmd/Ctrl+B)
+    // and is not a site-wide setting, so it stays pinned to the icon rail.
+    collapsible: DEFAULT_COLLAPSIBLE,
     defaultVariant: DEFAULT_VARIANT,
     variant: customization.sidebarVariant,
   }

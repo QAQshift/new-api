@@ -545,11 +545,6 @@ func UpdateOption(c *gin.Context) {
 			common.ApiErrorMsg(c, "无效的侧边栏样式设置")
 			return
 		}
-	case "UIThemeSidebarCollapsible":
-		if option.Value != "offcanvas" && option.Value != "icon" && option.Value != "none" {
-			common.ApiErrorMsg(c, "无效的侧边栏折叠方式设置")
-			return
-		}
 	case "UIThemeSidebarWidth":
 		if option.Value != "compact" && option.Value != "default" && option.Value != "wide" {
 			common.ApiErrorMsg(c, "无效的侧边栏宽度设置")

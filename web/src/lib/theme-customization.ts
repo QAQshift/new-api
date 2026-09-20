@@ -90,13 +90,19 @@ export type ThemeScale = 'default' | 'sm' | 'lg' | 'xl'
 export type ContentLayout = 'full' | 'centered'
 
 /**
- * Sidebar shell shape and collapse behaviour. These used to be per-user
- * preferences kept in a layout cookie; when appearance became an
- * administrator-controlled setting they moved here and travel with the rest
- * of the theme so the whole site renders one shell.
+ * Sidebar shell shape. This used to be a per-user preference kept in a layout
+ * cookie; when appearance became an administrator-controlled setting it moved
+ * here and travels with the rest of the theme, so the whole site renders one
+ * shell.
+ *
+ * Collapse behaviour is deliberately NOT configurable. The only states a user
+ * actually wants are "expanded" and "rail of icons", and the header trigger
+ * plus Cmd/Ctrl+B already toggle them. An administrator switch over it only
+ * produced broken shells: the `none` variant renders without a `data-variant`
+ * wrapper, so `SidebarInset` loses its `peer-data-[variant=inset]` styles and
+ * the entire layout collapses.
  */
 export type SidebarVariant = 'inset' | 'sidebar' | 'floating'
-export type SidebarCollapsible = 'offcanvas' | 'icon' | 'none'
 
 /**
  * Sidebar rail width. `SIDEBAR_WIDTHS` resolves the choice to the CSS custom
@@ -167,7 +173,6 @@ export type ThemeCustomization = {
   contentLayout: ContentLayout
   contentWidth: ContentWidth
   sidebarVariant: SidebarVariant
-  sidebarCollapsible: SidebarCollapsible
   sidebarWidth: SidebarWidth
   glassIntensity: GlassIntensity
   primary: ThemePrimary
@@ -182,7 +187,6 @@ export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
   contentLayout: 'full',
   contentWidth: 'default',
   sidebarVariant: 'inset',
-  sidebarCollapsible: 'icon',
   sidebarWidth: 'default',
   glassIntensity: 'default',
   primary: '',
@@ -225,9 +229,6 @@ export const SIDEBAR_VARIANT_VALUES: ReadonlySet<SidebarVariant> = new Set([
   'sidebar',
   'floating',
 ])
-
-export const SIDEBAR_COLLAPSIBLE_VALUES: ReadonlySet<SidebarCollapsible> =
-  new Set(['offcanvas', 'icon', 'none'])
 
 export const SIDEBAR_WIDTH_VALUES: ReadonlySet<SidebarWidth> = new Set([
   'compact',
@@ -312,11 +313,6 @@ export function resolveThemeCustomization(raw: unknown): ThemeCustomization {
   )
     ? (value.sidebar_variant as SidebarVariant)
     : DEFAULT_THEME_CUSTOMIZATION.sidebarVariant
-  const sidebarCollapsible = SIDEBAR_COLLAPSIBLE_VALUES.has(
-    value.sidebar_collapsible as SidebarCollapsible
-  )
-    ? (value.sidebar_collapsible as SidebarCollapsible)
-    : DEFAULT_THEME_CUSTOMIZATION.sidebarCollapsible
   const sidebarWidth = SIDEBAR_WIDTH_VALUES.has(value.sidebar_width as SidebarWidth)
     ? (value.sidebar_width as SidebarWidth)
     : DEFAULT_THEME_CUSTOMIZATION.sidebarWidth
@@ -341,7 +337,6 @@ export function resolveThemeCustomization(raw: unknown): ThemeCustomization {
     contentLayout,
     contentWidth,
     sidebarVariant,
-    sidebarCollapsible,
     sidebarWidth,
     glassIntensity,
     primary: resolveThemePrimary(value.primary),

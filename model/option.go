@@ -91,7 +91,6 @@ func InitOptionMap() {
 	common.OptionMap["UIThemeContentLayout"] = "full"
 	common.OptionMap["UIThemeBackground"] = ""
 	common.OptionMap["UIThemeSidebarVariant"] = "inset"
-	common.OptionMap["UIThemeSidebarCollapsible"] = "icon"
 	common.OptionMap["UIThemeSidebarWidth"] = "default"
 	common.OptionMap["UIThemePrimary"] = ""
 	common.OptionMap["UIThemeGlass"] = "default"

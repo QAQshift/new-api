@@ -17,12 +17,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Check, ImagePlus } from 'lucide-react'
-import type { UseFormReturn } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/components/ui/button'
 import { ImageUrlField } from '@/components/image-url-field'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
@@ -32,21 +30,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
 import { isImageDataUrl } from '@/lib/image-data-url'
 import {
+  resolvePrimaryForeground,
   THEME_PRESETS,
   type ContentLayout,
   type ContentWidth,
   type GlassIntensity,
-  type SidebarCollapsible,
   type SidebarVariant,
   type SidebarWidth,
   type ThemeFont,
@@ -66,6 +57,7 @@ import { SettingsPageFormActions } from '../components/settings-page-context'
 import { SettingsSection } from '../components/settings-section'
 import { useSettingsForm } from '../hooks/use-settings-form'
 import { useUpdateOption } from '../hooks/use-update-option'
+import { VisualOptionPicker } from './appearance-visual-options'
 
 export type AppearanceSettings = {
   UIThemePreset: ThemePreset
@@ -75,7 +67,6 @@ export type AppearanceSettings = {
   UIThemeContentLayout: ContentLayout
   UIThemeContentWidth: ContentWidth
   UIThemeSidebarVariant: SidebarVariant
-  UIThemeSidebarCollapsible: SidebarCollapsible
   UIThemeSidebarWidth: SidebarWidth
   UIThemeGlass: GlassIntensity
   UIThemePrimary: ThemePrimary
@@ -85,8 +76,6 @@ export type AppearanceSettings = {
 type AppearanceSectionProps = {
   defaultValues: AppearanceSettings
 }
-
-type SelectOption = { value: string; label: string }
 
 export function AppearanceSection(props: AppearanceSectionProps) {
   const { t } = useTranslation()
@@ -101,12 +90,12 @@ export function AppearanceSection(props: AppearanceSectionProps) {
       },
     })
 
-  const fontOptions: SelectOption[] = [
+  const fontOptions = [
     { value: 'default', label: t('Automatic') },
     { value: 'sans', label: t('Sans') },
     { value: 'serif', label: t('Serif') },
   ]
-  const radiusOptions: SelectOption[] = [
+  const radiusOptions = [
     { value: 'default', label: t('Automatic') },
     { value: 'none', label: t('None') },
     { value: 'sm', label: t('Small') },
@@ -114,37 +103,32 @@ export function AppearanceSection(props: AppearanceSectionProps) {
     { value: 'lg', label: t('Large') },
     { value: 'xl', label: t('Extra large') },
   ]
-  const scaleOptions: SelectOption[] = [
+  const scaleOptions = [
     { value: 'sm', label: t('Compact') },
     { value: 'default', label: t('Default') },
     { value: 'lg', label: t('Comfortable') },
     { value: 'xl', label: t('Super Large') },
   ]
-  const layoutOptions: SelectOption[] = [
+  const layoutOptions = [
     { value: 'full', label: t('Full width') },
     { value: 'centered', label: t('Centered') },
   ]
-  const sidebarVariantOptions: SelectOption[] = [
+  const sidebarVariantOptions = [
     { value: 'inset', label: t('Inset') },
     { value: 'sidebar', label: t('Standard') },
     { value: 'floating', label: t('Floating') },
   ]
-  const sidebarCollapsibleOptions: SelectOption[] = [
-    { value: 'icon', label: t('Collapse to icons') },
-    { value: 'offcanvas', label: t('Hide completely') },
-    { value: 'none', label: t('Always expanded') },
-  ]
-  const sidebarWidthOptions: SelectOption[] = [
+  const sidebarWidthOptions = [
     { value: 'compact', label: t('Compact') },
     { value: 'default', label: t('Default') },
     { value: 'wide', label: t('Wide') },
   ]
-  const contentWidthOptions: SelectOption[] = [
+  const contentWidthOptions = [
     { value: 'default', label: t('Default') },
     { value: 'wide', label: t('Wide') },
     { value: 'ultra', label: t('Extra wide') },
   ]
-  const glassOptions: SelectOption[] = [
+  const glassOptions = [
     { value: 'soft', label: t('More transparent') },
     { value: 'default', label: t('Default') },
     { value: 'heavy', label: t('More solid') },
@@ -157,6 +141,19 @@ export function AppearanceSection(props: AppearanceSectionProps) {
   const selectedPresetMeta =
     THEME_PRESETS.find((preset) => preset.value === selectedPreset) ??
     THEME_PRESETS[0]
+  // The outer preview corner is driven explicitly rather than only through
+  // `--radius`. The administrator has to SEE the difference between "none" and
+  // "xl" at a glance, and an explicit value cannot be lost to a cascade change
+  // somewhere else in the stylesheet.
+  const previewRadiusMap: Record<string, string> = {
+    default: '1rem',
+    none: '0px',
+    sm: '0.3rem',
+    md: '0.5rem',
+    lg: '0.75rem',
+    xl: '1rem',
+  }
+  const previewRadius = previewRadiusMap[selectedRadius] ?? '1rem'
   const previewBackground =
     /^https?:\/\//i.test(selectedBackground) ||
     isImageDataUrl(selectedBackground)
@@ -220,14 +217,16 @@ export function AppearanceSection(props: AppearanceSectionProps) {
                     )
                   })}
                 </div>
-                {/* The preview carries the real theme attributes rather than
-                    hard-coded stand-ins, so radius and density tokens resolve
-                    inside it exactly as they will on the live site. */}
+                {/* Two mechanisms on purpose: `data-theme-*` makes the real
+                    radius/density tokens resolve inside the preview, and the
+                    explicit `borderRadius` guarantees the corner still tracks
+                    the choice on its own. */}
                 <div
                   data-theme-radius={selectedRadius}
                   data-theme-scale={selectedScale}
                   className='relative overflow-hidden rounded-2xl border p-5'
                   style={{
+                    borderRadius: previewRadius,
                     backgroundColor:
                       'color-mix(in oklch, var(--card) 72%, transparent)',
                     backgroundImage: previewBackground,
@@ -267,6 +266,7 @@ export function AppearanceSection(props: AppearanceSectionProps) {
                           <div
                             key={label}
                             className='bg-card/70 rounded-lg border p-2.5'
+                            style={{ borderRadius: previewRadius }}
                           >
                             <div className='text-primary text-sm font-semibold'>
                               {['98ms', '99.9%', '24/7'][index]}
@@ -281,77 +281,76 @@ export function AppearanceSection(props: AppearanceSectionProps) {
                   </div>
                 </div>
               </div>
-              <AppearanceSelect
+              <VisualOptionPicker
                 form={form}
                 name='UIThemeFont'
+                kind='font'
                 label={t('Font')}
                 description={t(
                   'Sets the global interface font for every user.'
                 )}
                 options={fontOptions}
               />
-              <AppearanceSelect
+              <VisualOptionPicker
                 form={form}
                 name='UIThemeRadius'
+                kind='radius'
                 label={t('Border radius')}
                 description={t(
                   'Sets the global corner style for controls and panels.'
                 )}
                 options={radiusOptions}
               />
-              <AppearanceSelect
+              <VisualOptionPicker
                 form={form}
                 name='UIThemeScale'
+                kind='density'
                 label={t('Density')}
                 description={t(
                   'Sets the global interface density for every user.'
                 )}
                 options={scaleOptions}
               />
-              <AppearanceSelect
+              <VisualOptionPicker
                 form={form}
                 name='UIThemeContentLayout'
+                kind='contentLayout'
                 label={t('Content width')}
                 description={t(
                   'Sets whether application content is full width or centered.'
                 )}
                 options={layoutOptions}
               />
-              <AppearanceSelect
+              <VisualOptionPicker
                 form={form}
                 name='UIThemeContentWidth'
+                kind='contentMaxWidth'
                 label={t('Content max width')}
                 description={t(
                   'Caps how wide centered content may grow. Only applies when content width is centered.'
                 )}
                 options={contentWidthOptions}
               />
-              <AppearanceSelect
+              <VisualOptionPicker
                 form={form}
                 name='UIThemeSidebarVariant'
+                kind='sidebarVariant'
                 label={t('Sidebar style')}
                 description={t('Sets the sidebar shell for every user.')}
                 options={sidebarVariantOptions}
               />
-              <AppearanceSelect
-                form={form}
-                name='UIThemeSidebarCollapsible'
-                label={t('Sidebar collapse')}
-                description={t(
-                  'Sets how the sidebar folds away on desktop, for every user.'
-                )}
-                options={sidebarCollapsibleOptions}
-              />
-              <AppearanceSelect
+              <VisualOptionPicker
                 form={form}
                 name='UIThemeSidebarWidth'
+                kind='sidebarWidth'
                 label={t('Sidebar width')}
                 description={t('Sets the sidebar rail width for every user.')}
                 options={sidebarWidthOptions}
               />
-              <AppearanceSelect
+              <VisualOptionPicker
                 form={form}
                 name='UIThemeGlass'
+                kind='glass'
                 label={t('Glass intensity')}
                 description={t(
                   'Controls how much of the background shows through glass panels. Only affects the Glass preset.'
@@ -365,7 +364,7 @@ export function AppearanceSection(props: AppearanceSectionProps) {
                   <FormItem>
                     <FormLabel>{t('Accent color')}</FormLabel>
                     <FormControl>
-                      <div className='flex items-center gap-2'>
+                      <div className='flex flex-wrap items-center gap-2'>
                         <input
                           type='color'
                           aria-label={t('Accent color')}
@@ -381,7 +380,7 @@ export function AppearanceSection(props: AppearanceSectionProps) {
                           onChange={(event) =>
                             field.onChange(event.target.value.trim())
                           }
-                          className='font-mono'
+                          className='max-w-48 font-mono'
                         />
                         {field.value ? (
                           <Button
@@ -393,6 +392,21 @@ export function AppearanceSection(props: AppearanceSectionProps) {
                             {t('Reset')}
                           </Button>
                         ) : null}
+                        {/* Swatch so the accent is judged by looking at it,
+                            not by reading a hex string. Follows the same
+                            luminance rule the provider applies. */}
+                        <span
+                          className='ml-auto rounded-lg px-3 py-1.5 text-xs font-semibold'
+                          style={{
+                            backgroundColor: field.value || 'var(--primary)',
+                            color: field.value
+                              ? (resolvePrimaryForeground(field.value) ??
+                                'var(--primary-foreground)')
+                              : 'var(--primary-foreground)',
+                          }}
+                        >
+                          Aa 字
+                        </span>
                       </div>
                     </FormControl>
                     <FormDescription>
@@ -451,47 +465,5 @@ export function AppearanceSection(props: AppearanceSectionProps) {
         </Form>
       </SettingsSection>
     </>
-  )
-}
-
-function AppearanceSelect(props: {
-  form: UseFormReturn<AppearanceSettings>
-  name: keyof AppearanceSettings
-  label: string
-  description: string
-  options: SelectOption[]
-}) {
-  return (
-    <FormField
-      control={props.form.control}
-      name={props.name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{props.label}</FormLabel>
-          <FormControl>
-            <Select
-              items={props.options}
-              value={field.value}
-              onValueChange={field.onChange}
-            >
-              <SelectTrigger className='w-full'>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent alignItemWithTrigger={false}>
-                <SelectGroup>
-                  {props.options.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </FormControl>
-          <FormDescription>{props.description}</FormDescription>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
   )
 }

@@ -4,7 +4,6 @@ import {
   DEFAULT_THEME_CUSTOMIZATION,
   GLASS_INTENSITY_VALUES,
   resolveThemePrimary,
-  SIDEBAR_COLLAPSIBLE_VALUES,
   SIDEBAR_VARIANT_VALUES,
   SIDEBAR_WIDTH_VALUES,
   THEME_FONT_VALUES,
@@ -14,7 +13,6 @@ import {
   type ContentLayout,
   type ContentWidth,
   type GlassIntensity,
-  type SidebarCollapsible,
   type SidebarVariant,
   type SidebarWidth,
   type ThemeFont,
@@ -114,11 +112,6 @@ const SITE_SECTIONS = [
         )
           ? (settings.UIThemeSidebarVariant as SidebarVariant)
           : DEFAULT_THEME_CUSTOMIZATION.sidebarVariant,
-        UIThemeSidebarCollapsible: SIDEBAR_COLLAPSIBLE_VALUES.has(
-          settings.UIThemeSidebarCollapsible as SidebarCollapsible
-        )
-          ? (settings.UIThemeSidebarCollapsible as SidebarCollapsible)
-          : DEFAULT_THEME_CUSTOMIZATION.sidebarCollapsible,
         UIThemeSidebarWidth: SIDEBAR_WIDTH_VALUES.has(
           settings.UIThemeSidebarWidth as SidebarWidth
         )

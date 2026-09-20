@@ -53,7 +53,6 @@ func TestGetStatusAdvertisesDefaultDashboard(t *testing.T) {
 	assert.Equal(t, "full", themeCustomization["content_layout"])
 	assert.Equal(t, "", themeCustomization["background"])
 	assert.Equal(t, "inset", themeCustomization["sidebar_variant"])
-	assert.Equal(t, "icon", themeCustomization["sidebar_collapsible"])
 	assert.Equal(t, "default", themeCustomization["sidebar_width"])
 	assert.Equal(t, "default", themeCustomization["glass_intensity"])
 	assert.Equal(t, "default", themeCustomization["content_width"])
@@ -85,18 +84,17 @@ func TestGetStatusReturnsAdministratorThemeCustomization(t *testing.T) {
 	require.NoError(t, common.Unmarshal(response.Body.Bytes(), &payload))
 	assert.True(t, payload.Success)
 	assert.Equal(t, map[string]string{
-		"preset":              "forest-whisper",
-		"font":                "serif",
-		"radius":              "lg",
-		"scale":               "sm",
-		"content_layout":      "centered",
-		"content_width":       "default",
-		"background":          "",
-		"sidebar_variant":     "inset",
-		"sidebar_collapsible": "icon",
-		"sidebar_width":       "default",
-		"glass_intensity":     "default",
-		"primary":             "",
+		"preset":          "forest-whisper",
+		"font":            "serif",
+		"radius":          "lg",
+		"scale":           "sm",
+		"content_layout":  "centered",
+		"content_width":   "default",
+		"background":      "",
+		"sidebar_variant": "inset",
+		"sidebar_width":   "default",
+		"glass_intensity": "default",
+		"primary":         "",
 	}, payload.Data.ThemeCustomization)
 }
 
@@ -112,7 +110,6 @@ func TestUpdateOptionRejectsInvalidThemeCustomization(t *testing.T) {
 		{name: "scale", key: "UIThemeScale", value: "tiny"},
 		{name: "content layout", key: "UIThemeContentLayout", value: "sidebar"},
 		{name: "sidebar variant", key: "UIThemeSidebarVariant", value: "wide"},
-		{name: "sidebar collapsible", key: "UIThemeSidebarCollapsible", value: "sometimes"},
 		{name: "sidebar width", key: "UIThemeSidebarWidth", value: "gigantic"},
 		{name: "glass intensity", key: "UIThemeGlass", value: "molten"},
 		{name: "content width", key: "UIThemeContentWidth", value: "infinite"},

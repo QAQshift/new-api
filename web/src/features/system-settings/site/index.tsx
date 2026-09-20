@@ -44,7 +44,6 @@ const defaultSiteSettings: SiteSettings = {
   UIThemeContentLayout: 'full',
   UIThemeBackground: '',
   UIThemeSidebarVariant: 'inset',
-  UIThemeSidebarCollapsible: 'icon',
   UIThemeSidebarWidth: 'default',
   UIThemeGlass: 'default',
   UIThemeContentWidth: 'default',
