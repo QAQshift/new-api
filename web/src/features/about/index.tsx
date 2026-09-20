@@ -69,7 +69,14 @@ export function About() {
   }
 
   if (!hasContent) {
-    return <SupportPage />
+    // SupportPage is a full-bleed page of its own, so it keeps the container
+    // off — but it still needs the public shell, otherwise the built-in About
+    // page is a dead end with no header and no way back to the site.
+    return (
+      <PublicLayout showMainContainer={false}>
+        <SupportPage />
+      </PublicLayout>
+    )
   }
 
   if (isUrl) {

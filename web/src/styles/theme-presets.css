@@ -550,10 +550,10 @@ For commercial licensing, please contact support@quantumnous.com
    * so it reads as light filling the room rather than as coloured patches
    * stuck to the page. Alpha stays at 100% on purpose: a tint that is
    * already half-transparent washes out to nothing over a light canvas. */
-  --glass-glow-1: oklch(0.975 0.05 292);
-  --glass-glow-2: oklch(0.9 0.105 276);
-  --glass-glow-3: oklch(0.945 0.075 308);
-  --glass-glow-4: oklch(0.885 0.085 258);
+  --glass-glow-1: oklch(0.988 0.026 292);
+  --glass-glow-2: oklch(0.952 0.058 278);
+  --glass-glow-3: oklch(0.97 0.042 308);
+  --glass-glow-4: oklch(0.94 0.048 260);
   --glass-noise-opacity: 0.035;
   --glass-glow-layers: radial-gradient(
       74rem 48rem at 4% -14%,
@@ -1079,13 +1079,25 @@ body[data-theme-preset='glass'][data-theme-background='custom'] :is(
     saturate(var(--glass-saturate));
 }
 
+/* Semantic notice strips — the welfare rules banner, the recharge hint — keep
+ * their colour in the border, the icon and the text, but drop the flat tint
+ * fill. A saturated slab sitting in a column of frosted white panes reads as
+ * a different design system, which is exactly how it looked on the page. The
+ * border already carries the semantic colour, so nothing is lost. */
+[data-theme-preset='glass'] [data-slot='notice-strip'] {
+  background-color: var(--glass-tint);
+  background-image: var(--glass-sheen);
+  box-shadow: inset 0 1px 0 var(--glass-edge-top),
+    var(--glass-shadow-ambient), var(--glass-shadow-key);
+}
+
 /* The marketing hero paints its own aurora orbs. They exist to give the
  * default preset's flat canvas some colour, but under this preset they land
  * on top of `--glass-glow-layers` and the two readings fight — that is what
  * made the landing page look heavier and more saturated than the app. Dimming
  * them keeps the hero's local depth while letting one aurora own the mood. */
 [data-theme-preset='glass'] [data-slot='home-aurora'] {
-  opacity: 0.38;
+  opacity: 0.24;
 }
 
 /* `outline` buttons otherwise stay fully opaque `--background` on a

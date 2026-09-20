@@ -156,7 +156,10 @@ export function Welfare() {
           {modules.length > 0 && rulesContent !== '' ? (
             /* 说明用柔色提示条而不是描边卡片：它是一句"须知"，不该和下面的功能
                卡片抢视觉层级。样式与充值页的支付方式提示一致。 */
-            <div className='border-info/40 bg-info/10 flex items-start gap-3 rounded-xl border p-4 sm:p-5'>
+            <div
+              data-slot='notice-strip'
+              className='border-info/40 bg-info/10 flex items-start gap-3 rounded-xl border p-4 sm:p-5'
+            >
               <span className='bg-info/15 text-info flex size-8 shrink-0 items-center justify-center rounded-full'>
                 <Megaphone className='size-4' />
               </span>

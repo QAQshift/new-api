@@ -360,7 +360,10 @@ export function RechargeFormCard({
                   {t('Payment Method')}
                 </Label>
                 {disabledPaymentNotice && (
-                  <div className='border-warning/40 bg-warning/10 flex items-start gap-3 rounded-lg border p-3 sm:p-4'>
+                  <div
+                    data-slot='notice-strip'
+                    className='border-warning/40 bg-warning/10 flex items-start gap-3 rounded-lg border p-3 sm:p-4'
+                  >
                     <span className='bg-warning/15 text-warning flex size-8 shrink-0 items-center justify-center rounded-full'>
                       <Megaphone className='size-4' />
                     </span>
