@@ -188,13 +188,13 @@ export const ModelPricingEditorPanel = forwardRef<
         audioRatio: editData.audioRatio || '',
         audioCompletionRatio: editData.audioCompletionRatio || '',
       })
-      setPricingMode(
-        editData.billingMode === 'tiered_expr'
-          ? 'tiered_expr'
-          : editData.price
-            ? 'per-request'
-            : 'per-token'
-      )
+      if (editData.billingMode === 'tiered_expr') {
+        setPricingMode('tiered_expr')
+      } else if (editData.price) {
+        setPricingMode('per-request')
+      } else {
+        setPricingMode('per-token')
+      }
       setBillingExpr(editData.billingExpr || '')
       setRequestRuleExpr(editData.requestRuleExpr || '')
     } else {
@@ -480,7 +480,7 @@ export const ModelPricingEditorPanel = forwardRef<
   return (
     <div
       className={cn(
-        'bg-background flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border',
+        'flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border',
         className
       )}
     >

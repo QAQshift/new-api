@@ -14,10 +14,12 @@ content scrolls.
 ## Glass recipe
 
 Every glass surface (cards, popovers, dialogs, sheets, menus, table
-containers, the sidebar, the app header and `.glass-panel`) is composed from
-the `--glass-*` recipe variables declared in `styles/theme-presets.css`:
+containers, form controls, tabs, the sidebar, the app header and `.glass-panel`)
+is composed from the `--glass-*` recipe variables declared in
+`styles/theme-presets.css`:
 
-- `--glass-tint` / `--glass-tint-raised` — translucent surface colour
+- `--glass-tint` / `--glass-tint-raised` / `--glass-field-tint` — translucent
+  surface colour for panels, floating layers and form controls
 - `--glass-blur` / `--glass-blur-raised` — backdrop blur radius
 - `--glass-saturate` — backdrop saturation (lowered when a custom background
   image is set, because sampling a saturated photo reads dirty)
@@ -25,15 +27,21 @@ the `--glass-*` recipe variables declared in `styles/theme-presets.css`:
   gradient hairline drawn as a masked ring
 - `--glass-sheen` — the diagonal specular highlight
 - `--glass-shadow-*` — ambient / key / hover shadow layers
-- `--glass-glow-*` + `--glass-glow-opacity` — ambient light painted on the
-  body so the blur has something to refract
+- `--glass-glow-*` — ambient light painted on the body so the blur has
+  something to refract
 - `--glass-noise-opacity` — film grain strength
 
+Surfaces are matched by `data-slot` plus the `.glass-panel` / `bg-card` utility
+hooks, so feature panels join the recipe without per-component styling.
+Full-bleed canvas layers (`sidebar-inset`, `section`, the public layout shell,
+the sticky page footer) are forced transparent: an opaque fill there would hide
+the ambient light and flatten every pane above it.
+
 Light mode keeps the ambient light almost neutral; dark mode uses the
-blue/violet/cyan bloom. `prefers-reduced-transparency` disables blur and grain
+violet/blue/cyan bloom. `prefers-reduced-transparency` disables blur and grain
 and raises the tint opacity, `prefers-reduced-motion` disables the hover lift,
 and under `768px` the blur radius is reduced. `backdrop-filter` is applied only
-to large containers — never to buttons, table rows or cells.
+to containers and controls — never to buttons, table rows or cells.
 
 Glass is also opted out of the semantic surface bridge lower in
 `theme-presets.css`, otherwise that block would flatten the translucent tokens

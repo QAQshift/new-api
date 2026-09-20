@@ -41,6 +41,7 @@ export function PublicLayout(props: PublicLayoutProps) {
 
   return (
     <div
+      data-slot='public-layout'
       className={cn(
         'text-foreground relative min-h-svh overflow-x-clip',
         !hasCustomBackground && 'bg-background'

@@ -20,6 +20,7 @@ import { useNavigate, useRouter } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 const FEEDBACK_URL = 'https://github.com/QuantumNous/new-api/issues'
@@ -55,8 +56,19 @@ export function GeneralError({
     : t('Please try again later.')
 
   return (
-    <div className={cn('h-svh w-full', className)}>
-      <div className='m-auto flex h-full w-full flex-col items-center justify-center gap-2'>
+    <div
+      className={cn(
+        'flex h-svh w-full items-center justify-center p-4',
+        className
+      )}
+    >
+      <Card
+        data-card-hover='false'
+        className={cn(
+          'w-full items-center gap-2 text-center',
+          minimal ? 'max-w-md px-5 py-6' : 'max-w-lg px-6 py-10'
+        )}
+      >
         {!minimal && (
           <h1 className='text-[7rem] leading-tight font-bold'>
             {status ?? 500}
@@ -93,7 +105,7 @@ export function GeneralError({
             </Button>
           </div>
         )}
-      </div>
+      </Card>
     </div>
   )
 }

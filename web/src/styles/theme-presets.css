@@ -408,15 +408,26 @@ For commercial licensing, please contact support@quantumnous.com
  * Administrator-controlled glassmorphism preset.
  *
  * Two deliberate finishes share one recipe:
- *   - light: soft frosted glass — a translucent white tint over a faint
- *     blue/cyan/violet bloom, hairline edges and layered shadows, so the
- *     blur is actually readable against the light canvas.
- *   - dark:  Apple-style deep glass — blue/violet/cyan ambient light, a
- *     brighter card than the canvas, coloured edge reflections and grain.
+ *   - light: soft frosted glass — a translucent near-white tint over a faint
+ *     violet/blue/cyan bloom, a hairline top edge, an interior top glow and
+ *     a soft double shadow, so the blur is readable against a light canvas.
+ *   - dark:  deep glass — a violet/blue ambient field, a pane brighter than
+ *     the canvas, bright top reflections and grain.
  *
  * The finish is composed from the `--glass-*` recipe variables below. Retune
  * the look there rather than per component: every surface in the app reads
  * the same five ingredients (tint, blur, edge, sheen, shadow).
+ *
+ * The layers, in paint order:
+ *   - optics     — ambient light + grain painted once on <body>
+ *   - canvas     — full-bleed shells kept transparent so the light shows
+ *   - shell      — the `inset` content region, itself one large pane
+ *   - surface    — cards, popovers, dialogs, sheets, menus, tables
+ *   - control    — inputs, selects, segmented switchers
+ *   - navigation — sidebar rows
+ *   - scrim      — modal backdrops
+ * Blur stacks along that order, so inner layers frost whatever is already
+ * frosted behind them. The shell is the only full-viewport blur.
  *
  * Glass is opted OUT of the semantic surface bridge further down (see the
  * `:not()` list) so these translucent tokens are not flattened into opaque
@@ -476,45 +487,60 @@ For commercial licensing, please contact support@quantumnous.com
   --skeleton-base: oklch(0.925 0.004 265);
   --skeleton-highlight: oklch(0.965 0.003 265);
 
-  --radius: 1rem;
+  --radius: 1.25rem;
 
   /* ── Recipe ─────────────────────────────────────────────────────── */
-  --glass-tint: oklch(1 0 0 / 55%);
-  --glass-tint-raised: oklch(1 0 0 / 80%);
-  --glass-blur: 20px;
-  --glass-blur-raised: 28px;
-  --glass-saturate: 145%;
+  /* Five ingredients every surface shares: tint, blur, edge, sheen,
+   * shadow. Tuned for a clean, minimal "frosted pane" look — a
+   * near-white fill, a crisp top hairline, a soft double shadow and a
+   * barely-there diagonal sweep. Retune here, never per component. */
+  --glass-tint: oklch(1 0 0 / 62%);
+  --glass-tint-raised: oklch(1 0 0 / 86%);
+  --glass-field-tint: oklch(1 0 0 / 46%);
+  --glass-blur: 24px;
+  --glass-blur-raised: 34px;
+  --glass-saturate: 170%;
 
-  --glass-edge-top: oklch(1 0 0 / 90%);
-  --glass-edge-mid: oklch(0.55 0.02 268 / 14%);
-  --glass-edge-bottom: oklch(0.25 0.02 268 / 22%);
+  --glass-edge-top: oklch(1 0 0 / 96%);
+  --glass-edge-mid: oklch(0.5 0.02 268 / 8%);
+  --glass-edge-bottom: oklch(0.24 0.02 268 / 16%);
   --glass-sheen: linear-gradient(
-    158deg,
-    oklch(1 0 0 / 60%) 0%,
-    oklch(1 0 0 / 0%) 44%
+    152deg,
+    oklch(1 0 0 / 72%) 0%,
+    oklch(1 0 0 / 0%) 46%
   );
 
-  --glass-shadow-ambient: 0 1px 2px oklch(0.28 0.02 268 / 6%);
-  --glass-shadow-key: 0 10px 28px oklch(0.28 0.02 268 / 10%);
-  --glass-shadow-key-hover: 0 16px 38px oklch(0.28 0.02 268 / 15%);
+  --glass-shadow-ambient: 0 1px 2px oklch(0.28 0.03 268 / 5%);
+  /* The leading layer of each key shadow is an interior top glow — light
+   * entering the sheet from above and diffusing inside it. That inner
+   * bloom is what separates a pane from a flat translucent rectangle. */
+  --glass-shadow-key:
+    inset 0 16px 32px -26px oklch(1 0 0 / 90%),
+    0 2px 6px oklch(0.28 0.03 268 / 5%),
+    0 14px 36px oklch(0.3 0.05 268 / 10%);
+  --glass-shadow-key-hover:
+    inset 0 16px 32px -26px oklch(1 0 0 / 90%),
+    0 4px 12px oklch(0.28 0.03 268 / 7%),
+    0 22px 54px oklch(0.3 0.06 268 / 16%);
 
   /* Ambient light the glass has something to refract. A restrained
-   * blue/cyan/violet bloom so the frosted blur reads against a light
+   * violet/blue/cyan bloom so the frosted blur reads against a light
    * canvas instead of flattening into plain white cards. */
-  --glass-glow-1: oklch(1 0 0 / 78%);
-  --glass-glow-2: oklch(0.87 0.055 264 / 62%);
-  --glass-glow-3: oklch(0.9 0.05 200 / 52%);
-  --glass-glow-opacity: 0.85;
-  --glass-noise-opacity: 0.024;
+  --glass-glow-1: oklch(1 0 0 / 84%);
+  --glass-glow-2: oklch(0.85 0.082 288 / 68%);
+  --glass-glow-3: oklch(0.87 0.065 262 / 58%);
+  --glass-glow-4: oklch(0.9 0.052 205 / 50%);
+  --glass-noise-opacity: 0.03;
   --glass-glow-layers: radial-gradient(
-      58rem 38rem at 14% -12%,
+      58rem 38rem at 12% -14%,
       var(--glass-glow-1),
       transparent 62%
     ),
-    radial-gradient(48rem 34rem at 88% 2%, var(--glass-glow-2), transparent 64%),
+    radial-gradient(50rem 36rem at 88% 0%, var(--glass-glow-2), transparent 66%),
+    radial-gradient(46rem 32rem at 4% 64%, var(--glass-glow-3), transparent 62%),
     radial-gradient(
-      46rem 32rem at 52% 106%,
-      var(--glass-glow-3),
+      48rem 34rem at 54% 108%,
+      var(--glass-glow-4),
       transparent 60%
     );
 }
@@ -575,29 +601,36 @@ For commercial licensing, please contact support@quantumnous.com
   /* Deep glass: the card sits clearly above the canvas, edges catch a
    * bright top reflection and a dark bottom edge, and the specular sweep
    * is warmer than in light mode. */
-  --glass-tint: oklch(0.215 0.016 268 / 62%);
-  --glass-tint-raised: oklch(0.215 0.016 268 / 84%);
-  --glass-blur: 24px;
-  --glass-blur-raised: 32px;
-  --glass-saturate: 150%;
+  --glass-tint: oklch(0.235 0.018 268 / 64%);
+  --glass-tint-raised: oklch(0.25 0.02 268 / 88%);
+  --glass-field-tint: oklch(0.3 0.016 268 / 48%);
+  --glass-blur: 28px;
+  --glass-blur-raised: 38px;
+  --glass-saturate: 175%;
 
-  --glass-edge-top: oklch(1 0 0 / 20%);
+  --glass-edge-top: oklch(1 0 0 / 22%);
   --glass-edge-mid: oklch(0.72 0.03 268 / 10%);
-  --glass-edge-bottom: oklch(0 0 0 / 45%);
+  --glass-edge-bottom: oklch(0 0 0 / 52%);
   --glass-sheen: linear-gradient(
-    158deg,
-    oklch(1 0 0 / 12%) 0%,
-    oklch(1 0 0 / 0%) 40%
+    152deg,
+    oklch(1 0 0 / 14%) 0%,
+    oklch(1 0 0 / 0%) 42%
   );
 
-  --glass-shadow-ambient: 0 1px 2px oklch(0 0 0 / 32%);
-  --glass-shadow-key: 0 18px 42px oklch(0 0 0 / 42%);
-  --glass-shadow-key-hover: 0 26px 60px oklch(0 0 0 / 52%);
+  --glass-shadow-ambient: 0 1px 2px oklch(0 0 0 / 30%);
+  --glass-shadow-key:
+    inset 0 16px 34px -24px oklch(1 0 0 / 16%),
+    0 2px 8px oklch(0 0 0 / 30%),
+    0 20px 50px oklch(0 0 0 / 42%);
+  --glass-shadow-key-hover:
+    inset 0 16px 34px -24px oklch(1 0 0 / 16%),
+    0 4px 14px oklch(0 0 0 / 34%),
+    0 30px 72px oklch(0 0 0 / 54%);
 
-  --glass-glow-1: oklch(0.52 0.24 264 / 26%);
-  --glass-glow-2: oklch(0.52 0.26 292 / 20%);
-  --glass-glow-3: oklch(0.62 0.12 200 / 16%);
-  --glass-glow-opacity: 1;
+  --glass-glow-1: oklch(0.54 0.25 268 / 28%);
+  --glass-glow-2: oklch(0.5 0.26 296 / 22%);
+  --glass-glow-3: oklch(0.56 0.2 250 / 18%);
+  --glass-glow-4: oklch(0.62 0.13 200 / 16%);
   --glass-noise-opacity: 0.036;
 }
 
@@ -658,6 +691,77 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
   background-attachment: fixed;
 }
 
+/* ── Canvas layer ─────────────────────────────────────────────────────── */
+/*
+ * The page canvas MUST stay see-through. These are the only full-bleed
+ * opaque surfaces in the app shell; left opaque they cover the ambient
+ * light painted on <body>, so every glass surface above has nothing to
+ * refract and the whole theme collapses into flat white cards.
+ *
+ * They keep their own layout/scroll behaviour — only the fill is dropped.
+ */
+[data-theme-preset='glass'] :is(
+    [data-slot='sidebar-inset'],
+    [data-slot='sidebar-wrapper'],
+    [data-slot='section'],
+    [data-slot='public-layout']
+  ) {
+  background-color: transparent;
+}
+
+/* The sticky page footer keeps just enough frost to hold its buttons apart
+ * from the scrolled content behind it. */
+[data-theme-preset='glass'] [data-slot='page-footer'] {
+  background-color: color-mix(in oklch, var(--background) 34%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: blur(12px) saturate(150%);
+}
+
+/* `inset` is the default shell (see `DEFAULT_VARIANT`), where the content
+ * region is a raised rounded panel with its own margin. There it is a large
+ * glass pane in its own right — the same material as the cards it holds —
+ * rather than a transparent scroller. `:has()` keys off the sibling sidebar's
+ * `data-variant`; the `md` guard matches the breakpoint where the shell
+ * actually becomes a panel. */
+@media (min-width: 768px) {
+  [data-theme-preset='glass']
+    [data-slot='sidebar-wrapper']:has(
+      [data-slot='sidebar'][data-variant='inset']
+    )
+    [data-slot='sidebar-inset'] {
+    background-color: var(--glass-tint);
+    background-image: var(--glass-sheen);
+    box-shadow: inset 0 1px 0 var(--glass-edge-top),
+      inset 0 -1px 0 var(--glass-edge-bottom), var(--glass-shadow-ambient),
+      var(--glass-shadow-key);
+    -webkit-backdrop-filter: blur(var(--glass-blur))
+      saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  }
+}
+
+/* Table surfaces sit *inside* a glass container, so their fills must be
+ * translucent too — an opaque strip would punch a solid hole through the
+ * pane and break the frosted read. */
+[data-theme-preset='glass'] {
+  /* Rows keep a whisper of fill so standalone card lists stay readable,
+   * while rows inside a glass pane read as effectively see-through. */
+  --table-row: color-mix(in oklch, var(--background) 40%, transparent);
+  --table-header: color-mix(in oklch, var(--foreground) 3.5%, transparent);
+  --table-header-hover: color-mix(in oklch, var(--foreground) 6.5%, transparent);
+  --table-disabled: color-mix(in oklch, var(--foreground) 4%, transparent);
+  --table-disabled-hover: color-mix(
+    in oklch,
+    var(--foreground) 7%,
+    transparent
+  );
+  --table-disabled-border: color-mix(
+    in oklch,
+    var(--foreground) 20%,
+    transparent
+  );
+}
+
 /* ── Surface layer ────────────────────────────────────────────────────── */
 /*
  * One recipe applied by data-slot, so cards, popovers, dialogs, sheets,
@@ -699,6 +803,24 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
   box-shadow: inset 0 1px 0 var(--glass-edge-top),
     inset 0 -1px 0 var(--glass-edge-bottom), var(--glass-shadow-ambient),
     var(--glass-shadow-key);
+  -webkit-backdrop-filter: blur(var(--glass-blur))
+    saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+
+/* The `bg-card` utility is written directly by feature panels all over the app
+ * (dashboard overview, rankings, mobile list cards, editor shells …), which
+ * makes it the broadest hook into the recipe.
+ *
+ * It deliberately receives ONLY the frost — never a `background-color` or
+ * `box-shadow` override. Those two are exactly what components toggle on
+ * hover, selection and disabled states (`hover:bg-muted`, `hover:shadow-md`),
+ * and an unlayered declaration here would outrank every one of them and
+ * silently kill those states. The translucent `--card` token plus the blur is
+ * already enough to read as glass; the full recipe stays reserved for the
+ * elements that opt in via `data-slot`, `<Card>` or `.glass-panel`. */
+[data-theme-preset='glass'] [class*='bg-card'] {
+  background-image: var(--glass-sheen);
   -webkit-backdrop-filter: blur(var(--glass-blur))
     saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
@@ -748,7 +870,8 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
 /* The app header is a full-width bar rather than a panel: it only needs a
  * blur and a bottom edge, never a perimeter ring. */
 [data-theme-preset='glass'] [data-slot='app-header'] {
-  background-color: color-mix(in oklch, var(--background) 55%, transparent);
+  background-color: color-mix(in oklch, var(--background) 42%, transparent);
+  background-image: var(--glass-sheen);
   box-shadow: inset 0 -1px 0 var(--glass-edge-bottom);
   -webkit-backdrop-filter: blur(var(--glass-blur-raised))
     saturate(var(--glass-saturate));
@@ -807,6 +930,141 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
   }
 }
 
+/* ── Data rows ────────────────────────────────────────────────────────── */
+/* Row hover / selection inside a glass table must not paint an opaque strip
+ * over the pane: the stock rules mix with `--background`, which is opaque in
+ * this preset. */
+[data-theme-preset='glass'] [data-slot='table-row']:hover,
+[data-theme-preset='glass'] [data-slot='table-row'][aria-expanded] {
+  background-color: color-mix(in oklch, var(--foreground) 5%, transparent);
+}
+[data-theme-preset='glass'] [data-slot='table-row'][data-state='selected'] {
+  background-color: color-mix(in oklch, var(--foreground) 8%, transparent);
+}
+
+/* ── Control layer ────────────────────────────────────────────────────── */
+/*
+ * Form controls and segmented switchers read as small inset panes rather
+ * than flat rectangles: a faint fill, a top hairline and a shallow blur.
+ * Deliberately lighter than the surface recipe so a form never out-shouts
+ * the panel it sits in.
+ */
+[data-theme-preset='glass'] :is(
+    [data-slot='input'],
+    [data-slot='textarea'],
+    [data-slot='select-trigger'],
+    [data-slot='combobox-input'],
+    [data-slot='input-group'],
+    [data-slot='tabs-list'][data-variant='default']
+  ) {
+  background-color: var(--glass-field-tint);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  backdrop-filter: blur(10px) saturate(150%);
+}
+
+/* NOTE: this block deliberately sets no `box-shadow`. Tailwind renders both
+ * `focus-visible:ring-*` and `aria-invalid:ring-*` as box-shadows, and an
+ * unlayered declaration here would outrank them and strip the focus ring off
+ * every input in the app. A hairline highlight is not worth losing keyboard
+ * affordances over. */
+/* The selected segment lifts out of the trough it sits in. */
+[data-theme-preset='glass'] [data-slot='tabs-trigger'][data-active] {
+  background-color: var(--glass-tint-raised);
+  box-shadow: inset 0 1px 0 var(--glass-edge-top),
+    0 2px 6px oklch(0.28 0.03 268 / 8%);
+}
+
+/* ── Navigation layer ─────────────────────────────────────────────────── */
+/* Sidebar rows use the same optical language as the panels: a hairline
+ * highlight on hover, a raised frosted chip once active. */
+[data-theme-preset='glass'] :is(
+    [data-sidebar='menu-button'],
+    [data-sidebar='menu-sub-button'],
+    [data-sidebar='menu-action'],
+    [data-sidebar='group-action']
+  ):hover {
+  background-color: color-mix(in oklch, var(--foreground) 6%, transparent);
+  box-shadow: inset 0 1px 0 var(--glass-edge-top);
+}
+[data-theme-preset='glass'] :is(
+    [data-sidebar='menu-button'],
+    [data-sidebar='menu-sub-button']
+  )[data-active] {
+  background-color: var(--glass-tint-raised);
+  box-shadow: inset 0 1px 0 var(--glass-edge-top),
+    0 2px 8px oklch(0.28 0.03 268 / 10%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: blur(12px) saturate(150%);
+}
+
+/* ── Scrim ────────────────────────────────────────────────────────────── */
+/* Modal scrims frost instead of merely dimming, so the dialog keeps the
+ * same material story as everything behind it. */
+[data-theme-preset='glass'] :is(
+    [data-slot='dialog-overlay'],
+    [data-slot='sheet-overlay'],
+    [data-slot='drawer-overlay'],
+    [data-slot='alert-dialog-overlay']
+  ) {
+  background-color: color-mix(in oklch, var(--background) 45%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  backdrop-filter: blur(10px) saturate(120%);
+}
+
+/* The public-site mobile drawer is a hand-rolled motion element rather than a
+ * primitive, so it carries its own hooks instead of the sheet scrim above. It
+ * is the largest opaque block on small screens, which is why it belongs in the
+ * recipe rather than being left as a solid bar. */
+[data-theme-preset='glass'] [data-slot='mobile-drawer'] {
+  background-color: var(--glass-tint-raised);
+  background-image: var(--glass-sheen);
+  box-shadow: inset 0 1px 0 var(--glass-edge-top),
+    inset 0 -1px 0 var(--glass-edge-bottom), var(--glass-shadow-ambient),
+    var(--glass-shadow-key);
+  -webkit-backdrop-filter: blur(var(--glass-blur-raised))
+    saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur-raised))
+    saturate(var(--glass-saturate));
+}
+[data-theme-preset='glass'] [data-slot='mobile-drawer-overlay'] {
+  background-color: color-mix(in oklch, var(--background) 45%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  backdrop-filter: blur(10px) saturate(120%);
+}
+
+/* Recharts renders its tooltip as a bare div with no primitive slot, and it
+ * floats above the chart, so it takes the raised (floating-layer) finish. */
+[data-theme-preset='glass'] [data-slot='chart-tooltip'] {
+  background-color: var(--glass-tint-raised);
+  -webkit-backdrop-filter: blur(var(--glass-blur-raised))
+    saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur-raised))
+    saturate(var(--glass-saturate));
+}
+
+/* `outline` buttons otherwise stay fully opaque `--background` on a
+ * translucent surface, which reads as a hole punched through the pane. They
+ * get the same faint fill as the other controls — no blur, since a button is
+ * far too small for it to be visible and far too common to pay for.
+ *
+ * The hover / expanded states are restated here on purpose: this block is
+ * unlayered, so it would otherwise outrank the component's own
+ * `hover:bg-muted` and `aria-expanded:bg-muted` and freeze the feedback. */
+[data-theme-preset='glass'] [data-slot='button'][class*='bg-background'] {
+  background-color: var(--glass-field-tint);
+}
+/* Scoped away from the focus ring, which Tailwind paints as a box-shadow. */
+[data-theme-preset='glass']
+  [data-slot='button'][class*='bg-background']:not(:focus-visible) {
+  box-shadow: inset 0 1px 0 var(--glass-edge-top);
+}
+[data-theme-preset='glass']
+  [data-slot='button'][class*='bg-background']:hover,
+[data-theme-preset='glass']
+  [data-slot='button'][class*='bg-background'][aria-expanded='true'] {
+  background-color: color-mix(in oklch, var(--foreground) 7%, transparent);
+}
+
 /* Hover lift. Pointer-driven only, so touch devices never stick. */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   [data-theme-preset='glass'] :is([data-slot='card'], .glass-panel) {
@@ -836,11 +1094,13 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
   [data-theme-preset='glass'] {
     --glass-tint: oklch(1 0 0 / 96%);
     --glass-tint-raised: oklch(1 0 0 / 98%);
+    --glass-field-tint: oklch(1 0 0 / 94%);
     --glass-noise-opacity: 0;
   }
   .dark [data-theme-preset='glass'] {
-    --glass-tint: oklch(0.215 0.016 268 / 96%);
-    --glass-tint-raised: oklch(0.215 0.016 268 / 98%);
+    --glass-tint: oklch(0.235 0.018 268 / 96%);
+    --glass-tint-raised: oklch(0.235 0.018 268 / 98%);
+    --glass-field-tint: oklch(0.3 0.016 268 / 96%);
   }
   [data-theme-preset='glass'] :is(
       [data-slot='card'],
@@ -860,7 +1120,15 @@ body[data-theme-background='custom']:not([data-theme-preset='glass']) {
       [data-slot='sidebar-inner'],
       [data-slot='sidebar'][data-mobile='true'],
       [data-slot='sidebar']:not([data-state]),
-      .glass-panel
+      [data-slot='input'],
+      [data-slot='textarea'],
+      [data-slot='select-trigger'],
+      [data-slot='combobox-input'],
+      [data-slot='input-group'],
+      [data-slot='tabs-list'][data-variant='default'],
+      [data-sidebar='menu-button'][data-active],
+      .glass-panel,
+      [class*='bg-card']
     ),
   [data-theme-preset='glass'] [data-slot='app-header'] {
     -webkit-backdrop-filter: none;

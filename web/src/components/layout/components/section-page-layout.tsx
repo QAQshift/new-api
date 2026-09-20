@@ -67,13 +67,15 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
   Children.forEach(props.children, (node) => {
     if (!isValidElement(node)) return
     const child = node as ReactElement<SlotProps>
-    if (child.type === SectionPageLayoutTitle) title = child.props.children
-    else if (child.type === SectionPageLayoutActions)
+    if (child.type === SectionPageLayoutTitle) {
+      title = child.props.children
+    } else if (child.type === SectionPageLayoutActions) {
       actions = child.props.children
-    else if (child.type === SectionPageLayoutContent)
+    } else if (child.type === SectionPageLayoutContent) {
       content = child.props.children
-    else if (child.type === SectionPageLayoutBreadcrumb)
+    } else if (child.type === SectionPageLayoutBreadcrumb) {
       breadcrumb = child.props.children
+    }
   })
 
   return (
@@ -109,6 +111,7 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
 
         <div
           ref={setFooterContainer}
+          data-slot='page-footer'
           className='bg-background shrink-0 border-t px-3 py-2.5 empty:hidden sm:px-4 sm:py-3'
         />
       </Main>

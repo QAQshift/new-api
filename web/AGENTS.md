@@ -124,6 +124,7 @@
 
 - 以 Tailwind 工具类为主，动态类名用 `cn()` 合并；非动态场景避免内联样式。
 - 响应式采用移动优先与 Tailwind 断点（`sm:`、`md:`、`lg:` 等）；主题与暗色用 CSS 变量与 `dark:`，自定义样式集中在 `src/styles/`，组件内尽量少写自定义 CSS。
+- **玻璃主题（Glass preset）**：卡片、浮层、控件的外观由 `src/styles/theme-presets.css` 按 `data-slot` 统一接管。新增容器时请优先使用 `<Card>` 组件、现有 `data-slot` 约定或 `glass-panel` 钩子，避免直接写不透明的 `bg-background` —— 它在该主题下会形成"实心白块"，压掉背景环境光并破坏整块玻璃面板。确需自定义外观的元素（如自绘浮层）请补一个 `data-slot`，再加入配方列表。
 
 ### 3.11 文件组织
 

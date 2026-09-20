@@ -266,7 +266,7 @@ export function JsonCodeEditor({
   return (
     <div
       className={cn(
-        'border-input bg-background focus-within:border-ring focus-within:ring-ring/50 overflow-hidden rounded-lg border transition-colors focus-within:ring-3',
+        'border-input bg-card focus-within:border-ring focus-within:ring-ring/50 overflow-hidden rounded-lg border transition-colors focus-within:ring-3',
         className
       )}
       data-form-root={dataFormRoot}
@@ -320,7 +320,7 @@ export function JsonCodeEditor({
       </div>
       <div
         className={cn(
-          'bg-background relative overflow-hidden pl-2',
+          'bg-transparent relative overflow-hidden pl-2',
           'has-[textarea:disabled]:bg-input/30 has-[textarea:disabled]:opacity-70',
           heightClassName
         )}

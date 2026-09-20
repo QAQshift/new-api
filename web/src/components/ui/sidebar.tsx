@@ -343,7 +343,7 @@ function SidebarInput({
     <Input
       data-slot='sidebar-input'
       data-sidebar='input'
-      className={cn('bg-background h-8 w-full shadow-none', className)}
+      className={cn('bg-card/50 h-8 w-full shadow-none', className)}
       {...props}
     />
   )
@@ -501,7 +501,7 @@ const sidebarMenuButtonVariants = cva(
       variant: {
         default: 'hover:bg-muted hover:text-sidebar-foreground',
         outline:
-          'bg-background shadow-[0_0_0_1px_var(--sidebar-border)] hover:bg-muted hover:text-sidebar-foreground hover:shadow-[0_0_0_1px_var(--muted)]',
+          'bg-card shadow-[0_0_0_1px_var(--sidebar-border)] hover:bg-muted hover:text-sidebar-foreground hover:shadow-[0_0_0_1px_var(--muted)]',
       },
       size: {
         default: 'h-8 text-sm',

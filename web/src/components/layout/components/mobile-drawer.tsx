@@ -207,6 +207,7 @@ export function MobileDrawer({
         <>
           {/* Overlay */}
           <motion.div
+            data-slot='mobile-drawer-overlay'
             className={MOBILE_DRAWER_CONFIG.overlayClassName}
             initial='hidden'
             animate='visible'
@@ -220,6 +221,7 @@ export function MobileDrawer({
 
           {/* Drawer Content */}
           <motion.div
+            data-slot='mobile-drawer'
             className={MOBILE_DRAWER_CONFIG.drawerClassName}
             initial='hidden'
             animate='visible'
@@ -261,9 +263,9 @@ export function MobileDrawer({
                   </div>
                 ) : (
                   <AnimatePresence>
-                    {mobileLinksList.map((link, index) => (
+                    {mobileLinksList.map((link) => (
                       <motion.div
-                        key={`${link.href}-${index}`}
+                        key={`${link.href}-${link.title}`}
                         className='border-border border-b p-2.5 last:border-b-0'
                         variants={MOBILE_DRAWER_ANIMATION.menuItem as Variants}
                       >

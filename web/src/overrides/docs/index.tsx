@@ -388,7 +388,7 @@ export function Docs() {
               }}
               className={`shrink-0 rounded-lg px-3 py-2 text-sm transition-colors md:px-4 ${
                 activeCategory === category.id
-                  ? 'bg-background text-foreground shadow-sm'
+                  ? 'bg-card text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >

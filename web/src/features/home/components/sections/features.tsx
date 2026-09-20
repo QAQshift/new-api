@@ -200,7 +200,7 @@ export function Features(_props: FeaturesProps) {
               key={f.id}
               delay={i * 100}
               animation='scale-in'
-              className={`bg-background group hover:bg-muted/20 p-7 transition-colors duration-300 md:p-8 ${f.span}`}
+              className={`bg-background glass-panel group hover:bg-muted/20 p-7 transition-colors duration-300 md:p-8 ${f.span}`}
             >
               <div className='mb-3 flex items-center gap-3'>
                 <span className='border-border/40 bg-muted text-muted-foreground flex size-7 items-center justify-center rounded-md border text-[10px] font-semibold tabular-nums'>
